@@ -110,6 +110,12 @@ input[type=text] { width: 9em; min-width: 0; }
   font-family: var(--f-display); font-size: 2rem; border-radius: 4px; background: color-mix(in srgb, var(--shu) 8%, transparent);
 }
 .seal.big { width: 64px; height: 64px; font-size: 2.4rem; }
+.seal { position: relative; overflow: hidden; }
+.seal img.art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 25%; opacity: 0; transition: opacity .3s; }
+.seal.has-art { color: transparent; }
+.seal.has-art img.art { opacity: 1; }
+.seal.huge { width: min(62vw, 300px); height: auto; aspect-ratio: 3 / 4; font-size: 7rem; border-width: 3px; }
+.verdict .seal.huge { width: min(52vw, 240px); }
 .seal.gold { border-color: var(--kin); color: var(--kin); background: color-mix(in srgb, var(--kin) 14%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--kin) 40%, transparent); }
 .seal.locked { border-color: var(--line); color: var(--muted); background: none; }
 .seal.tame { border-color: var(--moe); color: var(--moe); background: color-mix(in srgb, var(--moe) 10%, transparent); }
@@ -493,18 +499,30 @@ const DIFF = [
 ];
 const diffName = (i = S.diff) => t(`diff.${i}.name`);
 const FREQ = [1.6, 1, 0.7];
+// `asset` is the id in assets/ghost_asset_manifest.json; `id` stays as before so saved progress carries over
 const MONSTERS = [
-  { id: "chochin",    glyph: "灯", hp: 300,   exp: 40,   atk: 9,   weak: "shinmen",   partner: { warn: .4 } },
-  { id: "kappa",      glyph: "河", hp: 1200,  exp: 120,  atk: 9,   weak: "do",        partner: { heal: .5 } },
-  { id: "ittan",      glyph: "布", hp: 3000,  exp: 280,  atk: 8,   weak: "tsuki",     partner: { counter: .5 } },
-  { id: "inoshishi",  glyph: "猪", hp: 6000,  exp: 520,  atk: 8,   weak: "gyakudo",   partner: { tsuki: .4 } },
-  { id: "kamaitachi", glyph: "鎌", hp: 10000, exp: 850,  atk: 7,   weak: "kiriage",   partner: { combo: .3 } },
-  { id: "akaoni",     glyph: "鬼", hp: 16000, exp: 1300, atk: 7,   weak: "kesa", oni: true, partner: { atk: .15 } },
-  { id: "yukionna",   glyph: "雪", hp: 24000, exp: 1900, atk: 6.5, weak: "gyakukesa", partner: { atkint: .3 } },
-  { id: "omukade",    glyph: "蟲", hp: 35000, exp: 2700, atk: 6,   weak: "tsuki",     partner: { combocap: 2 } },
-  { id: "tsuchigumo", glyph: "蜘", hp: 50000, exp: 3800, atk: 5.5, weak: "kesaage",   partner: { drop: 1 } },
-  { id: "shuten",     glyph: "酒", hp: 70000, exp: 5500, atk: 5,   weak: "shinmen", oni: true, partner: { exp: .5 } },
+  { id: "chochin",    asset: "yokai_010_chochin_obake", glyph: "灯", hp: 300,   exp: 40,   atk: 9,   weak: "shinmen",   partner: { warn: .4 } },
+  { id: "kappa",      asset: "yokai_001_kappa",         glyph: "河", hp: 1200,  exp: 120,  atk: 9,   weak: "do",        partner: { heal: .5 } },
+  { id: "ittan",      asset: "yokai_017_ittan_momen",   glyph: "布", hp: 3000,  exp: 280,  atk: 8,   weak: "tsuki",     partner: { counter: .5 } },
+  { id: "kamaitachi", asset: "yokai_015_kamaitachi",    glyph: "鎌", hp: 10000, exp: 850,  atk: 7,   weak: "kiriage",   partner: { combo: .3 } },
+  { id: "akaoni",     asset: "yokai_012_aka_oni",       glyph: "鬼", hp: 16000, exp: 1300, atk: 7,   weak: "kesa", oni: true, partner: { atk: .15 } },
+  { id: "yukionna",   asset: "yokai_014_yuki_onna",     glyph: "雪", hp: 24000, exp: 1900, atk: 6.5, weak: "gyakukesa", partner: { atkint: .3 } },
+  { id: "omukade",    asset: "boss_12_omukade",         glyph: "蟲", hp: 35000, exp: 2700, atk: 6,   weak: "tsuki", boss: true, partner: { combocap: 2 } },
+  { id: "tsuchigumo", asset: "boss_07_tsuchigumo",      glyph: "蜘", hp: 50000, exp: 3800, atk: 5.5, weak: "kesaage", boss: true, partner: { drop: 1 } },
+  { id: "shuten",     asset: "boss_01_shuten_doji",     glyph: "酒", hp: 70000, exp: 5500, atk: 5,   weak: "shinmen", boss: true, oni: true, partner: { exp: .5 } },
 ]; // atk = average seconds between enemy attacks
+
+// ---------- images: only files listed in the manifest are requested; a missing file falls back to the kanji seal ----------
+const MANIFEST = await fetch("assets/ghost_asset_manifest.json", { cache: "no-cache" }).then((r) => (r.ok ? r.json() : { assets: [] })).catch(() => ({ assets: [] }));
+const ASSET_PATH = Object.fromEntries(MANIFEST.assets.map((a) => [a.file, `assets/images/${a.section}/${a.file}`]));
+const monFile = (m, variant) => (m.boss ? `${m.asset}.png` : `${m.asset}_${variant}.png`);
+// a seal's inner html: the kanji, plus the picture laid over it once it loads (gold falls back to the base picture)
+function monArt(m, gold) {
+  const main = ASSET_PATH[monFile(m, gold ? "gold" : "base")], base = ASSET_PATH[monFile(m, "base")];
+  if (!main) return esc(m.glyph);
+  const fb = gold && base && base !== main ? base : "";
+  return `${esc(m.glyph)}<img class="art" src="${main}" alt="" data-fb="${fb}" onload="this.parentNode.classList.add('has-art')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">`;
+}
 const monName = (m) => t("mon." + m.id);
 const ATTACKS = ["crouch", "guard", "step"];
 const SKILLS = [
@@ -752,9 +770,9 @@ function renderBook() {
   $("book-sum").textContent = t("book.sum", { n: tamed, gold: golds, total: MONSTERS.length });
   $("book").innerHTML = MONSTERS.map((m) => {
     const sh = S.shiki[m.id], seen = S.mons[m.id];
-    if (!sh) return `<div class="card"><div class="seal locked">${seen ? m.glyph : "？"}</div><b>${seen ? nameHtml("mon." + m.id) : "？？？"}</b><span class="small muted">${esc(t(seen ? "book.notTamed" : "book.unseen"))}</span></div>`;
+    if (!sh) return `<div class="card"><div class="seal locked">${seen ? monArt(m, false) : "？"}</div><b>${seen ? nameHtml("mon." + m.id) : "？？？"}</b><span class="small muted">${esc(t(seen ? "book.notTamed" : "book.unseen"))}</span></div>`;
     const isP = S.partner === m.id;
-    return `<div class="card${isP ? " partner" : ""}"><div class="seal ${sh.gold ? "gold" : "tame"}">${m.glyph}</div>
+    return `<div class="card${isP ? " partner" : ""}"><div class="seal ${sh.gold ? "gold" : "tame"}">${monArt(m, sh.gold)}</div>
       <b>${nameHtml("mon." + m.id)} ${sh.gold ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}</b>
       <span class="stars">${"★".repeat(sh.stars)}${"☆".repeat(5 - sh.stars)}</span>
       <span class="small">${esc(t("partner." + m.id))}</span>
@@ -780,7 +798,7 @@ function renderMap() {
     b.className = "mon"; b.disabled = locked;
     b.innerHTML = locked
       ? `<div class="seal locked">？</div><div class="info"><b>？？？</b><span class="small muted">${esc(t("map.locked"))}</span></div><span></span>`
-      : `<div class="seal${st.gold ? " gold" : ""}">${m.glyph}</div>
+      : `<div class="seal${st.gold ? " gold" : ""}">${monArt(m, st.gold)}</div>
          <div class="info"><div class="row spread"><b>${nameHtml("mon." + m.id)} ${st.gold ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}</b><span class="small muted">${st.kills ? esc(t("map.kills", { n: st.kills })) : ""}${S.shiki[m.id] ? esc(t("map.tamed")) : ""}</span></div>
            <div class="hpbar"><i style="width:${100 * st.hp / mx}%"></i></div>
            <span class="small muted num">${esc(t("map.hpWeak", { hp: fmt(st.hp), max: fmt(mx), weak: typeName(m.weak) }))}</span>
@@ -848,6 +866,8 @@ function startBattle(m) {
   $("btn-retreat").textContent = t("battle.retreat");
   if ($("scr-battle").hidden) show("battle");
   renderHeader(); scheduleAttack(performance.now() + 6000);
+  // encounter: the yokai's picture, large, before the fight
+  showVerdict(`<div class="seal huge${st.gold ? " gold" : ""}">${monArt(m, st.gold)}</div><h2>${st.gold ? esc(t("mon.goldName", { name: monName(m) })) : nameHtml("mon." + m.id)}</h2>${m.boss ? `<span class="tag" style="color:var(--shu)">${esc(t("tag.boss"))}</span>` : ""}`);
   if (st.gold) toast(t("toast.gold", { name: monName(m) }));
 }
 function renderHeader() {
@@ -871,7 +891,7 @@ function renderHeader() {
   }
   const st = monState(foe), mx = maxHp(foe, st);
   if (st.gold) seal.classList.add("gold");
-  seal.textContent = foe.glyph; $("b-name").textContent = st.gold ? t("mon.goldName", { name: monName(foe) }) : monName(foe);
+  seal.innerHTML = monArt(foe, st.gold); $("b-name").textContent = st.gold ? t("mon.goldName", { name: monName(foe) }) : monName(foe);
   $("b-hpbar").style.background = ""; $("b-hpbar").style.width = (100 * st.hp / mx) + "%";
   $("b-hp").textContent = t("battle.hp", { hp: fmt(st.hp), max: fmt(mx) });
   const p = MONSTERS.find((m) => m.id === S.partner);
@@ -1099,7 +1119,7 @@ function defeat(m, st) {
   const tile = (key, val) => `<div><span class="label">${esc(t(key))}</span><b class="num">${val}</b></div>`;
   openResult(`
     <div class="stamp${gold ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.slain"))}</div>
-    <div class="res-title" style="${dl()}"><div class="seal big${gold ? " gold" : ""}">${m.glyph}</div><h2>${gold ? esc(title) : nameHtml("mon." + m.id)}</h2><span class="muted small">${esc(diffName())} ・ ${esc(wp().name)} ${kg().toFixed(1)}kg</span></div>
+    <div class="res-title" style="${dl()}"><div class="seal huge${gold ? " gold" : ""}">${monArt(m, gold)}</div><h2>${gold ? esc(title) : nameHtml("mon." + m.id)}</h2><span class="muted small">${esc(diffName())} ・ ${esc(wp().name)} ${kg().toFixed(1)}kg</span></div>
     <div class="tiles" style="${dl()}">
       ${tile("res.dmg", fmt(B.dmg))}${tile("res.swings", B.swings)}${tile("res.maxCombo", B.maxCombo)}
       ${tile("res.best", esc(t("res.bestVal", { rank: B.bestRank, n: B.best })))}${tile("res.dodges", `${B.dodges} / ${B.dodges + B.hits}`)}${tile("res.time", `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`)}
@@ -1111,8 +1131,8 @@ function defeat(m, st) {
       ${learned.map((s) => `<div>${esc(t("res.learned", { name: skillName(s), desc: skillDesc(s) }))}</div>`).join("")}
     </div>
     <div style="${dl()}" class="drops"><span class="label">${esc(t("res.drops"))}</span>${drops.map((it) => itemCard(it)).join("")}</div>
-    ${tame ? `<div class="tame" style="${dl()}"><div class="seal ${gold ? "gold" : "tame"}">${m.glyph}</div><div><b>${esc(t(tame.first ? "res.tamed" : "res.bond", { name }))}</b><div class="small">${tame.first ? esc(t("res.blessing", { text: t("partner." + m.id) })) + (S.partner === m.id ? esc(t("res.madePartner")) : "") : esc(t("res.bondStars")) + " " + "★".repeat(tame.stars)}</div></div></div>`
-           : `<div class="tame miss" style="${dl()}"><div class="seal locked">${m.glyph}</div><div><b>${esc(t("res.left", { name }))}</b><div class="small muted">${esc(t("res.tameRate", { p: gold ? 70 : 30 }))}</div></div></div>`}`,
+    ${tame ? `<div class="tame" style="${dl()}"><div class="seal ${gold ? "gold" : "tame"}">${monArt(m, gold)}</div><div><b>${esc(t(tame.first ? "res.tamed" : "res.bond", { name }))}</b><div class="small">${tame.first ? esc(t("res.blessing", { text: t("partner." + m.id) })) + (S.partner === m.id ? esc(t("res.madePartner")) : "") : esc(t("res.bondStars")) + " " + "★".repeat(tame.stars)}</div></div></div>`
+           : `<div class="tame miss" style="${dl()}"><div class="seal locked">${monArt(m, gold)}</div><div><b>${esc(t("res.left", { name }))}</b><div class="small muted">${esc(t("res.tameRate", { p: gold ? 70 : 30 }))}</div></div></div>`}`,
     { ok: { label: next === m ? t("res.again", { name }) : t("res.next", { name: monName(next) }), fn: () => startBattle(next) },
       ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("map"); } } });
   requestAnimationFrame(() => requestAnimationFrame(() => { const e = $("res-exp"); if (e) e.style.width = (100 * S.exp / expNeed(S.lv)) + "%"; }));
