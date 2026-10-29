@@ -2277,14 +2277,15 @@ function sndSwing(rank, crit, c = 0) {
     if (tanto) noise({ sec: 0.09, f0: 2600 * p, f1: 4200 * p, q: 1.4, vol: 0.32 });
     else noise({ sec: 0.18, f0: 700 * p, f1: 2600 * p, q: 1.1, vol: 0.38 });
   }
-  if (c > 0 && !playFile(tanto ? "hit_tanto" : "hit_katana", { rate: p * cp })) {
+  // recorded hits play at their own pitch and only rise with the combo; the weight changes only the synthesized stand-ins
+  if (c > 0 && !playFile(tanto ? "hit_tanto" : "hit_katana", { rate: cp })) {
     // the blow landing, then a note that climbs with the combo
     tone({ f: 190 * p, f1: 80 * p, sec: 0.16, vol: 0.34, type: "triangle" });
     noise({ sec: 0.07, f0: 1800 * p, f1: 700, vol: 0.28, type: "bandpass" });
     if (c > 1) tone({ f: COMBO_NOTES[Math.min(step, COMBO_NOTES.length - 1)], sec: 0.22, vol: 0.09, type: "square", delay: 0.03 });
   }
   if (rank === "S" || crit) {
-    if (!playFile(tanto ? "crit_tanto" : "crit_katana", { rate: p })) {
+    if (!playFile(tanto ? "crit_tanto" : "crit_katana")) {
       // its own sound: a heavy thump under the hit-stop, then the blade ringing out
       tone({ f: 90, f1: 38, sec: 0.55, vol: 0.6 });
       noise({ sec: 0.25, f0: 5000, f1: 9000, q: 0.7, vol: 0.22, type: "highpass" });
