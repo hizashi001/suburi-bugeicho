@@ -641,5 +641,12 @@
   "barrage.sub": "{n} attacks in a row!",
   "barrage.perfect": "READ IT ALL!",
   "barrage.perfectSub": "Next cut is a ×{x} counter",
-  "fin.cut": "ISSEN"
+  "fin.cut": "ISSEN",
+  "forms.add.label": "Add a new form (iai, spinning cut…)",
+  "forms.add.lead": "Name it and swing it 3 times in front of the camera; that motion becomes a new form. The first swing sets its direction, and where your hands start (drawing from the hip, say) is remembered too. Added forms can be used in techniques.",
+  "forms.add.namePh": "Form name (e.g. Iai)",
+  "forms.add.rec": "Record with the camera",
+  "forms.add.need": "Enter a name for the form",
+  "forms.customTag": "Added",
+  "reg.customHint": "the same motion you registered"
 }

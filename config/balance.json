@@ -453,7 +453,12 @@
       "dist": 0.15,
       "ratio": 1.5
     },
-    "depthGain": 1.5
+    "depthGain": 1.5,
+    "custom": {
+      "_note": "追加した型（居合など）の見分け方。向きに加えて、振り始めの手の位置（腰を基準、m）が登録と近いほど有利。posTol より離れると不利",
+      "posWeight": 0.3,
+      "posTol": 0.25
+    }
   },
   "sound": {
     "_note": "COMBOごとに打撃音の高さを comboPitchStep ずつ上げ、comboPitchSteps 段で頭打ち。BGMの音量は0〜1",

@@ -472,5 +472,12 @@
   "barrage.sub": "{n}連続の攻撃が来る！",
   "barrage.perfect": "見切った！",
   "barrage.perfectSub": "次の一振りはカウンター×{x}",
-  "fin.cut": "一閃"
+  "fin.cut": "一閃",
+  "forms.add.label": "新しい型を追加（居合・回転斬りなど）",
+  "forms.add.lead": "名前を付けて、カメラの前で3回振ると、その動きが新しい型になる。最初の一振りで向きが決まり、振り始めの手の位置（腰から抜く、など）も覚える。追加した型は技にも使える。",
+  "forms.add.namePh": "型の名前（例：居合）",
+  "forms.add.rec": "カメラで登録する",
+  "forms.add.need": "型の名前を入れてください",
+  "forms.customTag": "追加",
+  "reg.customHint": "登録したときと同じ動き"
 }

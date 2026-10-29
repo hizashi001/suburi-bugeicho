@@ -423,6 +423,12 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
     </div>
     <div class="forms" id="forms"></div>
     <div class="panel">
+      <span class="label" data-i18n="forms.add.label"></span>
+      <p class="small muted" data-i18n="forms.add.lead"></p>
+      <input type="text" id="form-name" maxlength="24">
+      <button class="primary" id="form-add" data-i18n="forms.add.rec"></button>
+    </div>
+    <div class="panel">
       <span class="label" data-i18n="tech.label"></span>
       <p class="small muted" data-i18n="tech.lead"></p>
       <div id="tech-list"></div>
@@ -663,8 +669,16 @@ const TYPES = [
   { id: "gyakudo",      dir: [1, 0, 0],     amp: 0.9 },
   { id: "tsuki",        dir: [0, 0, 1],     amp: 0.4 },
 ];
-const TYPE = Object.fromEntries(TYPES.map((x) => [x.id, x]));
-const typeName = (id) => t("type." + id);
+// Added forms (居合, 回転斬り…): shared ones come from data/techniques.json "forms", others are made on this phone.
+// Each carries its own template (direction, reach, speed, and where the hands start, hip-centred).
+const customTypes = () => [...(TECH.forms || []), ...(S.customForms || [])].filter((x) => x.dir || mode === "reg").map((x) => ({ ...x, custom: true }));
+const allTypes = () => [...TYPES, ...customTypes()];
+const TYPE = {};
+function refreshTypes() { for (const k of Object.keys(TYPE)) delete TYPE[k]; allTypes().forEach((x) => (TYPE[x.id] = x)); }
+const customName = (x) => (LANG === "ja" ? x.name_ja : x.name_en || x.name_ja) || x.id;
+const typeName = (id) => (TYPE[id] && TYPE[id].custom ? customName(TYPE[id]) : t("type." + id));
+const typeHtml = (id) => (TYPE[id] && TYPE[id].custom ? esc(customName(TYPE[id])) : nameHtml("type." + id));
+const typeHint = (id) => (TYPE[id] && TYPE[id].custom ? t("reg.customHint") : t("type." + id + ".hint"));
 // speed = min share of your registered peak; ang = max degrees off; wob/dip = allowed excess over your registered blur/slow-down; amp = min share of registered reach
 // judging levels live in config/balance.json (judge.levels). null = that check is off at this level.
 const DIFF = B.judge.levels;
@@ -716,7 +730,7 @@ const fresh = () => ({
   weapons: [{ opt: "bokuto", kg: 0.6, kind: "katana" }, { opt: "tanto", kg: 0.2, kind: "tanto" }], active: 0,
   height: 170, enemyAtk: true, freq: 1, diff: 0, forms: {}, division: "bushi",
   lv: 1, exp: 0, kills: {}, bestScore: {}, bestRun: { score: 0, kills: 0 }, tabataBest: {}, tabataToday: null, climb: {}, climbBest: {},
-  inv: [], equip: {}, nextId: 1, seen: {}, setDone: {}, techniques: [],
+  inv: [], equip: {}, nextId: 1, seen: {}, setDone: {}, techniques: [], customForms: [],
   shiki: {}, partner: null,
 });
 let S = { ...fresh(), ...saved };
@@ -735,6 +749,8 @@ S.inv = (S.inv || []).filter(validItem);
 for (const k of Object.keys(S.equip || {})) if (!S.inv.some((i) => i.id === S.equip[k])) delete S.equip[k];
 for (const c of Object.values(S.climb || {})) if (c && c.inv) c.inv = c.inv.filter(validItem);
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+S.customForms = (S.customForms || []).filter((c) => c.dir); // a form whose recording never finished
+refreshTypes();
 
 // ---------- the day: it turns over at 22:00 in Japan (UTC 13:00) for everyone ----------
 const DAY_MS = 86400000, TURN_MS = 13 * 3600000;
@@ -800,6 +816,8 @@ const hasSkill = (id) => bushi() && SKILLS.some((s) => s.id === id && lvNow() >=
 
 function tmpl(x) {
   const f = S.forms[x.id];
+  if (!f && x.custom) return { peak: (x.peak * expectedPeak(kg())) / expectedPeak(x.kg || 0.6), amp: x.amp, wob: x.wob, dip: x.dip, dir: x.dir, from: x.from };
+  if (f && x.custom) return { peak: (f.peak * expectedPeak(kg())) / expectedPeak(f.kg), amp: f.amp, wob: f.wob, dip: f.dip, dir: f.dir, from: f.from || x.from };
   if (!f) return { peak: expectedPeak(kg()) * 0.85, amp: x.amp, wob: 0.15, dip: 0.15, dir: x.dir, def: true };
   return { peak: (f.peak * expectedPeak(kg())) / expectedPeak(f.kg), amp: f.amp, wob: f.wob, dip: f.dip, dir: f.dir };
 }
@@ -949,7 +967,7 @@ function renderTech() {
   $("tech-name").placeholder = t("tech.namePh");
   $("tech-list").innerHTML = [hidenTech(), ...allTechs()].map((x, i) => `<div class="row" style="gap:8px;flex-wrap:wrap;padding:4px 0"><b>${esc(techName(x))}</b>${x.hiden ? `<span class="tag gold">${esc(t("calc.hiden"))}</span>` : ""}<span class="small muted">${x.seq.map(typeName).map(esc).join(" → ")}</span>${i > shared ? `<button class="ghost mini" data-tdel="${i - shared - 1}">${esc(t("tech.delete"))}</button>` : ""}</div>`).join("");
   $("tech-seq").textContent = techDraft.length ? techDraft.map(typeName).join(" → ") : t("tech.seqEmpty");
-  $("tech-pick").innerHTML = TYPES.map((x) => `<button class="mini" data-tadd="${x.id}">${esc(typeName(x.id))}</button>`).join("");
+  $("tech-pick").innerHTML = allTypes().map((x) => `<button class="mini" data-tadd="${x.id}">${esc(typeName(x.id))}</button>`).join("");
   $("tech-pick").querySelectorAll("[data-tadd]").forEach((b) => (b.onclick = () => { if (techDraft.length < 12) techDraft.push(b.dataset.tadd); renderTech(); }));
   $("tech-list").querySelectorAll("[data-tdel]").forEach((b) => (b.onclick = () => { S.techniques.splice(+b.dataset.tdel, 1); save(); renderTech(); }));
 }
@@ -961,20 +979,31 @@ $("tech-save").onclick = () => {
   techDraft = []; $("tech-name").value = ""; save(); renderTech(); toast(t("tech.saved", { name }));
 };
 $("tech-export").onclick = () => {
-  const txt = JSON.stringify({ techniques: [...(TECH.techniques || []), ...S.techniques] }, null, 2);
+  const txt = JSON.stringify({ forms: [...(TECH.forms || []), ...S.customForms.filter((c) => c.dir)], techniques: [...(TECH.techniques || []), ...S.techniques] }, null, 2);
   $("tech-json").hidden = false; $("tech-json").value = txt; $("tech-json").select();
   try { navigator.clipboard.writeText(txt).then(() => toast(t("tech.copied"))); } catch {}
 };
 function renderForms() {
   renderTech();
-  $("forms").innerHTML = TYPES.map((x) => {
+  $("form-name").placeholder = t("forms.add.namePh");
+  $("forms").innerHTML = allTypes().map((x) => {
     const f = S.forms[x.id];
     const st = f ? `<span class="small" style="color:var(--moe)">${esc(t("forms.saved", { peak: f.peak.toFixed(1), kg: f.kg.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100) }))}</span>`
                  : `<span class="small muted">${esc(t("forms.unsaved"))}</span>`;
-    return `<div class="form-row">${arrowSvg(f ? f.dir : x.dir)}<div class="info"><b>${nameHtml("type." + x.id)}</b><span class="small muted">${esc(t("type." + x.id + ".hint"))}</span>${st}</div><button class="mini" data-reg="${x.id}">${esc(t(f ? "forms.retake" : "forms.register"))}</button></div>`;
+    return `<div class="form-row">${arrowSvg((f || x).dir)}<div class="info"><b>${typeHtml(x.id)}</b>${x.custom ? ` <span class="tag">${esc(t("forms.customTag"))}</span>` : ""}<span class="small muted">${esc(typeHint(x.id))}</span>${st}</div><span class="row" style="gap:4px">${x.custom && S.customForms.some((c) => c.id === x.id) ? `<button class="ghost mini" data-cdel="${x.id}">${esc(t("tech.delete"))}</button>` : ""}<button class="mini" data-reg="${x.id}">${esc(t(f ? "forms.retake" : "forms.register"))}</button></span></div>`;
   }).join("");
+  $("forms").querySelectorAll("[data-cdel]").forEach((b) => (b.onclick = () => { S.customForms = S.customForms.filter((c) => c.id !== b.dataset.cdel); delete S.forms[b.dataset.cdel]; save(); refreshTypes(); renderForms(); }));
   $("forms").querySelectorAll("[data-reg]").forEach((b) => (b.onclick = () => startReg([b.dataset.reg])));
 }
+// a new form: name it, then swing it 3 times in front of the camera; the first swing sets its direction
+$("form-add").onclick = () => {
+  const name = $("form-name").value.trim();
+  if (!name) { toast(t("forms.add.need")); return; }
+  const id = "c_" + Date.now().toString(36);
+  S.customForms.push({ id, name_ja: name, name_en: name, dir: null, amp: 0, peak: 0, kg: kg(), wob: 0.15, dip: 0.15 });
+  refreshTypes(); $("form-name").value = "";
+  startReg([id]);
+};
 $("reg-all").onclick = () => startReg(TYPES.map((x) => x.id));
 $("reg-missing").onclick = () => { const ids = TYPES.filter((x) => !S.forms[x.id]).map((x) => x.id); ids.length ? startReg(ids) : toast(t("forms.allDone")); };
 
@@ -1492,6 +1521,7 @@ function finishTabata() {
 function startReg(ids) {
   show("battle");
   mode = "reg"; P = null; foe = null;
+  refreshTypes(); // a new form being recorded has no direction yet, and is listed only here
   reg = { queue: ids, i: 0, got: [] };
   resetBattleUI(); phase = "fight";
   $("btn-retreat").textContent = t("reg.quit");
@@ -1502,21 +1532,30 @@ function renderReg() {
   const x = TYPE[reg.queue[reg.i]];
   $("regbox").hidden = false;
   $("reg-who").textContent = t("reg.who", { i: reg.i + 1, n: reg.queue.length });
-  $("reg-arrow").innerHTML = arrowSvg(x.dir, true);
-  $("reg-cue").innerHTML = nameHtml("type." + x.id);
-  $("reg-hint").textContent = t("reg.hint", { hint: t("type." + x.id + ".hint"), reps: 3, n: reg.got.length + 1 });
+  const ref = x.dir || (reg.got[0] && reg.got[0].dir);
+  $("reg-arrow").innerHTML = ref ? arrowSvg(ref, true) : `<b style="font-size:3rem;color:var(--kin)">？</b>`; // a new form: its first swing sets the direction
+  $("reg-cue").innerHTML = typeHtml(x.id);
+  $("reg-hint").textContent = t("reg.hint", { hint: typeHint(x.id), reps: 3, n: reg.got.length + 1 });
   renderHud();
 }
 function regSwing(m) {
   const x = TYPE[reg.queue[reg.i]];
-  if (angDeg(m.dir, x.dir) > 55) { note(t("reg.wrongDir", { hint: t("type." + x.id + ".hint") })); return; }
-  if (m.amp < 0.3 * x.amp) { note(t("reg.tooSmall")); return; }
+  const ref = x.dir || (reg.got[0] && reg.got[0].dir);
+  if (ref && angDeg(m.dir, ref) > 55) { note(t("reg.wrongDir", { hint: typeHint(x.id) })); return; }
+  if (m.amp < 0.3 * (x.amp || 0.6)) { note(t("reg.tooSmall")); return; }
   reg.got.push(m); lastValid = m;
   popup("good", `${reg.got.length} / 3`, `${typeName(x.id)} ${m.peak.toFixed(1)}m/s`); sndSwing("A");
   if (reg.got.length >= 3) {
     const g = reg.got, avg = (k) => g.reduce((s, y) => s + y[k], 0) / g.length;
-    S.forms[x.id] = { peak: avg("peak"), amp: avg("amp"), wob: avg("wob"), dip: avg("dip"), kg: kg(),
-      dir: norm(g.reduce((s, y) => [s[0] + y.dir[0], s[1] + y.dir[1], s[2] + y.dir[2]], [0, 0, 0])) };
+    const sum3 = (k) => g.reduce((s, y) => [s[0] + y[k][0], s[1] + y[k][1], s[2] + y[k][2]], [0, 0, 0]);
+    S.forms[x.id] = { peak: avg("peak"), amp: avg("amp"), wob: avg("wob"), dip: avg("dip"), kg: kg(), dir: norm(sum3("dir")) };
+    if (x.custom) {
+      S.forms[x.id].from = scl(sum3("from"), 1 / g.length).map((v) => +v.toFixed(3));
+      // a brand-new form keeps these as its own template, so it can be shared
+      const mine = S.customForms.find((c) => c.id === x.id);
+      if (mine) Object.assign(mine, { ...S.forms[x.id], dir: S.forms[x.id].dir.map((v) => +v.toFixed(3)) });
+      refreshTypes();
+    }
     save();
     reg.i++; reg.got = [];
     if (reg.i >= reg.queue.length) return finishReg();
@@ -1531,12 +1570,18 @@ function finishReg() {
   openResult(`
     <div class="stamp kin${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.menkyo"))}</div>
     <div class="score" style="--d:.2s"><h2>${esc(t("reg.doneTitle"))}</h2><span class="muted">${esc(t("reg.doneSub", { n: done.length }))}</span></div>
-    <div class="drops" style="--d:.35s">${done.map((x) => { const f = S.forms[x.id]; return `<div class="form-row">${arrowSvg(f.dir)}<div class="info"><b>${nameHtml("type." + x.id)}</b><span class="small muted num">${esc(t("reg.doneRow", { peak: f.peak.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100), dip: Math.round(f.dip * 100) }))}</span></div><span></span></div>`; }).join("")}</div>`,
+    <div class="drops" style="--d:.35s">${done.map((x) => { const f = S.forms[x.id]; return `<div class="form-row">${arrowSvg(f.dir)}<div class="info"><b>${typeHtml(x.id)}</b><span class="small muted num">${esc(t("reg.doneRow", { peak: f.peak.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100), dip: Math.round(f.dip * 100) }))}</span></div><span></span></div>`; }).join("")}</div>`,
     { ok: { label: t("reg.toTitle"), fn: () => { stopCamera(); show("title"); } }, ng: { label: t("reg.toForms"), fn: () => { stopCamera(); show("forms"); } } });
+  mode = null; refreshTypes();
 }
 
+function dropUnfinishedForms() {
+  const before = S.customForms.length;
+  S.customForms = S.customForms.filter((c) => c.dir);
+  if (S.customForms.length !== before) { save(); refreshTypes(); }
+}
 function retreat() {
-  if (mode === "reg") { stopCamera(); show("forms"); return; }
+  if (mode === "reg") { stopCamera(); dropUnfinishedForms(); show("forms"); return; }
   if (mode === "tabata") { stopCamera(); show("title"); return; }
   if (fighting()) { endRun("retreat"); return; }
   stopCamera(); show("title");
@@ -1607,7 +1652,13 @@ function isRecovery(m) {
 }
 function judge(m) {
   let best = null;
-  TYPES.forEach((x) => { const tm = tmpl(x), c = dot(m.dir, norm(tm.dir)); if (!best || c > best.c) best = { x, tm, c }; });
+  const C = B.judge.custom;
+  allTypes().forEach((x) => {
+    const tm = tmpl(x);
+    let c = dot(m.dir, norm(tm.dir));
+    if (tm.from && m.from) c += C.posWeight * Math.max(-1, Math.min(1, 1 - len(sub(m.from, tm.from)) / C.posTol));
+    if (!best || c > best.c) best = { x, tm, c };
+  });
   const { x, tm } = best, d = diff();
   const ang = angDeg(m.dir, tm.dir), sp = m.peak / tm.peak, ampR = m.amp / tm.amp;
   const wobEx = Math.max(0, m.wob - tm.wob), dipEx = Math.max(0, m.dip - tm.dip);
@@ -1826,7 +1877,7 @@ function showStaggerCue() {
     showCue(`<div class="full gold">${bigArrow([1, 0, 0], "var(--kin)", true)}</div><div class="label">${esc(t("cue.stagShinobi", { n: s.need - s.got }))}</div>`);
   } else {
     const id = s.seq[s.i];
-    showCue(`<div class="full gold">${bigArrow(tmpl(TYPE[id]).dir, "var(--kin)")}</div><div class="label">${nameHtml("type." + id)}${s.seq.length > 1 ? ` <span class="small">(${s.i + 1}/${s.seq.length})</span>` : ""}</div>`);
+    showCue(`<div class="full gold">${bigArrow(tmpl(TYPE[id]).dir, "var(--kin)")}</div><div class="label">${typeHtml(id)}${s.seq.length > 1 ? ` <span class="small">(${s.i + 1}/${s.seq.length})</span>` : ""}</div>`);
   }
 }
 function staggerSwing(m, j) {
@@ -2628,7 +2679,7 @@ const detector = {
     const peak = Math.max(...s.speeds), pi = s.speeds.indexOf(peak);
     let run = 0, dip = 0;
     for (let i = 0; i < pi; i++) { run = Math.max(run, s.speeds[i]); dip = Math.max(dip, (run - s.speeds[i]) / peak); }
-    onMeasure({ peak, dir, amp, wob: wob / amp, dip, settle, tStart: s.tStart, tEnd: s.tEnd });
+    onMeasure({ peak, dir, amp, wob: wob / amp, dip, settle, tStart: s.tStart, tEnd: s.tEnd, from: s.start });
   },
 };
 
