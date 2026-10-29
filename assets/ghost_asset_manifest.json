@@ -1,0 +1,3109 @@
+{
+ "app": "NINJA SAMURAI WORKOUT: GHOST",
+ "version": "2026-10-29",
+ "naming_rules": [
+  "lowercase ascii, digits, underscore only; extension .png",
+  "yokai_{NNN}_{romaji}_{variant}.png  variant = base | gold | taisho",
+  "boss_{NN}_{romaji}.png / rare_{NN}_{romaji}.png",
+  "mask_{free|shop|award|drop}_{...}.png",
+  "gear_{slot}_{g1-g5}.png  g1=kazuuchi g2=wazamono g3=yoki_wazamono g4=o_wazamono g5=saijo_o_wazamono",
+  "shadow_{samurai|shinobi}_{kamae|kiri|zanshin}.png / shadow_part_{part}.png"
+ ],
+ "assets": [
+  {
+   "section": "yokai",
+   "id": "yokai_001_kappa",
+   "variant": "base",
+   "file": "yokai_001_kappa_base.png",
+   "name_ja": "河童（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_001_kappa",
+   "variant": "gold",
+   "file": "yokai_001_kappa_gold.png",
+   "name_ja": "河童（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_001_kappa",
+   "variant": "taisho",
+   "file": "yokai_001_kappa_taisho.png",
+   "name_ja": "河童（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_002_karasu_tengu",
+   "variant": "base",
+   "file": "yokai_002_karasu_tengu_base.png",
+   "name_ja": "烏天狗（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_002_karasu_tengu",
+   "variant": "gold",
+   "file": "yokai_002_karasu_tengu_gold.png",
+   "name_ja": "烏天狗（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_002_karasu_tengu",
+   "variant": "taisho",
+   "file": "yokai_002_karasu_tengu_taisho.png",
+   "name_ja": "烏天狗（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_003_yako",
+   "variant": "base",
+   "file": "yokai_003_yako_base.png",
+   "name_ja": "野狐（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_003_yako",
+   "variant": "gold",
+   "file": "yokai_003_yako_gold.png",
+   "name_ja": "野狐（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_003_yako",
+   "variant": "taisho",
+   "file": "yokai_003_yako_taisho.png",
+   "name_ja": "野狐（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_004_bake_danuki",
+   "variant": "base",
+   "file": "yokai_004_bake_danuki_base.png",
+   "name_ja": "化け狸（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_004_bake_danuki",
+   "variant": "gold",
+   "file": "yokai_004_bake_danuki_gold.png",
+   "name_ja": "化け狸（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_004_bake_danuki",
+   "variant": "taisho",
+   "file": "yokai_004_bake_danuki_taisho.png",
+   "name_ja": "化け狸（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_005_nekomata",
+   "variant": "base",
+   "file": "yokai_005_nekomata_base.png",
+   "name_ja": "猫又（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_005_nekomata",
+   "variant": "gold",
+   "file": "yokai_005_nekomata_gold.png",
+   "name_ja": "猫又（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_005_nekomata",
+   "variant": "taisho",
+   "file": "yokai_005_nekomata_taisho.png",
+   "name_ja": "猫又（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_006_rokurokubi",
+   "variant": "base",
+   "file": "yokai_006_rokurokubi_base.png",
+   "name_ja": "ろくろ首（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_006_rokurokubi",
+   "variant": "gold",
+   "file": "yokai_006_rokurokubi_gold.png",
+   "name_ja": "ろくろ首（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_006_rokurokubi",
+   "variant": "taisho",
+   "file": "yokai_006_rokurokubi_taisho.png",
+   "name_ja": "ろくろ首（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_007_nukekubi",
+   "variant": "base",
+   "file": "yokai_007_nukekubi_base.png",
+   "name_ja": "抜け首（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_007_nukekubi",
+   "variant": "gold",
+   "file": "yokai_007_nukekubi_gold.png",
+   "name_ja": "抜け首（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_007_nukekubi",
+   "variant": "taisho",
+   "file": "yokai_007_nukekubi_taisho.png",
+   "name_ja": "抜け首（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_008_nopperabo",
+   "variant": "base",
+   "file": "yokai_008_nopperabo_base.png",
+   "name_ja": "のっぺらぼう（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_008_nopperabo",
+   "variant": "gold",
+   "file": "yokai_008_nopperabo_gold.png",
+   "name_ja": "のっぺらぼう（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_008_nopperabo",
+   "variant": "taisho",
+   "file": "yokai_008_nopperabo_taisho.png",
+   "name_ja": "のっぺらぼう（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_009_karakasa_obake",
+   "variant": "base",
+   "file": "yokai_009_karakasa_obake_base.png",
+   "name_ja": "唐傘お化け（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_009_karakasa_obake",
+   "variant": "gold",
+   "file": "yokai_009_karakasa_obake_gold.png",
+   "name_ja": "唐傘お化け（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_009_karakasa_obake",
+   "variant": "taisho",
+   "file": "yokai_009_karakasa_obake_taisho.png",
+   "name_ja": "唐傘お化け（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_010_chochin_obake",
+   "variant": "base",
+   "file": "yokai_010_chochin_obake_base.png",
+   "name_ja": "提灯お化け（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_010_chochin_obake",
+   "variant": "gold",
+   "file": "yokai_010_chochin_obake_gold.png",
+   "name_ja": "提灯お化け（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_010_chochin_obake",
+   "variant": "taisho",
+   "file": "yokai_010_chochin_obake_taisho.png",
+   "name_ja": "提灯お化け（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_011_hitotsume_kozo",
+   "variant": "base",
+   "file": "yokai_011_hitotsume_kozo_base.png",
+   "name_ja": "一つ目小僧（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_011_hitotsume_kozo",
+   "variant": "gold",
+   "file": "yokai_011_hitotsume_kozo_gold.png",
+   "name_ja": "一つ目小僧（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_011_hitotsume_kozo",
+   "variant": "taisho",
+   "file": "yokai_011_hitotsume_kozo_taisho.png",
+   "name_ja": "一つ目小僧（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_012_aka_oni",
+   "variant": "base",
+   "file": "yokai_012_aka_oni_base.png",
+   "name_ja": "赤鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_012_aka_oni",
+   "variant": "gold",
+   "file": "yokai_012_aka_oni_gold.png",
+   "name_ja": "赤鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_012_aka_oni",
+   "variant": "taisho",
+   "file": "yokai_012_aka_oni_taisho.png",
+   "name_ja": "赤鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_013_ao_oni",
+   "variant": "base",
+   "file": "yokai_013_ao_oni_base.png",
+   "name_ja": "青鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_013_ao_oni",
+   "variant": "gold",
+   "file": "yokai_013_ao_oni_gold.png",
+   "name_ja": "青鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_013_ao_oni",
+   "variant": "taisho",
+   "file": "yokai_013_ao_oni_taisho.png",
+   "name_ja": "青鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_014_yuki_onna",
+   "variant": "base",
+   "file": "yokai_014_yuki_onna_base.png",
+   "name_ja": "雪女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_014_yuki_onna",
+   "variant": "gold",
+   "file": "yokai_014_yuki_onna_gold.png",
+   "name_ja": "雪女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_014_yuki_onna",
+   "variant": "taisho",
+   "file": "yokai_014_yuki_onna_taisho.png",
+   "name_ja": "雪女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_015_kamaitachi",
+   "variant": "base",
+   "file": "yokai_015_kamaitachi_base.png",
+   "name_ja": "鎌鼬（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_015_kamaitachi",
+   "variant": "gold",
+   "file": "yokai_015_kamaitachi_gold.png",
+   "name_ja": "鎌鼬（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_015_kamaitachi",
+   "variant": "taisho",
+   "file": "yokai_015_kamaitachi_taisho.png",
+   "name_ja": "鎌鼬（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_016_nurikabe",
+   "variant": "base",
+   "file": "yokai_016_nurikabe_base.png",
+   "name_ja": "塗壁（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_016_nurikabe",
+   "variant": "gold",
+   "file": "yokai_016_nurikabe_gold.png",
+   "name_ja": "塗壁（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_016_nurikabe",
+   "variant": "taisho",
+   "file": "yokai_016_nurikabe_taisho.png",
+   "name_ja": "塗壁（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_017_ittan_momen",
+   "variant": "base",
+   "file": "yokai_017_ittan_momen_base.png",
+   "name_ja": "一反木綿（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_017_ittan_momen",
+   "variant": "gold",
+   "file": "yokai_017_ittan_momen_gold.png",
+   "name_ja": "一反木綿（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_017_ittan_momen",
+   "variant": "taisho",
+   "file": "yokai_017_ittan_momen_taisho.png",
+   "name_ja": "一反木綿（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_018_azukiarai",
+   "variant": "base",
+   "file": "yokai_018_azukiarai_base.png",
+   "name_ja": "小豆洗い（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_018_azukiarai",
+   "variant": "gold",
+   "file": "yokai_018_azukiarai_gold.png",
+   "name_ja": "小豆洗い（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_018_azukiarai",
+   "variant": "taisho",
+   "file": "yokai_018_azukiarai_taisho.png",
+   "name_ja": "小豆洗い（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_019_jorogumo",
+   "variant": "base",
+   "file": "yokai_019_jorogumo_base.png",
+   "name_ja": "絡新婦（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_019_jorogumo",
+   "variant": "gold",
+   "file": "yokai_019_jorogumo_gold.png",
+   "name_ja": "絡新婦（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_019_jorogumo",
+   "variant": "taisho",
+   "file": "yokai_019_jorogumo_taisho.png",
+   "name_ja": "絡新婦（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_020_yamauba",
+   "variant": "base",
+   "file": "yokai_020_yamauba_base.png",
+   "name_ja": "山姥（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_020_yamauba",
+   "variant": "gold",
+   "file": "yokai_020_yamauba_gold.png",
+   "name_ja": "山姥（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_020_yamauba",
+   "variant": "taisho",
+   "file": "yokai_020_yamauba_taisho.png",
+   "name_ja": "山姥（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_021_tsurube_otoshi",
+   "variant": "base",
+   "file": "yokai_021_tsurube_otoshi_base.png",
+   "name_ja": "釣瓶落とし（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_021_tsurube_otoshi",
+   "variant": "gold",
+   "file": "yokai_021_tsurube_otoshi_gold.png",
+   "name_ja": "釣瓶落とし（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_021_tsurube_otoshi",
+   "variant": "taisho",
+   "file": "yokai_021_tsurube_otoshi_taisho.png",
+   "name_ja": "釣瓶落とし（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_022_kodama",
+   "variant": "base",
+   "file": "yokai_022_kodama_base.png",
+   "name_ja": "木霊（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_022_kodama",
+   "variant": "gold",
+   "file": "yokai_022_kodama_gold.png",
+   "name_ja": "木霊（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_022_kodama",
+   "variant": "taisho",
+   "file": "yokai_022_kodama_taisho.png",
+   "name_ja": "木霊（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_023_hyosube",
+   "variant": "base",
+   "file": "yokai_023_hyosube_base.png",
+   "name_ja": "ひょうすべ（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_023_hyosube",
+   "variant": "gold",
+   "file": "yokai_023_hyosube_gold.png",
+   "name_ja": "ひょうすべ（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_023_hyosube",
+   "variant": "taisho",
+   "file": "yokai_023_hyosube_taisho.png",
+   "name_ja": "ひょうすべ（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_024_kawauso",
+   "variant": "base",
+   "file": "yokai_024_kawauso_base.png",
+   "name_ja": "川獺（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_024_kawauso",
+   "variant": "gold",
+   "file": "yokai_024_kawauso_gold.png",
+   "name_ja": "川獺（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_024_kawauso",
+   "variant": "taisho",
+   "file": "yokai_024_kawauso_taisho.png",
+   "name_ja": "川獺（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_025_mikoshi_nyudo",
+   "variant": "base",
+   "file": "yokai_025_mikoshi_nyudo_base.png",
+   "name_ja": "見越し入道（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_025_mikoshi_nyudo",
+   "variant": "gold",
+   "file": "yokai_025_mikoshi_nyudo_gold.png",
+   "name_ja": "見越し入道（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_025_mikoshi_nyudo",
+   "variant": "taisho",
+   "file": "yokai_025_mikoshi_nyudo_taisho.png",
+   "name_ja": "見越し入道（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_026_ohaguro_bettari",
+   "variant": "base",
+   "file": "yokai_026_ohaguro_bettari_base.png",
+   "name_ja": "お歯黒べったり（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_026_ohaguro_bettari",
+   "variant": "gold",
+   "file": "yokai_026_ohaguro_bettari_gold.png",
+   "name_ja": "お歯黒べったり（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_026_ohaguro_bettari",
+   "variant": "taisho",
+   "file": "yokai_026_ohaguro_bettari_taisho.png",
+   "name_ja": "お歯黒べったり（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_027_futakuchi_onna",
+   "variant": "base",
+   "file": "yokai_027_futakuchi_onna_base.png",
+   "name_ja": "二口女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_027_futakuchi_onna",
+   "variant": "gold",
+   "file": "yokai_027_futakuchi_onna_gold.png",
+   "name_ja": "二口女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_027_futakuchi_onna",
+   "variant": "taisho",
+   "file": "yokai_027_futakuchi_onna_taisho.png",
+   "name_ja": "二口女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_028_hone_onna",
+   "variant": "base",
+   "file": "yokai_028_hone_onna_base.png",
+   "name_ja": "骨女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_028_hone_onna",
+   "variant": "gold",
+   "file": "yokai_028_hone_onna_gold.png",
+   "name_ja": "骨女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_028_hone_onna",
+   "variant": "taisho",
+   "file": "yokai_028_hone_onna_taisho.png",
+   "name_ja": "骨女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_029_kerakera_onna",
+   "variant": "base",
+   "file": "yokai_029_kerakera_onna_base.png",
+   "name_ja": "倩兮女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_029_kerakera_onna",
+   "variant": "gold",
+   "file": "yokai_029_kerakera_onna_gold.png",
+   "name_ja": "倩兮女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_029_kerakera_onna",
+   "variant": "taisho",
+   "file": "yokai_029_kerakera_onna_taisho.png",
+   "name_ja": "倩兮女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_030_waira",
+   "variant": "base",
+   "file": "yokai_030_waira_base.png",
+   "name_ja": "わいら（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_030_waira",
+   "variant": "gold",
+   "file": "yokai_030_waira_gold.png",
+   "name_ja": "わいら（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_030_waira",
+   "variant": "taisho",
+   "file": "yokai_030_waira_taisho.png",
+   "name_ja": "わいら（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_031_akaname",
+   "variant": "base",
+   "file": "yokai_031_akaname_base.png",
+   "name_ja": "垢嘗（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_031_akaname",
+   "variant": "gold",
+   "file": "yokai_031_akaname_gold.png",
+   "name_ja": "垢嘗（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_031_akaname",
+   "variant": "taisho",
+   "file": "yokai_031_akaname_taisho.png",
+   "name_ja": "垢嘗（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_032_tenjoname",
+   "variant": "base",
+   "file": "yokai_032_tenjoname_base.png",
+   "name_ja": "天井嘗（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_032_tenjoname",
+   "variant": "gold",
+   "file": "yokai_032_tenjoname_gold.png",
+   "name_ja": "天井嘗（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_032_tenjoname",
+   "variant": "taisho",
+   "file": "yokai_032_tenjoname_taisho.png",
+   "name_ja": "天井嘗（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_033_makuragaeshi",
+   "variant": "base",
+   "file": "yokai_033_makuragaeshi_base.png",
+   "name_ja": "枕返し（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_033_makuragaeshi",
+   "variant": "gold",
+   "file": "yokai_033_makuragaeshi_gold.png",
+   "name_ja": "枕返し（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_033_makuragaeshi",
+   "variant": "taisho",
+   "file": "yokai_033_makuragaeshi_taisho.png",
+   "name_ja": "枕返し（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_034_baku",
+   "variant": "base",
+   "file": "yokai_034_baku_base.png",
+   "name_ja": "獏（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_034_baku",
+   "variant": "gold",
+   "file": "yokai_034_baku_gold.png",
+   "name_ja": "獏（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_034_baku",
+   "variant": "taisho",
+   "file": "yokai_034_baku_taisho.png",
+   "name_ja": "獏（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_035_raiju",
+   "variant": "base",
+   "file": "yokai_035_raiju_base.png",
+   "name_ja": "雷獣（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_035_raiju",
+   "variant": "gold",
+   "file": "yokai_035_raiju_gold.png",
+   "name_ja": "雷獣（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_035_raiju",
+   "variant": "taisho",
+   "file": "yokai_035_raiju_taisho.png",
+   "name_ja": "雷獣（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_036_kudan",
+   "variant": "base",
+   "file": "yokai_036_kudan_base.png",
+   "name_ja": "件（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_036_kudan",
+   "variant": "gold",
+   "file": "yokai_036_kudan_gold.png",
+   "name_ja": "件（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_036_kudan",
+   "variant": "taisho",
+   "file": "yokai_036_kudan_taisho.png",
+   "name_ja": "件（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_037_amabie",
+   "variant": "base",
+   "file": "yokai_037_amabie_base.png",
+   "name_ja": "アマビエ（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_037_amabie",
+   "variant": "gold",
+   "file": "yokai_037_amabie_gold.png",
+   "name_ja": "アマビエ（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_037_amabie",
+   "variant": "taisho",
+   "file": "yokai_037_amabie_taisho.png",
+   "name_ja": "アマビエ（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_038_ningyo",
+   "variant": "base",
+   "file": "yokai_038_ningyo_base.png",
+   "name_ja": "人魚（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_038_ningyo",
+   "variant": "gold",
+   "file": "yokai_038_ningyo_gold.png",
+   "name_ja": "人魚（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_038_ningyo",
+   "variant": "taisho",
+   "file": "yokai_038_ningyo_taisho.png",
+   "name_ja": "人魚（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_039_isonade",
+   "variant": "base",
+   "file": "yokai_039_isonade_base.png",
+   "name_ja": "磯撫で（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_039_isonade",
+   "variant": "gold",
+   "file": "yokai_039_isonade_gold.png",
+   "name_ja": "磯撫で（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_039_isonade",
+   "variant": "taisho",
+   "file": "yokai_039_isonade_taisho.png",
+   "name_ja": "磯撫で（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_040_funayurei",
+   "variant": "base",
+   "file": "yokai_040_funayurei_base.png",
+   "name_ja": "船幽霊（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_040_funayurei",
+   "variant": "gold",
+   "file": "yokai_040_funayurei_gold.png",
+   "name_ja": "船幽霊（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_040_funayurei",
+   "variant": "taisho",
+   "file": "yokai_040_funayurei_taisho.png",
+   "name_ja": "船幽霊（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_041_bake_kujira",
+   "variant": "base",
+   "file": "yokai_041_bake_kujira_base.png",
+   "name_ja": "化け鯨（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_041_bake_kujira",
+   "variant": "gold",
+   "file": "yokai_041_bake_kujira_gold.png",
+   "name_ja": "化け鯨（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_041_bake_kujira",
+   "variant": "taisho",
+   "file": "yokai_041_bake_kujira_taisho.png",
+   "name_ja": "化け鯨（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_042_onibi",
+   "variant": "base",
+   "file": "yokai_042_onibi_base.png",
+   "name_ja": "鬼火（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_042_onibi",
+   "variant": "gold",
+   "file": "yokai_042_onibi_gold.png",
+   "name_ja": "鬼火（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_042_onibi",
+   "variant": "taisho",
+   "file": "yokai_042_onibi_taisho.png",
+   "name_ja": "鬼火（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_043_wanyudo",
+   "variant": "base",
+   "file": "yokai_043_wanyudo_base.png",
+   "name_ja": "輪入道（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_043_wanyudo",
+   "variant": "gold",
+   "file": "yokai_043_wanyudo_gold.png",
+   "name_ja": "輪入道（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_043_wanyudo",
+   "variant": "taisho",
+   "file": "yokai_043_wanyudo_taisho.png",
+   "name_ja": "輪入道（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_044_katawaguruma",
+   "variant": "base",
+   "file": "yokai_044_katawaguruma_base.png",
+   "name_ja": "片輪車（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_044_katawaguruma",
+   "variant": "gold",
+   "file": "yokai_044_katawaguruma_gold.png",
+   "name_ja": "片輪車（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_044_katawaguruma",
+   "variant": "taisho",
+   "file": "yokai_044_katawaguruma_taisho.png",
+   "name_ja": "片輪車（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_045_oboroguruma",
+   "variant": "base",
+   "file": "yokai_045_oboroguruma_base.png",
+   "name_ja": "朧車（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_045_oboroguruma",
+   "variant": "gold",
+   "file": "yokai_045_oboroguruma_gold.png",
+   "name_ja": "朧車（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_045_oboroguruma",
+   "variant": "taisho",
+   "file": "yokai_045_oboroguruma_taisho.png",
+   "name_ja": "朧車（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_046_biwa_bokuboku",
+   "variant": "base",
+   "file": "yokai_046_biwa_bokuboku_base.png",
+   "name_ja": "琵琶牧々（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_046_biwa_bokuboku",
+   "variant": "gold",
+   "file": "yokai_046_biwa_bokuboku_gold.png",
+   "name_ja": "琵琶牧々（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_046_biwa_bokuboku",
+   "variant": "taisho",
+   "file": "yokai_046_biwa_bokuboku_taisho.png",
+   "name_ja": "琵琶牧々（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_047_koto_furunushi",
+   "variant": "base",
+   "file": "yokai_047_koto_furunushi_base.png",
+   "name_ja": "琴古主（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_047_koto_furunushi",
+   "variant": "gold",
+   "file": "yokai_047_koto_furunushi_gold.png",
+   "name_ja": "琴古主（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_047_koto_furunushi",
+   "variant": "taisho",
+   "file": "yokai_047_koto_furunushi_taisho.png",
+   "name_ja": "琴古主（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_048_bakezori",
+   "variant": "base",
+   "file": "yokai_048_bakezori_base.png",
+   "name_ja": "化け草履（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_048_bakezori",
+   "variant": "gold",
+   "file": "yokai_048_bakezori_gold.png",
+   "name_ja": "化け草履（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_048_bakezori",
+   "variant": "taisho",
+   "file": "yokai_048_bakezori_taisho.png",
+   "name_ja": "化け草履（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_049_kameosa",
+   "variant": "base",
+   "file": "yokai_049_kameosa_base.png",
+   "name_ja": "瓶長（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_049_kameosa",
+   "variant": "gold",
+   "file": "yokai_049_kameosa_gold.png",
+   "name_ja": "瓶長（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_049_kameosa",
+   "variant": "taisho",
+   "file": "yokai_049_kameosa_taisho.png",
+   "name_ja": "瓶長（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_050_ungaikyo",
+   "variant": "base",
+   "file": "yokai_050_ungaikyo_base.png",
+   "name_ja": "雲外鏡（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_050_ungaikyo",
+   "variant": "gold",
+   "file": "yokai_050_ungaikyo_gold.png",
+   "name_ja": "雲外鏡（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_050_ungaikyo",
+   "variant": "taisho",
+   "file": "yokai_050_ungaikyo_taisho.png",
+   "name_ja": "雲外鏡（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_051_menreiki",
+   "variant": "base",
+   "file": "yokai_051_menreiki_base.png",
+   "name_ja": "面霊気（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_051_menreiki",
+   "variant": "gold",
+   "file": "yokai_051_menreiki_gold.png",
+   "name_ja": "面霊気（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_051_menreiki",
+   "variant": "taisho",
+   "file": "yokai_051_menreiki_taisho.png",
+   "name_ja": "面霊気（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_052_abura_sumashi",
+   "variant": "base",
+   "file": "yokai_052_abura_sumashi_base.png",
+   "name_ja": "油すまし（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_052_abura_sumashi",
+   "variant": "gold",
+   "file": "yokai_052_abura_sumashi_gold.png",
+   "name_ja": "油すまし（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_052_abura_sumashi",
+   "variant": "taisho",
+   "file": "yokai_052_abura_sumashi_taisho.png",
+   "name_ja": "油すまし（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_053_nurarihyon",
+   "variant": "base",
+   "file": "yokai_053_nurarihyon_base.png",
+   "name_ja": "ぬらりひょん（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_053_nurarihyon",
+   "variant": "gold",
+   "file": "yokai_053_nurarihyon_gold.png",
+   "name_ja": "ぬらりひょん（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_053_nurarihyon",
+   "variant": "taisho",
+   "file": "yokai_053_nurarihyon_taisho.png",
+   "name_ja": "ぬらりひょん（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_054_nuppeppo",
+   "variant": "base",
+   "file": "yokai_054_nuppeppo_base.png",
+   "name_ja": "ぬっぺっぽう（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_054_nuppeppo",
+   "variant": "gold",
+   "file": "yokai_054_nuppeppo_gold.png",
+   "name_ja": "ぬっぺっぽう（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_054_nuppeppo",
+   "variant": "taisho",
+   "file": "yokai_054_nuppeppo_taisho.png",
+   "name_ja": "ぬっぺっぽう（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_055_sazae_oni",
+   "variant": "base",
+   "file": "yokai_055_sazae_oni_base.png",
+   "name_ja": "栄螺鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_055_sazae_oni",
+   "variant": "gold",
+   "file": "yokai_055_sazae_oni_gold.png",
+   "name_ja": "栄螺鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_055_sazae_oni",
+   "variant": "taisho",
+   "file": "yokai_055_sazae_oni_taisho.png",
+   "name_ja": "栄螺鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_056_dorotabo",
+   "variant": "base",
+   "file": "yokai_056_dorotabo_base.png",
+   "name_ja": "泥田坊（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_056_dorotabo",
+   "variant": "gold",
+   "file": "yokai_056_dorotabo_gold.png",
+   "name_ja": "泥田坊（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_056_dorotabo",
+   "variant": "taisho",
+   "file": "yokai_056_dorotabo_taisho.png",
+   "name_ja": "泥田坊（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_057_keukegen",
+   "variant": "base",
+   "file": "yokai_057_keukegen_base.png",
+   "name_ja": "毛羽毛現（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_057_keukegen",
+   "variant": "gold",
+   "file": "yokai_057_keukegen_gold.png",
+   "name_ja": "毛羽毛現（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_057_keukegen",
+   "variant": "taisho",
+   "file": "yokai_057_keukegen_taisho.png",
+   "name_ja": "毛羽毛現（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_058_yanari",
+   "variant": "base",
+   "file": "yokai_058_yanari_base.png",
+   "name_ja": "鳴家（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_058_yanari",
+   "variant": "gold",
+   "file": "yokai_058_yanari_gold.png",
+   "name_ja": "鳴家（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_058_yanari",
+   "variant": "taisho",
+   "file": "yokai_058_yanari_taisho.png",
+   "name_ja": "鳴家（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_059_sagari",
+   "variant": "base",
+   "file": "yokai_059_sagari_base.png",
+   "name_ja": "下がり（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_059_sagari",
+   "variant": "gold",
+   "file": "yokai_059_sagari_gold.png",
+   "name_ja": "下がり（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_059_sagari",
+   "variant": "taisho",
+   "file": "yokai_059_sagari_taisho.png",
+   "name_ja": "下がり（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_060_basan",
+   "variant": "base",
+   "file": "yokai_060_basan_base.png",
+   "name_ja": "波山（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_060_basan",
+   "variant": "gold",
+   "file": "yokai_060_basan_gold.png",
+   "name_ja": "波山（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_060_basan",
+   "variant": "taisho",
+   "file": "yokai_060_basan_taisho.png",
+   "name_ja": "波山（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_061_tsuchinoko",
+   "variant": "base",
+   "file": "yokai_061_tsuchinoko_base.png",
+   "name_ja": "槌の子（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_061_tsuchinoko",
+   "variant": "gold",
+   "file": "yokai_061_tsuchinoko_gold.png",
+   "name_ja": "槌の子（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_061_tsuchinoko",
+   "variant": "taisho",
+   "file": "yokai_061_tsuchinoko_taisho.png",
+   "name_ja": "槌の子（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_062_konoha_tengu",
+   "variant": "base",
+   "file": "yokai_062_konoha_tengu_base.png",
+   "name_ja": "木の葉天狗（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_062_konoha_tengu",
+   "variant": "gold",
+   "file": "yokai_062_konoha_tengu_gold.png",
+   "name_ja": "木の葉天狗（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_062_konoha_tengu",
+   "variant": "taisho",
+   "file": "yokai_062_konoha_tengu_taisho.png",
+   "name_ja": "木の葉天狗（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_063_yamabiko",
+   "variant": "base",
+   "file": "yokai_063_yamabiko_base.png",
+   "name_ja": "山彦（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_063_yamabiko",
+   "variant": "gold",
+   "file": "yokai_063_yamabiko_gold.png",
+   "name_ja": "山彦（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_063_yamabiko",
+   "variant": "taisho",
+   "file": "yokai_063_yamabiko_taisho.png",
+   "name_ja": "山彦（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_064_satori",
+   "variant": "base",
+   "file": "yokai_064_satori_base.png",
+   "name_ja": "覚（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_064_satori",
+   "variant": "gold",
+   "file": "yokai_064_satori_gold.png",
+   "name_ja": "覚（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_064_satori",
+   "variant": "taisho",
+   "file": "yokai_064_satori_taisho.png",
+   "name_ja": "覚（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_065_yamawaro",
+   "variant": "base",
+   "file": "yokai_065_yamawaro_base.png",
+   "name_ja": "山童（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_065_yamawaro",
+   "variant": "gold",
+   "file": "yokai_065_yamawaro_gold.png",
+   "name_ja": "山童（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_065_yamawaro",
+   "variant": "taisho",
+   "file": "yokai_065_yamawaro_taisho.png",
+   "name_ja": "山童（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_066_kijimuna",
+   "variant": "base",
+   "file": "yokai_066_kijimuna_base.png",
+   "name_ja": "キジムナー（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_066_kijimuna",
+   "variant": "gold",
+   "file": "yokai_066_kijimuna_gold.png",
+   "name_ja": "キジムナー（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_066_kijimuna",
+   "variant": "taisho",
+   "file": "yokai_066_kijimuna_taisho.png",
+   "name_ja": "キジムナー（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_067_inugami",
+   "variant": "base",
+   "file": "yokai_067_inugami_base.png",
+   "name_ja": "犬神（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_067_inugami",
+   "variant": "gold",
+   "file": "yokai_067_inugami_gold.png",
+   "name_ja": "犬神（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_067_inugami",
+   "variant": "taisho",
+   "file": "yokai_067_inugami_taisho.png",
+   "name_ja": "犬神（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_068_okuri_inu",
+   "variant": "base",
+   "file": "yokai_068_okuri_inu_base.png",
+   "name_ja": "送り犬（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_068_okuri_inu",
+   "variant": "gold",
+   "file": "yokai_068_okuri_inu_gold.png",
+   "name_ja": "送り犬（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_068_okuri_inu",
+   "variant": "taisho",
+   "file": "yokai_068_okuri_inu_taisho.png",
+   "name_ja": "送り犬（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_069_jinmenju",
+   "variant": "base",
+   "file": "yokai_069_jinmenju_base.png",
+   "name_ja": "人面樹（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_069_jinmenju",
+   "variant": "gold",
+   "file": "yokai_069_jinmenju_gold.png",
+   "name_ja": "人面樹（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_069_jinmenju",
+   "variant": "taisho",
+   "file": "yokai_069_jinmenju_taisho.png",
+   "name_ja": "人面樹（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_070_kosode_no_te",
+   "variant": "base",
+   "file": "yokai_070_kosode_no_te_base.png",
+   "name_ja": "小袖の手（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_070_kosode_no_te",
+   "variant": "gold",
+   "file": "yokai_070_kosode_no_te_gold.png",
+   "name_ja": "小袖の手（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_070_kosode_no_te",
+   "variant": "taisho",
+   "file": "yokai_070_kosode_no_te_taisho.png",
+   "name_ja": "小袖の手（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_071_hahakigami",
+   "variant": "base",
+   "file": "yokai_071_hahakigami_base.png",
+   "name_ja": "掃木神（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_071_hahakigami",
+   "variant": "gold",
+   "file": "yokai_071_hahakigami_gold.png",
+   "name_ja": "掃木神（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_071_hahakigami",
+   "variant": "taisho",
+   "file": "yokai_071_hahakigami_taisho.png",
+   "name_ja": "掃木神（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_072_mokumokuren",
+   "variant": "base",
+   "file": "yokai_072_mokumokuren_base.png",
+   "name_ja": "目目連（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_072_mokumokuren",
+   "variant": "gold",
+   "file": "yokai_072_mokumokuren_gold.png",
+   "name_ja": "目目連（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_072_mokumokuren",
+   "variant": "taisho",
+   "file": "yokai_072_mokumokuren_taisho.png",
+   "name_ja": "目目連（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_073_hyakume",
+   "variant": "base",
+   "file": "yokai_073_hyakume_base.png",
+   "name_ja": "百目（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_073_hyakume",
+   "variant": "gold",
+   "file": "yokai_073_hyakume_gold.png",
+   "name_ja": "百目（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_073_hyakume",
+   "variant": "taisho",
+   "file": "yokai_073_hyakume_taisho.png",
+   "name_ja": "百目（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_074_dodomeki",
+   "variant": "base",
+   "file": "yokai_074_dodomeki_base.png",
+   "name_ja": "百々目鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_074_dodomeki",
+   "variant": "gold",
+   "file": "yokai_074_dodomeki_gold.png",
+   "name_ja": "百々目鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_074_dodomeki",
+   "variant": "taisho",
+   "file": "yokai_074_dodomeki_taisho.png",
+   "name_ja": "百々目鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_075_tenome",
+   "variant": "base",
+   "file": "yokai_075_tenome_base.png",
+   "name_ja": "手の目（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_075_tenome",
+   "variant": "gold",
+   "file": "yokai_075_tenome_gold.png",
+   "name_ja": "手の目（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_075_tenome",
+   "variant": "taisho",
+   "file": "yokai_075_tenome_taisho.png",
+   "name_ja": "手の目（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_076_enenra",
+   "variant": "base",
+   "file": "yokai_076_enenra_base.png",
+   "name_ja": "煙々羅（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_076_enenra",
+   "variant": "gold",
+   "file": "yokai_076_enenra_gold.png",
+   "name_ja": "煙々羅（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_076_enenra",
+   "variant": "taisho",
+   "file": "yokai_076_enenra_taisho.png",
+   "name_ja": "煙々羅（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_077_otoroshi",
+   "variant": "base",
+   "file": "yokai_077_otoroshi_base.png",
+   "name_ja": "おとろし（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_077_otoroshi",
+   "variant": "gold",
+   "file": "yokai_077_otoroshi_gold.png",
+   "name_ja": "おとろし（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_077_otoroshi",
+   "variant": "taisho",
+   "file": "yokai_077_otoroshi_taisho.png",
+   "name_ja": "おとろし（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_078_nure_onna",
+   "variant": "base",
+   "file": "yokai_078_nure_onna_base.png",
+   "name_ja": "濡女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_078_nure_onna",
+   "variant": "gold",
+   "file": "yokai_078_nure_onna_gold.png",
+   "name_ja": "濡女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_078_nure_onna",
+   "variant": "taisho",
+   "file": "yokai_078_nure_onna_taisho.png",
+   "name_ja": "濡女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_079_iso_onna",
+   "variant": "base",
+   "file": "yokai_079_iso_onna_base.png",
+   "name_ja": "磯女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_079_iso_onna",
+   "variant": "gold",
+   "file": "yokai_079_iso_onna_gold.png",
+   "name_ja": "磯女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_079_iso_onna",
+   "variant": "taisho",
+   "file": "yokai_079_iso_onna_taisho.png",
+   "name_ja": "磯女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_080_hashihime",
+   "variant": "base",
+   "file": "yokai_080_hashihime_base.png",
+   "name_ja": "橋姫（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_080_hashihime",
+   "variant": "gold",
+   "file": "yokai_080_hashihime_gold.png",
+   "name_ja": "橋姫（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_080_hashihime",
+   "variant": "taisho",
+   "file": "yokai_080_hashihime_taisho.png",
+   "name_ja": "橋姫（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_081_kiyohime",
+   "variant": "base",
+   "file": "yokai_081_kiyohime_base.png",
+   "name_ja": "清姫（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_081_kiyohime",
+   "variant": "gold",
+   "file": "yokai_081_kiyohime_gold.png",
+   "name_ja": "清姫（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_081_kiyohime",
+   "variant": "taisho",
+   "file": "yokai_081_kiyohime_taisho.png",
+   "name_ja": "清姫（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_082_kyokotsu",
+   "variant": "base",
+   "file": "yokai_082_kyokotsu_base.png",
+   "name_ja": "狂骨（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_082_kyokotsu",
+   "variant": "gold",
+   "file": "yokai_082_kyokotsu_gold.png",
+   "name_ja": "狂骨（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_082_kyokotsu",
+   "variant": "taisho",
+   "file": "yokai_082_kyokotsu_taisho.png",
+   "name_ja": "狂骨（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_083_gaki",
+   "variant": "base",
+   "file": "yokai_083_gaki_base.png",
+   "name_ja": "餓鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_083_gaki",
+   "variant": "gold",
+   "file": "yokai_083_gaki_gold.png",
+   "name_ja": "餓鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_083_gaki",
+   "variant": "taisho",
+   "file": "yokai_083_gaki_taisho.png",
+   "name_ja": "餓鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_084_tsuchikorobi",
+   "variant": "base",
+   "file": "yokai_084_tsuchikorobi_base.png",
+   "name_ja": "土転び（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_084_tsuchikorobi",
+   "variant": "gold",
+   "file": "yokai_084_tsuchikorobi_gold.png",
+   "name_ja": "土転び（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_084_tsuchikorobi",
+   "variant": "taisho",
+   "file": "yokai_084_tsuchikorobi_taisho.png",
+   "name_ja": "土転び（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_085_nobusuma",
+   "variant": "base",
+   "file": "yokai_085_nobusuma_base.png",
+   "name_ja": "野襖（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_085_nobusuma",
+   "variant": "gold",
+   "file": "yokai_085_nobusuma_gold.png",
+   "name_ja": "野襖（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_085_nobusuma",
+   "variant": "taisho",
+   "file": "yokai_085_nobusuma_taisho.png",
+   "name_ja": "野襖（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_086_mujina",
+   "variant": "base",
+   "file": "yokai_086_mujina_base.png",
+   "name_ja": "貉（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_086_mujina",
+   "variant": "gold",
+   "file": "yokai_086_mujina_gold.png",
+   "name_ja": "貉（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_086_mujina",
+   "variant": "taisho",
+   "file": "yokai_086_mujina_taisho.png",
+   "name_ja": "貉（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_087_kamikiri",
+   "variant": "base",
+   "file": "yokai_087_kamikiri_base.png",
+   "name_ja": "髪切り（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_087_kamikiri",
+   "variant": "gold",
+   "file": "yokai_087_kamikiri_gold.png",
+   "name_ja": "髪切り（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_087_kamikiri",
+   "variant": "taisho",
+   "file": "yokai_087_kamikiri_taisho.png",
+   "name_ja": "髪切り（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_088_shojo",
+   "variant": "base",
+   "file": "yokai_088_shojo_base.png",
+   "name_ja": "猩々（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_088_shojo",
+   "variant": "gold",
+   "file": "yokai_088_shojo_gold.png",
+   "name_ja": "猩々（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_088_shojo",
+   "variant": "taisho",
+   "file": "yokai_088_shojo_taisho.png",
+   "name_ja": "猩々（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_089_hiderigami",
+   "variant": "base",
+   "file": "yokai_089_hiderigami_base.png",
+   "name_ja": "魃（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_089_hiderigami",
+   "variant": "gold",
+   "file": "yokai_089_hiderigami_gold.png",
+   "name_ja": "魃（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_089_hiderigami",
+   "variant": "taisho",
+   "file": "yokai_089_hiderigami_taisho.png",
+   "name_ja": "魃（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_090_umi_zato",
+   "variant": "base",
+   "file": "yokai_090_umi_zato_base.png",
+   "name_ja": "海座頭（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_090_umi_zato",
+   "variant": "gold",
+   "file": "yokai_090_umi_zato_gold.png",
+   "name_ja": "海座頭（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_090_umi_zato",
+   "variant": "taisho",
+   "file": "yokai_090_umi_zato_taisho.png",
+   "name_ja": "海座頭（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_091_aosagibi",
+   "variant": "base",
+   "file": "yokai_091_aosagibi_base.png",
+   "name_ja": "青鷺火（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_091_aosagibi",
+   "variant": "gold",
+   "file": "yokai_091_aosagibi_gold.png",
+   "name_ja": "青鷺火（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_091_aosagibi",
+   "variant": "taisho",
+   "file": "yokai_091_aosagibi_taisho.png",
+   "name_ja": "青鷺火（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_092_kasha",
+   "variant": "base",
+   "file": "yokai_092_kasha_base.png",
+   "name_ja": "火車（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_092_kasha",
+   "variant": "gold",
+   "file": "yokai_092_kasha_gold.png",
+   "name_ja": "火車（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_092_kasha",
+   "variant": "taisho",
+   "file": "yokai_092_kasha_taisho.png",
+   "name_ja": "火車（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_093_tofu_kozo",
+   "variant": "base",
+   "file": "yokai_093_tofu_kozo_base.png",
+   "name_ja": "豆腐小僧（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_093_tofu_kozo",
+   "variant": "gold",
+   "file": "yokai_093_tofu_kozo_gold.png",
+   "name_ja": "豆腐小僧（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_093_tofu_kozo",
+   "variant": "taisho",
+   "file": "yokai_093_tofu_kozo_taisho.png",
+   "name_ja": "豆腐小僧（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_094_mizuchi",
+   "variant": "base",
+   "file": "yokai_094_mizuchi_base.png",
+   "name_ja": "蛟（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_094_mizuchi",
+   "variant": "gold",
+   "file": "yokai_094_mizuchi_gold.png",
+   "name_ja": "蛟（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_094_mizuchi",
+   "variant": "taisho",
+   "file": "yokai_094_mizuchi_taisho.png",
+   "name_ja": "蛟（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_095_tenaga_ashinaga",
+   "variant": "base",
+   "file": "yokai_095_tenaga_ashinaga_base.png",
+   "name_ja": "手長足長（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_095_tenaga_ashinaga",
+   "variant": "gold",
+   "file": "yokai_095_tenaga_ashinaga_gold.png",
+   "name_ja": "手長足長（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_095_tenaga_ashinaga",
+   "variant": "taisho",
+   "file": "yokai_095_tenaga_ashinaga_taisho.png",
+   "name_ja": "手長足長（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_096_hoko",
+   "variant": "base",
+   "file": "yokai_096_hoko_base.png",
+   "name_ja": "彭侯（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_096_hoko",
+   "variant": "gold",
+   "file": "yokai_096_hoko_gold.png",
+   "name_ja": "彭侯（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_096_hoko",
+   "variant": "taisho",
+   "file": "yokai_096_hoko_taisho.png",
+   "name_ja": "彭侯（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_097_amanojaku",
+   "variant": "base",
+   "file": "yokai_097_amanojaku_base.png",
+   "name_ja": "天邪鬼（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_097_amanojaku",
+   "variant": "gold",
+   "file": "yokai_097_amanojaku_gold.png",
+   "name_ja": "天邪鬼（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_097_amanojaku",
+   "variant": "taisho",
+   "file": "yokai_097_amanojaku_taisho.png",
+   "name_ja": "天邪鬼（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_098_hari_onago",
+   "variant": "base",
+   "file": "yokai_098_hari_onago_base.png",
+   "name_ja": "針女（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_098_hari_onago",
+   "variant": "gold",
+   "file": "yokai_098_hari_onago_gold.png",
+   "name_ja": "針女（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_098_hari_onago",
+   "variant": "taisho",
+   "file": "yokai_098_hari_onago_taisho.png",
+   "name_ja": "針女（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_099_yosuzume",
+   "variant": "base",
+   "file": "yokai_099_yosuzume_base.png",
+   "name_ja": "夜雀（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_099_yosuzume",
+   "variant": "gold",
+   "file": "yokai_099_yosuzume_gold.png",
+   "name_ja": "夜雀（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_099_yosuzume",
+   "variant": "taisho",
+   "file": "yokai_099_yosuzume_taisho.png",
+   "name_ja": "夜雀（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_100_uwan",
+   "variant": "base",
+   "file": "yokai_100_uwan_base.png",
+   "name_ja": "うわん（通常）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_100_uwan",
+   "variant": "gold",
+   "file": "yokai_100_uwan_gold.png",
+   "name_ja": "うわん（金色）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "yokai",
+   "id": "yokai_100_uwan",
+   "variant": "taisho",
+   "file": "yokai_100_uwan_taisho.png",
+   "name_ja": "うわん（大将）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "boss",
+   "id": "boss_01_shuten_doji",
+   "variant": "",
+   "file": "boss_01_shuten_doji.png",
+   "name_ja": "酒呑童子",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_02_ibaraki_doji",
+   "variant": "",
+   "file": "boss_02_ibaraki_doji.png",
+   "name_ja": "茨木童子",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_03_tamamo_no_mae",
+   "variant": "",
+   "file": "boss_03_tamamo_no_mae.png",
+   "name_ja": "玉藻前",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_04_otakemaru",
+   "variant": "",
+   "file": "boss_04_otakemaru.png",
+   "name_ja": "大嶽丸",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_05_yamata_no_orochi",
+   "variant": "",
+   "file": "boss_05_yamata_no_orochi.png",
+   "name_ja": "八岐大蛇",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_06_nue",
+   "variant": "",
+   "file": "boss_06_nue.png",
+   "name_ja": "鵺",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_07_tsuchigumo",
+   "variant": "",
+   "file": "boss_07_tsuchigumo.png",
+   "name_ja": "土蜘蛛",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_08_gashadokuro",
+   "variant": "",
+   "file": "boss_08_gashadokuro.png",
+   "name_ja": "がしゃどくろ",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_09_ushi_oni",
+   "variant": "",
+   "file": "boss_09_ushi_oni.png",
+   "name_ja": "牛鬼",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_10_dai_tengu",
+   "variant": "",
+   "file": "boss_10_dai_tengu.png",
+   "name_ja": "大天狗",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_11_umibozu",
+   "variant": "",
+   "file": "boss_11_umibozu.png",
+   "name_ja": "海坊主",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "boss_12_omukade",
+   "variant": "",
+   "file": "boss_12_omukade.png",
+   "name_ja": "大百足",
+   "ratio": "9:16"
+  },
+  {
+   "section": "boss",
+   "id": "rare_01_zashiki_warashi",
+   "variant": "",
+   "file": "rare_01_zashiki_warashi.png",
+   "name_ja": "座敷童（当たり）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "mask",
+   "id": "mask_free_oni",
+   "variant": "",
+   "file": "mask_free_oni.png",
+   "name_ja": "鬼面（無料・師範と同じ面）",
+   "ratio": "1:1",
+   "ref": true
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_menpo",
+   "variant": "",
+   "file": "mask_shop_menpo.png",
+   "name_ja": "面頬（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_aka_oni",
+   "variant": "",
+   "file": "mask_shop_aka_oni.png",
+   "name_ja": "赤鬼（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_ao_oni",
+   "variant": "",
+   "file": "mask_shop_ao_oni.png",
+   "name_ja": "青鬼（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_shinobi_fukumen",
+   "variant": "",
+   "file": "mask_shop_shinobi_fukumen.png",
+   "name_ja": "忍の覆面（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_karasu_tengu",
+   "variant": "",
+   "file": "mask_shop_karasu_tengu.png",
+   "name_ja": "烏天狗（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_kitsune",
+   "variant": "",
+   "file": "mask_shop_kitsune.png",
+   "name_ja": "狐面（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_hannya",
+   "variant": "",
+   "file": "mask_shop_hannya.png",
+   "name_ja": "般若（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_tengu",
+   "variant": "",
+   "file": "mask_shop_tengu.png",
+   "name_ja": "天狗（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_koomote",
+   "variant": "",
+   "file": "mask_shop_koomote.png",
+   "name_ja": "小面（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_hyottoko",
+   "variant": "",
+   "file": "mask_shop_hyottoko.png",
+   "name_ja": "ひょっとこ（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_shop_okame",
+   "variant": "",
+   "file": "mask_shop_okame.png",
+   "name_ja": "おかめ（100円）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_award_gold_oni",
+   "variant": "",
+   "file": "mask_award_gold_oni.png",
+   "name_ja": "金の鬼面（初段に到達）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_award_kage",
+   "variant": "",
+   "file": "mask_award_kage.png",
+   "name_ja": "影の面（師範の影を初めて斬る）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_award_itadaki",
+   "variant": "",
+   "file": "mask_award_itadaki.png",
+   "name_ja": "頂の面（登頂で一定の階に到達）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_01_shuten_doji",
+   "variant": "",
+   "file": "mask_drop_boss_01_shuten_doji.png",
+   "name_ja": "酒呑童子の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_02_ibaraki_doji",
+   "variant": "",
+   "file": "mask_drop_boss_02_ibaraki_doji.png",
+   "name_ja": "茨木童子の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_03_tamamo_no_mae",
+   "variant": "",
+   "file": "mask_drop_boss_03_tamamo_no_mae.png",
+   "name_ja": "玉藻前の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_04_otakemaru",
+   "variant": "",
+   "file": "mask_drop_boss_04_otakemaru.png",
+   "name_ja": "大嶽丸の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_05_yamata_no_orochi",
+   "variant": "",
+   "file": "mask_drop_boss_05_yamata_no_orochi.png",
+   "name_ja": "八岐大蛇の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_06_nue",
+   "variant": "",
+   "file": "mask_drop_boss_06_nue.png",
+   "name_ja": "鵺の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_07_tsuchigumo",
+   "variant": "",
+   "file": "mask_drop_boss_07_tsuchigumo.png",
+   "name_ja": "土蜘蛛の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_08_gashadokuro",
+   "variant": "",
+   "file": "mask_drop_boss_08_gashadokuro.png",
+   "name_ja": "がしゃどくろの面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_09_ushi_oni",
+   "variant": "",
+   "file": "mask_drop_boss_09_ushi_oni.png",
+   "name_ja": "牛鬼の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_10_dai_tengu",
+   "variant": "",
+   "file": "mask_drop_boss_10_dai_tengu.png",
+   "name_ja": "大天狗の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_11_umibozu",
+   "variant": "",
+   "file": "mask_drop_boss_11_umibozu.png",
+   "name_ja": "海坊主の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_boss_12_omukade",
+   "variant": "",
+   "file": "mask_drop_boss_12_omukade.png",
+   "name_ja": "大百足の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "mask",
+   "id": "mask_drop_rare_01_zashiki_warashi",
+   "variant": "",
+   "file": "mask_drop_rare_01_zashiki_warashi.png",
+   "name_ja": "座敷童の面（ドロップ）",
+   "ratio": "1:1"
+  },
+  {
+   "section": "gear",
+   "id": "gear_hachigane_g1",
+   "variant": "g1",
+   "file": "gear_hachigane_g1.png",
+   "name_ja": "鉢金・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_hachigane_g2",
+   "variant": "g2",
+   "file": "gear_hachigane_g2.png",
+   "name_ja": "鉢金・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_hachigane_g3",
+   "variant": "g3",
+   "file": "gear_hachigane_g3.png",
+   "name_ja": "鉢金・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_hachigane_g4",
+   "variant": "g4",
+   "file": "gear_hachigane_g4.png",
+   "name_ja": "鉢金・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_hachigane_g5",
+   "variant": "g5",
+   "file": "gear_hachigane_g5.png",
+   "name_ja": "鉢金・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_kote_g1",
+   "variant": "g1",
+   "file": "gear_kote_g1.png",
+   "name_ja": "籠手・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_kote_g2",
+   "variant": "g2",
+   "file": "gear_kote_g2.png",
+   "name_ja": "籠手・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_kote_g3",
+   "variant": "g3",
+   "file": "gear_kote_g3.png",
+   "name_ja": "籠手・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_kote_g4",
+   "variant": "g4",
+   "file": "gear_kote_g4.png",
+   "name_ja": "籠手・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_kote_g5",
+   "variant": "g5",
+   "file": "gear_kote_g5.png",
+   "name_ja": "籠手・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_do_g1",
+   "variant": "g1",
+   "file": "gear_do_g1.png",
+   "name_ja": "胴・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_do_g2",
+   "variant": "g2",
+   "file": "gear_do_g2.png",
+   "name_ja": "胴・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_do_g3",
+   "variant": "g3",
+   "file": "gear_do_g3.png",
+   "name_ja": "胴・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_do_g4",
+   "variant": "g4",
+   "file": "gear_do_g4.png",
+   "name_ja": "胴・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_do_g5",
+   "variant": "g5",
+   "file": "gear_do_g5.png",
+   "name_ja": "胴・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_suneate_g1",
+   "variant": "g1",
+   "file": "gear_suneate_g1.png",
+   "name_ja": "脛当・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_suneate_g2",
+   "variant": "g2",
+   "file": "gear_suneate_g2.png",
+   "name_ja": "脛当・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_suneate_g3",
+   "variant": "g3",
+   "file": "gear_suneate_g3.png",
+   "name_ja": "脛当・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_suneate_g4",
+   "variant": "g4",
+   "file": "gear_suneate_g4.png",
+   "name_ja": "脛当・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_suneate_g5",
+   "variant": "g5",
+   "file": "gear_suneate_g5.png",
+   "name_ja": "脛当・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_tsuba_g1",
+   "variant": "g1",
+   "file": "gear_tsuba_g1.png",
+   "name_ja": "鍔・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_tsuba_g2",
+   "variant": "g2",
+   "file": "gear_tsuba_g2.png",
+   "name_ja": "鍔・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_tsuba_g3",
+   "variant": "g3",
+   "file": "gear_tsuba_g3.png",
+   "name_ja": "鍔・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_tsuba_g4",
+   "variant": "g4",
+   "file": "gear_tsuba_g4.png",
+   "name_ja": "鍔・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_tsuba_g5",
+   "variant": "g5",
+   "file": "gear_tsuba_g5.png",
+   "name_ja": "鍔・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_omamori_g1",
+   "variant": "g1",
+   "file": "gear_omamori_g1.png",
+   "name_ja": "御守・数打",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "gear",
+   "id": "gear_omamori_g2",
+   "variant": "g2",
+   "file": "gear_omamori_g2.png",
+   "name_ja": "御守・業物",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_omamori_g3",
+   "variant": "g3",
+   "file": "gear_omamori_g3.png",
+   "name_ja": "御守・良業物",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_omamori_g4",
+   "variant": "g4",
+   "file": "gear_omamori_g4.png",
+   "name_ja": "御守・大業物",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "gear",
+   "id": "gear_omamori_g5",
+   "variant": "g5",
+   "file": "gear_omamori_g5.png",
+   "name_ja": "御守・最上大業物",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_samurai_kamae",
+   "variant": "",
+   "file": "shadow_samurai_kamae.png",
+   "name_ja": "侍・中段の構え",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_samurai_kiri",
+   "variant": "",
+   "file": "shadow_samurai_kiri.png",
+   "name_ja": "侍・袈裟斬り",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_samurai_zanshin",
+   "variant": "",
+   "file": "shadow_samurai_zanshin.png",
+   "name_ja": "侍・残心",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_shinobi_kamae",
+   "variant": "",
+   "file": "shadow_shinobi_kamae.png",
+   "name_ja": "忍・逆手の構え",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_shinobi_kiri",
+   "variant": "",
+   "file": "shadow_shinobi_kiri.png",
+   "name_ja": "忍・斬撃",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_shinobi_zanshin",
+   "variant": "",
+   "file": "shadow_shinobi_zanshin.png",
+   "name_ja": "忍・残心",
+   "ratio": "9:16"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_jingasa",
+   "variant": "",
+   "file": "shadow_part_jingasa.png",
+   "name_ja": "重ね用の部品：陣笠",
+   "ratio": "1:1"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_kabuto",
+   "variant": "",
+   "file": "shadow_part_kabuto.png",
+   "name_ja": "重ね用の部品：兜",
+   "ratio": "1:1"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_amigasa",
+   "variant": "",
+   "file": "shadow_part_amigasa.png",
+   "name_ja": "重ね用の部品：編笠",
+   "ratio": "1:1"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_zukin",
+   "variant": "",
+   "file": "shadow_part_zukin.png",
+   "name_ja": "重ね用の部品：忍頭巾",
+   "ratio": "1:1"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_hachimaki",
+   "variant": "",
+   "file": "shadow_part_hachimaki.png",
+   "name_ja": "重ね用の部品：鉢巻",
+   "ratio": "1:1"
+  },
+  {
+   "section": "shadow",
+   "id": "shadow_part_jinbaori",
+   "variant": "",
+   "file": "shadow_part_jinbaori.png",
+   "name_ja": "重ね用の部品：陣羽織",
+   "ratio": "1:1"
+  }
+ ]
+}

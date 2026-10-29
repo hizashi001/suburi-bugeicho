@@ -1,7 +1,6 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
-<title>素振り武芸帳</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NINJA SAMURAI WORKOUT: GHOST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
 <style>
@@ -16,7 +15,7 @@
   --shu: #cf4a33;       /* 朱: HP / damage (semantic) */
   --moe: #6fbf8e;       /* 萌黄: good */
   --line: rgba(235,229,213,.14);
-  /* sword grading, 並 → 最上大業物 */
+  /* sword grading, low → high */
   --r0: #9ba6bc; --r1: #ebe5d5; --r2: #6fbf8e; --r3: #79a7e8; --r4: #d6ab4c;
   --f-display: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif;
   --f-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
@@ -25,9 +24,9 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body {
-  background: var(--ai); color: var(--washi); font-family: var(--f-body); font-size: 15px; line-height: 1.6;
+  margin: 0; background: var(--ai); color: var(--washi); font-family: var(--f-body); font-size: 15px; line-height: 1.6;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 16px 40px;
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(40px + env(safe-area-inset-bottom, 0px));
 }
 .app { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
 h1, h2, h3 { font-family: var(--f-display); font-weight: 800; margin: 0; text-wrap: balance; letter-spacing: .02em; }
@@ -35,6 +34,7 @@ h1 { font-size: 2.1rem; line-height: 1.2; }
 h2 { font-size: 1.3rem; }
 h3 { font-size: 1.05rem; }
 p { margin: 0; }
+small.gloss { display: block; font-family: var(--f-body); font-size: .62em; font-weight: 400; color: var(--muted); letter-spacing: 0; line-height: 1.3; }
 .muted { color: var(--muted); }
 .small { font-size: .82rem; }
 .num { font-variant-numeric: tabular-nums; }
@@ -84,7 +84,7 @@ input[type=text] { width: 9em; min-width: 0; }
 .slot .no { font-family: var(--f-display); font-size: 1.6rem; color: var(--kin); line-height: 1.2; text-align: center; }
 .slot .fields { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
 .diffs { display: flex; flex-direction: column; gap: 6px; }
-.diffs button { display: grid; grid-template-columns: 4.5em 1fr auto; gap: 10px; align-items: center; text-align: left; }
+.diffs button { display: grid; grid-template-columns: 5.5em 1fr auto; gap: 10px; align-items: center; text-align: left; }
 .diffs button b { font-family: var(--f-display); font-size: 1.1rem; }
 .diffs button span { font-size: .8rem; color: var(--muted); }
 .diffs button em { font-style: normal; font-size: .8rem; color: var(--kin); }
@@ -218,6 +218,7 @@ input[type=text] { width: 9em; min-width: 0; }
   border: 5px solid var(--shu); padding: 0 20px; border-radius: 6px; animation: stamp .55s cubic-bezier(.2,1.5,.4,1) both !important;
 }
 .stamp.kin { color: var(--kin); border-color: var(--kin); }
+.stamp.latin { font-size: 3.2rem; letter-spacing: .06em; }
 @keyframes stamp { from { opacity: 0; transform: rotate(-7deg) scale(2.4); } to { opacity: 1; transform: rotate(-7deg) scale(1); } }
 .res-title { text-align: center; display: flex; flex-direction: column; gap: 4px; align-items: center; }
 .res-title h2 { font-size: 1.8rem; }
@@ -231,7 +232,7 @@ input[type=text] { width: 9em; min-width: 0; }
 .tame { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--moe); border-radius: 10px; background: color-mix(in srgb, var(--moe) 8%, var(--ai-2)); }
 .tame.miss { border-color: var(--line); background: var(--ai-2); }
 .tame b { font-family: var(--f-display); font-size: 1.25rem; }
-.gest { position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, rgba(9,13,26,.98) 30%); }
+.gest { position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding-block: 12px calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--ai) 30%); }
 .gest button { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px; }
 .gest button b { font-family: var(--f-display); font-size: 1.25rem; }
 .gest button span { font-size: .8rem; color: var(--muted); }
@@ -243,114 +244,115 @@ input[type=text] { width: 9em; min-width: 0; }
   @keyframes fade { to { opacity: 0; } }
 }
 </style>
+</head><body>
 
 <div class="app">
 
   <!-- ===== Title ===== -->
   <section id="scr-title" class="app">
     <div class="masthead">
-      <span class="sub">素振り×討伐</span>
-      <h1>素振り武芸帳</h1>
-      <p class="muted">スマホを立てて全身を映し、素振りをするとカメラが一振りごとに採点します。登録した「型」との一致度で斬撃を判定し、武器の重さと剣速で威力が決まります。</p>
+      <div class="row spread"><span class="sub" data-i18n="title.kicker"></span><button class="ghost mini" id="lang-btn" data-i18n="lang.switch"></button></div>
+      <h1 data-i18n="app.name"></h1>
+      <p class="muted" data-i18n="title.lead"></p>
     </div>
     <div class="status-strip">
-      <div><span class="label">剣士LV</span><b class="num" id="t-lv">1</b></div>
-      <div><span class="label">得物</span><b id="t-wp">刀</b></div>
-      <div><span class="label">判定</span><b id="t-diff">初段</b></div>
+      <div><span class="label" data-i18n="common.lv"></span><b class="num" id="t-lv">1</b></div>
+      <div><span class="label" data-i18n="title.weapon"></span><b id="t-wp"></b></div>
+      <div><span class="label" data-i18n="title.diff"></span><b id="t-diff"></b></div>
     </div>
-    <p class="warn" id="t-formnote" hidden></p>
-    <button class="mode kin" id="go-adv"><strong>冒険の旅</strong><span>妖怪を討伐してLVを上げ、装具を集め、倒した妖怪を式神にする。敵の攻撃は、しゃがむ・ガード・ステップでかわす。</span></button>
-    <button class="mode" id="go-musha"><strong>武者修行</strong><span>LVも装具も式神も敵の攻撃も無し。60秒間、巻藁に素振りの威力だけを叩き込む。判定難易度と重量級ごとに自己ベストを記録。</span></button>
+    <p class="warn" id="t-formnote" data-i18n="title.formnote" hidden></p>
+    <button class="mode kin" id="go-adv"><strong data-i18n="mode.adv"></strong><span data-i18n="mode.adv.desc"></span></button>
+    <button class="mode" id="go-musha"><strong data-i18n="mode.musha"></strong><span data-i18n="mode.musha.desc"></span></button>
     <div class="grid2">
-      <button class="tile-btn" id="go-forms"><b>型の登録</b><span>9種類の理想の一振りを登録</span></button>
-      <button class="tile-btn" id="go-setup"><b>設定</b><span>得物・体格・判定難易度</span></button>
-      <button class="tile-btn" id="go-gear"><b>蔵</b><span id="t-gear">装具 0点</span></button>
-      <button class="tile-btn" id="go-book"><b>式神帳</b><span id="t-book">0 / 10</span></button>
+      <button class="tile-btn" id="go-forms"><b data-i18n="menu.forms"></b><span data-i18n="menu.forms.desc"></span></button>
+      <button class="tile-btn" id="go-setup"><b data-i18n="menu.setup"></b><span data-i18n="menu.setup.desc"></span></button>
+      <button class="tile-btn" id="go-gear"><b data-i18n="menu.gear"></b><span id="t-gear"></span></button>
+      <button class="tile-btn" id="go-book"><b data-i18n="menu.book"></b><span id="t-book"></span></button>
     </div>
   </section>
 
   <!-- ===== Setup ===== -->
   <section id="scr-setup" class="app" hidden>
-    <div class="row spread"><h2>設定</h2><button class="ghost" data-back="title">戻る</button></div>
+    <div class="row spread"><h2 data-i18n="menu.setup"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
     <div class="panel">
-      <span class="label">判定の難易度（修行の段位）</span>
+      <span class="label" data-i18n="setup.diff.label"></span>
       <div class="diffs" id="diffs"></div>
-      <span class="small muted">難易度が高いほど、ダメージとEXPに倍率がつきます。どの段位でも、登録した型の速さ・向き・振り幅・ブレ・減速と比べて判定します。</span>
+      <span class="small muted" data-i18n="setup.diff.note"></span>
     </div>
     <div class="panel">
-      <span class="label">得物を3つまで登録（戦闘中にタップで持ち替え）</span>
+      <span class="label" data-i18n="setup.slots.label"></span>
       <div id="slots"></div>
     </div>
     <div class="panel">
       <div class="row">
-        <label for="in-h">身長</label>
+        <label for="in-h" data-i18n="setup.height"></label>
         <input type="number" id="in-h" min="120" max="220" step="1"> <span>cm</span>
       </div>
-      <span class="small muted">カメラの3D推定を実際の速さ(m/s)に合わせるのに使います。</span>
-      <label class="check" for="in-atk"><input type="checkbox" id="in-atk"><span>冒険の旅で敵の攻撃を発生させる<br><span class="small muted">かわせないと妖怪のHPが回復し、COMBOが途切れます。</span></span></label>
-      <div class="row"><span>敵の攻撃頻度</span><div class="row" id="freqs" style="gap:6px"></div></div>
+      <span class="small muted" data-i18n="setup.height.note"></span>
+      <label class="check" for="in-atk"><input type="checkbox" id="in-atk"><span><span data-i18n="setup.atk"></span><br><span class="small muted" data-i18n="setup.atk.note"></span></span></label>
+      <div class="row"><span data-i18n="setup.freq"></span><div class="row" id="freqs" style="gap:6px"></div></div>
     </div>
     <div class="panel">
-      <span class="label">いま選んでいる得物の性能</span>
+      <span class="label" data-i18n="setup.stats.label"></span>
       <div class="stats" id="wp-stats"></div>
     </div>
-    <p class="warn">刃物は使わないでください。素振り用木刀・鉄芯木刀・メイスベルなどの練習具で代用します。前後左右に「腕＋得物」以上の空間を空け、人や家具、照明が届かない場所で振ってください。</p>
-    <button class="primary" data-back="title">決定</button>
+    <p class="warn" data-i18n="setup.safety"></p>
+    <button class="primary" data-back="title" data-i18n="common.done"></button>
   </section>
 
   <!-- ===== Forms ===== -->
   <section id="scr-forms" class="app" hidden>
-    <div class="row spread"><h2>型の登録</h2><button class="ghost" data-back="title">戻る</button></div>
-    <p class="muted small">自分にとって理想の一振りを、型ごとに3回ずつ振って登録します。以降はこの型と比べて「剣速」「向き」「振り幅」「ブレ」「途中の減速」を判定します。未登録の型は標準の値で判定します。向きはカメラの映像（鏡像）で見たときの左右です。</p>
+    <div class="row spread"><h2 data-i18n="menu.forms"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
+    <p class="muted small" data-i18n="forms.lead"></p>
     <div class="grid2">
-      <button class="primary" id="reg-all">9種類をまとめて登録</button>
-      <button id="reg-missing">未登録の型だけ登録</button>
+      <button class="primary" id="reg-all" data-i18n="forms.regAll"></button>
+      <button id="reg-missing" data-i18n="forms.regMissing"></button>
     </div>
     <div class="forms" id="forms"></div>
   </section>
 
   <!-- ===== Gear ===== -->
   <section id="scr-gear" class="app" hidden>
-    <div class="row spread"><h2>蔵</h2><button class="ghost" data-back="title">戻る</button></div>
+    <div class="row spread"><h2 data-i18n="menu.gear"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
     <div class="panel">
-      <span class="label">装備中と、式神の加護の合計</span>
+      <span class="label" data-i18n="gear.total.label"></span>
       <div class="stats" id="gear-total"></div>
     </div>
     <div class="grid3" id="gear-slots"></div>
-    <div class="row spread"><span class="label">所持している装具</span><span class="small muted num" id="gear-count"></span></div>
+    <div class="row spread"><span class="label" data-i18n="gear.owned.label"></span><span class="small muted num" id="gear-count"></span></div>
     <div class="drops" id="gear-list"></div>
-    <p class="footer-note">装具は妖怪を討伐すると手に入ります。等級は 並・良・業物・大業物・最上大業物 の5段階。40点を超えると、装備していない低い等級のものから自動で手放します。</p>
+    <p class="footer-note" data-i18n="gear.note"></p>
   </section>
 
   <!-- ===== Book ===== -->
   <section id="scr-book" class="app" hidden>
-    <div class="row spread"><h2>式神帳</h2><button class="ghost" data-back="title">戻る</button></div>
+    <div class="row spread"><h2 data-i18n="menu.book"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
     <p class="muted small" id="book-sum"></p>
     <div class="book" id="book"></div>
-    <p class="footer-note">討伐した妖怪は一定の確率で式神になります。金色の個体は現れにくい代わりに、HPとEXPが多く、式神にもなりやすい。同じ妖怪をもう一度式神にすると絆（★）が深まります。供にした式神1体の加護が戦闘で働きます。</p>
+    <p class="footer-note" data-i18n="book.note"></p>
   </section>
 
   <!-- ===== Map (adventure) ===== -->
   <section id="scr-map" class="app" hidden>
-    <div class="row spread"><h2>討伐帳</h2><button class="ghost" data-back="title">戻る</button></div>
+    <div class="row spread"><h2 data-i18n="map.title"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
     <div class="panel">
       <div class="row spread">
-        <span><span class="label">剣士LV</span> <b class="num" id="m-lv" style="font-family:var(--f-display);font-size:1.4rem">1</b></span>
+        <span><span class="label" data-i18n="common.lv"></span> <b class="num" id="m-lv" style="font-family:var(--f-display);font-size:1.4rem">1</b></span>
         <span class="small muted num" id="m-exp"></span>
       </div>
       <div class="hpbar"><i id="m-expbar" style="background:var(--kin);width:0"></i></div>
       <div class="small" id="m-skills"></div>
     </div>
     <div class="monsters" id="monsters"></div>
-    <p class="footer-note">妖怪のHPは時間とともに少しずつ回復し、最後にダメージを受けてから24時間で全快します。倒しきれない相手は撤退して、回復しきる前にもう一度挑んでください。</p>
+    <p class="footer-note" data-i18n="map.note"></p>
   </section>
 
   <!-- ===== Battle ===== -->
   <section id="scr-battle" class="app" hidden>
     <div class="foe">
-      <div class="seal big" id="b-seal">鬼</div>
+      <div class="seal big" id="b-seal"></div>
       <div class="info">
-        <div class="row spread"><h2 id="b-name">赤鬼</h2><span class="small muted num" id="b-regen"></span></div>
+        <div class="row spread"><h2 id="b-name"></h2><span class="small muted num" id="b-regen"></span></div>
         <div class="hpbar lg"><i id="b-hpbar" style="width:100%"></i></div>
         <div class="row spread small"><span class="num" id="b-hp"></span><span class="muted" id="b-sub"></span></div>
       </div>
@@ -362,12 +364,12 @@ input[type=text] { width: 9em; min-width: 0; }
       <video id="video" playsinline muted></video>
       <canvas id="overlay"></canvas>
       <div class="placeholder" id="placeholder"><div>
-        <p>スマホを縦に立て、2〜3m離れて<br>頭から足まで映る位置に置いてください。</p>
-        <p class="small" style="margin-top:8px">正面から映すと認識が安定します。</p>
+        <p data-i18n-html="battle.place1"></p>
+        <p class="small" style="margin-top:8px" data-i18n="battle.place2"></p>
       </div></div>
       <div class="hud-top">
         <div class="chips">
-          <span class="chip" id="pose-chip">カメラ停止中</span>
+          <span class="chip" id="pose-chip" data-i18n="chip.camOff"></span>
           <span class="chip note" id="note-chip" hidden></span>
         </div>
         <div class="combo" id="combo" hidden>
@@ -383,7 +385,7 @@ input[type=text] { width: 9em; min-width: 0; }
         <span class="cue" id="atk-cue"></span>
         <div class="clock"><i id="atk-clock"></i></div>
         <div class="dodges" id="atk-demo">
-          <button data-dodge="crouch">しゃがむ</button><button data-dodge="guard">ガード</button><button data-dodge="step">ステップ</button>
+          <button data-dodge="crouch" data-i18n="dodgeBtn.crouch"></button><button data-dodge="guard" data-i18n="dodgeBtn.guard"></button><button data-dodge="step" data-i18n="dodgeBtn.step"></button>
         </div>
       </div>
       <div class="callout reg" id="regbox" hidden>
@@ -395,32 +397,32 @@ input[type=text] { width: 9em; min-width: 0; }
     </div>
 
     <div class="row">
-      <button class="primary" id="btn-cam" style="flex:1">カメラで素振り開始</button>
-      <button id="btn-demo" title="カメラ無しで動作を試す (スペースキーでも可)">試し振り</button>
-      <button class="ghost" id="btn-retreat">撤退</button>
+      <button class="primary" id="btn-cam" style="flex:1"></button>
+      <button id="btn-demo" data-i18n="battle.demo" data-i18n-title="battle.demo.tip"></button>
+      <button class="ghost" id="btn-retreat"></button>
     </div>
     <p class="small muted" id="cam-msg" hidden></p>
-    <p class="small muted" id="gesture-help">離れたままの操作：<b>胸の前で腕を交差して2秒</b>で撤退。討伐後の画面では<b>両手を頭上に1秒</b>で次の敵へ、<b>腕の交差</b>で討伐帳へ戻ります。</p>
+    <p class="small muted" id="gesture-help" data-i18n-html="battle.gestureHelp"></p>
 
     <div class="panel">
-      <span class="label">直前の一振り</span>
+      <span class="label" data-i18n="battle.last"></span>
       <div class="lastswing">
         <div class="rank" id="ls-rank">－</div>
         <div class="bars">
-          <div class="row spread"><b id="ls-type">まだ振っていません</b><span class="num" id="ls-score"></span></div>
-          <div class="b"><span>剣速</span><div class="meter"><i id="ls-speed" style="width:0"></i></div><span class="num" id="ls-speed-v"></span></div>
-          <div class="b"><span>太刀筋</span><div class="meter"><i id="ls-line" style="width:0"></i></div><span class="num" id="ls-line-v"></span></div>
-          <div class="b"><span>振り幅</span><div class="meter"><i id="ls-amp" style="width:0"></i></div><span class="num" id="ls-amp-v"></span></div>
-          <div class="b"><span>残心</span><div class="meter"><i id="ls-zan" style="width:0"></i></div><span class="num" id="ls-zan-v"></span></div>
+          <div class="row spread"><b id="ls-type"></b><span class="num" id="ls-score"></span></div>
+          <div class="b"><span data-i18n="bar.speed"></span><div class="meter"><i id="ls-speed" style="width:0"></i></div><span class="num" id="ls-speed-v"></span></div>
+          <div class="b"><span data-i18n="bar.line"></span><div class="meter"><i id="ls-line" style="width:0"></i></div><span class="num" id="ls-line-v"></span></div>
+          <div class="b"><span data-i18n="bar.amp"></span><div class="meter"><i id="ls-amp" style="width:0"></i></div><span class="num" id="ls-amp-v"></span></div>
+          <div class="b"><span data-i18n="bar.zan"></span><div class="meter"><i id="ls-zan" style="width:0"></i></div><span class="num" id="ls-zan-v"></span></div>
         </div>
       </div>
       <p class="small muted num" id="ls-calc"></p>
     </div>
     <div class="panel">
-      <span class="label">太刀筋の記録</span>
-      <ul class="log" id="log"><li class="muted" style="display:block">ここに一振りごとの結果が並びます。</li></ul>
+      <span class="label" data-i18n="battle.log"></span>
+      <ul class="log" id="log"></ul>
     </div>
-    <p class="footer-note row" id="test-tools">テスト用：<button class="ghost mini" id="btn-skip">時間を6時間進める</button><button class="ghost mini" id="btn-atk-now">敵の攻撃を今すぐ出す</button></p>
+    <p class="footer-note row" id="test-tools"><span data-i18n="test.label"></span><button class="ghost mini" id="btn-skip" data-i18n="test.skip6h"></button><button class="ghost mini" id="btn-atk-now" data-i18n="test.atkNow"></button></p>
   </section>
 </div>
 
@@ -428,77 +430,105 @@ input[type=text] { width: 9em; min-width: 0; }
 <div class="toast" id="toast" hidden></div>
 
 <script type="module">
+// ---------- language files ----------
+// Every on-screen string lives in lang/<code>.json. Names of forms, yokai and grades stay in romaji in other languages, with a small gloss.
+const LANGS = ["ja", "en"];
+const KEY = "suburi-bugeicho.v1";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+const LANG = LANGS.includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
+async function loadDict(code) {
+  try { const r = await fetch(`lang/${code}.json`, { cache: "no-cache" }); if (r.ok) return await r.json(); } catch {}
+  return {};
+}
+const [DICT, FALLBACK] = await Promise.all([loadDict(LANG), LANG === "ja" ? Promise.resolve({}) : loadDict("ja")]);
+const LOCALE = LANG === "ja" ? "ja-JP" : "en-US";
+// t("key", {n: 3}) → the string with {n} filled in; falls back to Japanese, then to the key itself
+function t(key, vars) {
+  let s = DICT[key] ?? FALLBACK[key] ?? key;
+  if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+  return s;
+}
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// a name with its small gloss underneath, when this language has one (e.g. KESA-GIRI / Diagonal cut)
+const nameHtml = (key) => { const g = DICT[key + ".gloss"]; return esc(t(key)) + (g ? `<small class="gloss">${esc(g)}</small>` : ""); };
+document.documentElement.lang = LANG;
+function applyStatic(root = document) {
+  root.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+  root.querySelectorAll("[data-i18n-html]").forEach((el) => (el.innerHTML = t(el.dataset.i18nHtml)));
+  root.querySelectorAll("[data-i18n-title]").forEach((el) => (el.title = t(el.dataset.i18nTitle)));
+}
+applyStatic();
+
 // ---------- data ----------
 const PRESETS = [
-  { name: "短刀",         kg: 0.3, sub: "ゴム・木製の練習ナイフ" },
-  { name: "木刀",         kg: 0.6, sub: "一般的な木刀" },
-  { name: "刀",           kg: 1.2, sub: "鉄芯木刀・居合刀" },
-  { name: "メイス",       kg: 4.0, sub: "メイスベル" },
-  { name: "バスターソード", kg: 6.0, sub: "トレーニングバー" },
+  { id: "tanto",  kg: 0.3 },
+  { id: "bokuto", kg: 0.6 },
+  { id: "katana", kg: 1.2 },
+  { id: "mace",   kg: 4.0 },
+  { id: "buster", kg: 6.0 },
 ];
 // Directions are in the player's frame as seen in the mirrored preview: [right, down, toward camera]
 const S2 = Math.SQRT1_2;
 const TYPES = [
-  { id: "shinmen",      name: "真向",         dir: [0, 1, 0],     amp: 1.0,  hint: "真上から真下へ" },
-  { id: "kiriage",      name: "切り上げ",     dir: [0, -1, 0],    amp: 0.8,  hint: "真下から真上へ" },
-  { id: "kesa",         name: "袈裟",         dir: [-S2, S2, 0],  amp: 1.0,  hint: "右上から左下へ" },
-  { id: "gyakukesa",    name: "逆袈裟",       dir: [S2, S2, 0],   amp: 1.0,  hint: "左上から右下へ" },
-  { id: "kesaage",      name: "袈裟切り上げ", dir: [S2, -S2, 0],  amp: 0.85, hint: "左下から右上へ" },
-  { id: "gyakukesaage", name: "逆袈裟切り上げ", dir: [-S2, -S2, 0], amp: 0.85, hint: "右下から左上へ" },
-  { id: "do",           name: "胴",           dir: [-1, 0, 0],    amp: 0.9,  hint: "右から左へ水平に" },
-  { id: "gyakudo",      name: "逆胴",         dir: [1, 0, 0],     amp: 0.9,  hint: "左から右へ水平に" },
-  { id: "tsuki",        name: "突き",         dir: [0, 0, 1],     amp: 0.4,  hint: "カメラに向かってまっすぐ" },
+  { id: "shinmen",      dir: [0, 1, 0],     amp: 1.0 },
+  { id: "kiriage",      dir: [0, -1, 0],    amp: 0.8 },
+  { id: "kesa",         dir: [-S2, S2, 0],  amp: 1.0 },
+  { id: "gyakukesa",    dir: [S2, S2, 0],   amp: 1.0 },
+  { id: "kesaage",      dir: [S2, -S2, 0],  amp: 0.85 },
+  { id: "gyakukesaage", dir: [-S2, -S2, 0], amp: 0.85 },
+  { id: "do",           dir: [-1, 0, 0],    amp: 0.9 },
+  { id: "gyakudo",      dir: [1, 0, 0],     amp: 0.9 },
+  { id: "tsuki",        dir: [0, 0, 1],     amp: 0.4 },
 ];
-const TYPE = Object.fromEntries(TYPES.map((t) => [t.id, t]));
+const TYPE = Object.fromEntries(TYPES.map((x) => [x.id, x]));
+const typeName = (id) => t("type." + id);
 // speed = min share of your registered peak; ang = max degrees off; wob/dip = allowed excess over your registered blur/slow-down; amp = min share of registered reach
 const DIFF = [
-  { name: "入門", desc: "多少遅くても、ぶれても一振りと認める",       speed: .45, ang: 45, wob: .40, dip: .60, amp: .40, bonus: 1.0 },
-  { name: "初段", desc: "手振りや戻りの動作は拾わない",               speed: .60, ang: 35, wob: .30, dip: .45, amp: .50, bonus: 1.1 },
-  { name: "三段", desc: "型どおりの向きと速さが要る",                 speed: .72, ang: 27, wob: .20, dip: .30, amp: .60, bonus: 1.25 },
-  { name: "師範", desc: "ブレも減速もほとんど許さない",               speed: .85, ang: 18, wob: .12, dip: .18, amp: .70, bonus: 1.5 },
-  { name: "神域", desc: "わずかなブレも減速も許さない、神の一振りのみ", speed: .95, ang: 10, wob: .05, dip: .08, amp: .80, bonus: 2.0 },
+  { speed: .45, ang: 45, wob: .40, dip: .60, amp: .40, bonus: 1.0 },
+  { speed: .60, ang: 35, wob: .30, dip: .45, amp: .50, bonus: 1.1 },
+  { speed: .72, ang: 27, wob: .20, dip: .30, amp: .60, bonus: 1.25 },
+  { speed: .85, ang: 18, wob: .12, dip: .18, amp: .70, bonus: 1.5 },
+  { speed: .95, ang: 10, wob: .05, dip: .08, amp: .80, bonus: 2.0 },
 ];
-const FREQ = [{ name: "少", mult: 1.6 }, { name: "普", mult: 1 }, { name: "多", mult: 0.7 }];
+const diffName = (i = S.diff) => t(`diff.${i}.name`);
+const FREQ = [1.6, 1, 0.7];
 const MONSTERS = [
-  { id: "chochin",    name: "化け提灯", glyph: "灯", hp: 300,   exp: 40,   atk: 9,   weak: "shinmen",      partner: { mods: { warn: .4 },     text: "敵の攻撃予告 +0.4秒" } },
-  { id: "kappa",      name: "河童",     glyph: "河", hp: 1200,  exp: 120,  atk: 9,   weak: "do",           partner: { mods: { heal: .5 },     text: "攻撃を受けた時の敵の回復 -50%" } },
-  { id: "ittan",      name: "一反木綿", glyph: "布", hp: 3000,  exp: 280,  atk: 8,   weak: "tsuki",        partner: { mods: { counter: .5 },  text: "返し技の倍率 +0.5" } },
-  { id: "inoshishi",  name: "大猪",     glyph: "猪", hp: 6000,  exp: 520,  atk: 8,   weak: "gyakudo",      partner: { mods: { tsuki: .4 },    text: "突きのダメージ +40%" } },
-  { id: "kamaitachi", name: "鎌鼬",     glyph: "鎌", hp: 10000, exp: 850,  atk: 7,   weak: "kiriage",      partner: { mods: { combo: .3 },    text: "COMBO受付 +0.3秒" } },
-  { id: "akaoni",     name: "赤鬼",     glyph: "鬼", hp: 16000, exp: 1300, atk: 7,   weak: "kesa", oni: true, partner: { mods: { atk: .15 }, text: "攻撃 +15%" } },
-  { id: "yukionna",   name: "雪女",     glyph: "雪", hp: 24000, exp: 1900, atk: 6.5, weak: "gyakukesa",    partner: { mods: { atkint: .3 },   text: "敵の攻撃間隔 +30%" } },
-  { id: "omukade",    name: "大百足",   glyph: "蟲", hp: 35000, exp: 2700, atk: 6,   weak: "tsuki",        partner: { mods: { combocap: 2 },  text: "COMBO倍率の上限 +2" } },
-  { id: "tsuchigumo", name: "土蜘蛛",   glyph: "蜘", hp: 50000, exp: 3800, atk: 5.5, weak: "kesaage",      partner: { mods: { drop: 1 },      text: "装具の等級が上がりやすい" } },
-  { id: "shuten",     name: "酒呑童子", glyph: "酒", hp: 70000, exp: 5500, atk: 5,   weak: "shinmen", oni: true, partner: { mods: { exp: .5 }, text: "EXP +50%" } },
+  { id: "chochin",    glyph: "灯", hp: 300,   exp: 40,   atk: 9,   weak: "shinmen",   partner: { warn: .4 } },
+  { id: "kappa",      glyph: "河", hp: 1200,  exp: 120,  atk: 9,   weak: "do",        partner: { heal: .5 } },
+  { id: "ittan",      glyph: "布", hp: 3000,  exp: 280,  atk: 8,   weak: "tsuki",     partner: { counter: .5 } },
+  { id: "inoshishi",  glyph: "猪", hp: 6000,  exp: 520,  atk: 8,   weak: "gyakudo",   partner: { tsuki: .4 } },
+  { id: "kamaitachi", glyph: "鎌", hp: 10000, exp: 850,  atk: 7,   weak: "kiriage",   partner: { combo: .3 } },
+  { id: "akaoni",     glyph: "鬼", hp: 16000, exp: 1300, atk: 7,   weak: "kesa", oni: true, partner: { atk: .15 } },
+  { id: "yukionna",   glyph: "雪", hp: 24000, exp: 1900, atk: 6.5, weak: "gyakukesa", partner: { atkint: .3 } },
+  { id: "omukade",    glyph: "蟲", hp: 35000, exp: 2700, atk: 6,   weak: "tsuki",     partner: { combocap: 2 } },
+  { id: "tsuchigumo", glyph: "蜘", hp: 50000, exp: 3800, atk: 5.5, weak: "kesaage",   partner: { drop: 1 } },
+  { id: "shuten",     glyph: "酒", hp: 70000, exp: 5500, atk: 5,   weak: "shinmen", oni: true, partner: { exp: .5 } },
 ]; // atk = average seconds between enemy attacks
-const ATTACKS = [
-  { need: "crouch", move: "薙ぎ払い", cue: "しゃがめ！" },
-  { need: "guard",  move: "振り下ろし", cue: "剣を立てて受けろ！" },
-  { need: "step",   move: "突進",     cue: "横へステップ！" },
-];
-const DODGE_NAME = { crouch: "しゃがみ", guard: "ガード", step: "ステップ" };
+const monName = (m) => t("mon." + m.id);
+const ATTACKS = ["crouch", "guard", "step"];
 const SKILLS = [
-  { lv: 2,  id: "fumikomi", name: "踏み込み",   desc: "与ダメージ+10%" },
-  { lv: 3,  id: "rengeki",  name: "連撃の心得", desc: "COMBO受付+0.3秒" },
-  { lv: 5,  id: "kaishin",  name: "会心",       desc: "Sランクの一振りが1.5倍" },
-  { lv: 7,  id: "zanshin",  name: "残心",       desc: "フォーム点+10" },
-  { lv: 10, id: "onikiri",  name: "鬼斬り",     desc: "鬼に1.3倍" },
+  { lv: 2,  id: "fumikomi" },
+  { lv: 3,  id: "rengeki" },
+  { lv: 5,  id: "kaishin" },
+  { lv: 7,  id: "zanshin" },
+  { lv: 10, id: "onikiri" },
 ];
-const RARITY = ["並", "良", "業物", "大業物", "最上大業物"];
-const GEAR = { tsuba: "鍔", tsuka: "柄巻", omamori: "御守" };
-const pct = (v) => Math.round(v * 100) + "%";
+const skillName = (s) => t(`skill.${s.id}.name`), skillDesc = (s) => t(`skill.${s.id}.desc`);
+const GEAR = ["tsuba", "tsuka", "omamori"];
+const pctS = (v) => Math.round(v * 100) + "%";
 const AFFIX = {
-  atk:     { label: "攻撃",       base: .05, pre: "剛力", fmt: (v) => "+" + pct(v) },
-  combo:   { label: "COMBO受付",  base: .08, pre: "疾風", fmt: (v) => `+${v.toFixed(2)}秒` },
-  counter: { label: "返し技倍率", base: .12, pre: "燕返", fmt: (v) => `+${v.toFixed(2)}` },
-  heal:    { label: "敵の回復",   base: .08, pre: "封魔", fmt: (v) => "-" + pct(v) },
-  exp:     { label: "EXP",        base: .08, pre: "修験", fmt: (v) => "+" + pct(v) },
-  crit:    { label: "Sランク時",  base: .10, pre: "会心", fmt: (v) => "+" + pct(v) },
-  warn:    { label: "攻撃予告",   base: .10, pre: "先見", fmt: (v) => `+${v.toFixed(2)}秒` },
+  atk:     { base: .05, fmt: (v) => "+" + pctS(v) },
+  combo:   { base: .08, fmt: (v) => t("unit.secPlus", { v: v.toFixed(2) }) },
+  counter: { base: .12, fmt: (v) => `+${v.toFixed(2)}` },
+  heal:    { base: .08, fmt: (v) => "-" + pctS(v) },
+  exp:     { base: .08, fmt: (v) => "+" + pctS(v) },
+  crit:    { base: .10, fmt: (v) => "+" + pctS(v) },
+  warn:    { base: .10, fmt: (v) => t("unit.secPlus", { v: v.toFixed(2) }) },
 };
-const MOD_TEXT = { ...Object.fromEntries(Object.entries(AFFIX).map(([k, a]) => [k, a])),
-  tsuki: { label: "突き", fmt: (v) => "+" + pct(v) }, atkint: { label: "敵の攻撃間隔", fmt: (v) => "+" + pct(v) },
-  combocap: { label: "COMBO上限", fmt: (v) => "+" + v }, drop: { label: "装具の等級", fmt: (v) => "上がりやすい" } };
+const MOD_FMT = { ...Object.fromEntries(Object.entries(AFFIX).map(([k, a]) => [k, a.fmt])),
+  tsuki: (v) => "+" + pctS(v), atkint: (v) => "+" + pctS(v), combocap: (v) => "+" + v, drop: () => t("mod.drop.value") };
+const modText = (k, v) => `${t("mod." + k)} ${MOD_FMT[k](v)}`;
 const DAY = 24 * 3600 * 1000;
 const MUSHA_SEC = 60;
 const ATK_WARN = 2.6;     // seconds from warning to impact
@@ -508,23 +538,20 @@ const COUNTER = 1.5;      // next swing multiplier after a clean dodge
 const REG_REPS = 3;
 
 // ---------- state (localStorage is best-effort) ----------
-const KEY = "suburi-bugeicho.v1";
 const fresh = () => ({
-  slots: [{ name: "刀", kg: 1.2 }, { name: "木刀", kg: 0.6 }, { name: "メイス", kg: 4.0 }], active: 0,
-  height: 170, enemyAtk: true, freq: 1, diff: 1, forms: {},
+  slots: [{ name: t("preset.katana"), kg: 1.2 }, { name: t("preset.bokuto"), kg: 0.6 }, { name: t("preset.mace"), kg: 4.0 }], active: 0,
+  height: 170, enemyAtk: true, freq: 1, diff: 1, forms: {}, lang: LANG,
   lv: 1, exp: 0, cleared: 0, mons: {}, best: {}, clock: 0,
   inv: [], equip: { tsuba: null, tsuka: null, omamori: null }, nextId: 1, shiki: {}, partner: null,
 });
-let S = fresh();
-try { const raw = localStorage.getItem(KEY); if (raw) S = { ...S, ...JSON.parse(raw) }; } catch {}
+let S = { ...fresh(), ...saved };
 if (!Array.isArray(S.slots) || S.slots.length !== 3) S.slots = fresh().slots;
 S.equip = { ...fresh().equip, ...S.equip };
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
 const now = () => Date.now() + S.clock; // S.clock = test-only time skip
 
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const fmt = (n) => Math.round(n).toLocaleString("ja-JP");
+const fmt = (n) => Math.round(n).toLocaleString(LOCALE);
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const rand = (a, b) => a + Math.random() * (b - a);
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
@@ -541,7 +568,8 @@ const kg = () => wp().kg;
 const diff = () => DIFF[S.diff];
 const hasSkill = (id) => !musha && SKILLS.some((s) => s.id === id && S.lv >= s.lv);
 const expNeed = (lv) => Math.round(100 * Math.pow(lv, 1.6));
-const weightClass = (w) => (w < 1 ? "軽量級" : w <= 2.5 ? "中量級" : "重量級");
+const weightClass = (w) => (w < 1 ? "light" : w <= 2.5 ? "mid" : "heavy");
+const wclassName = (w) => t("wclass." + weightClass(w));
 // hand speed (m/s) of a good swing; heavier gear is expected to move slower
 const expectedPeak = (w) => 6.4 / Math.sqrt(1 + 0.4 * w);
 const torsoMeters = () => (S.height / 100) * 0.29; // shoulder-to-hip ≈ 29% of height
@@ -552,16 +580,16 @@ function mods() {
   const add = (m) => Object.entries(m).forEach(([k, v]) => (o[k] = (o[k] || 0) + v));
   Object.values(S.equip).forEach((id) => { const it = S.inv.find((i) => i.id === id); if (it) add(it.mods); });
   const p = MONSTERS.find((m) => m.id === S.partner);
-  if (p && S.shiki[p.id]) add(p.partner.mods);
+  if (p && S.shiki[p.id]) add(p.partner);
   return o;
 }
 const comboWindow = (w = kg()) => 1.0 + 0.45 * w + (hasSkill("rengeki") ? 0.3 : 0) + (mods().combo || 0);
 const comboCap = () => 6 + (mods().combocap || 0);
 const comboMult = (c) => Math.min(comboCap(), Math.pow(1.1, Math.max(0, c - 1)));
 
-function tmpl(t) {
-  const f = S.forms[t.id];
-  if (!f) return { peak: expectedPeak(kg()) * 0.85, amp: t.amp, wob: 0.15, dip: 0.15, dir: t.dir, def: true };
+function tmpl(x) {
+  const f = S.forms[x.id];
+  if (!f) return { peak: expectedPeak(kg()) * 0.85, amp: x.amp, wob: 0.15, dip: 0.15, dir: x.dir, def: true };
   return { peak: (f.peak * expectedPeak(kg())) / expectedPeak(f.kg), amp: f.amp, wob: f.wob, dip: f.dip, dir: f.dir };
 }
 
@@ -580,7 +608,7 @@ function regenText(m, st) {
   if (st.hp >= mx) return "";
   const left = ((mx - st.hp) / mx) * DAY;
   const h = Math.floor(left / 3600000), mi = Math.floor((left % 3600000) / 60000);
-  return `毎時+${fmt(mx / 24)} ・ 全快まで ${h}時間${String(mi).padStart(2, "0")}分`;
+  return t("regen", { rate: fmt(mx / 24), h, m: String(mi).padStart(2, "0") });
 }
 
 // ---------- screens ----------
@@ -595,40 +623,41 @@ function show(name) {
 document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => show(b.dataset.back)));
 
 function toast(msg) {
-  const t = $("toast"); t.textContent = msg; t.hidden = false;
-  clearTimeout(toast.h); toast.h = setTimeout(() => (t.hidden = true), 2600);
+  const el = $("toast"); el.textContent = msg; el.hidden = false;
+  clearTimeout(toast.h); toast.h = setTimeout(() => (el.hidden = true), 2600);
 }
 
+// the language switch reloads the page so every screen is rebuilt in the new language
+$("lang-btn").onclick = () => { S.lang = LANGS[(LANGS.indexOf(LANG) + 1) % LANGS.length]; save(); location.reload(); };
+
 function renderTitle() {
-  $("t-lv").textContent = S.lv; $("t-wp").textContent = wp().name; $("t-diff").textContent = diff().name;
-  const n = Object.keys(S.forms).length;
-  $("t-formnote").hidden = n > 0;
-  $("t-formnote").textContent = "型がまだ登録されていません。標準の値で判定しているので、まず「型の登録」で自分の理想の一振りを登録すると判定が安定します。";
-  $("t-gear").textContent = `装具 ${S.inv.length}点`;
-  $("t-book").textContent = `式神 ${Object.keys(S.shiki).length} / ${MONSTERS.length}`;
+  $("t-lv").textContent = S.lv; $("t-wp").textContent = wp().name; $("t-diff").textContent = diffName();
+  $("t-formnote").hidden = Object.keys(S.forms).length > 0;
+  $("t-gear").textContent = t("menu.gear.count", { n: S.inv.length });
+  $("t-book").textContent = t("menu.book.count", { n: Object.keys(S.shiki).length, total: MONSTERS.length });
 }
 
 // --- setup
 function renderSetup() {
-  $("diffs").innerHTML = DIFF.map((d, i) => `<button data-diff="${i}" aria-pressed="${i === S.diff}"><b>${d.name}</b><span>${d.desc}</span><em class="num">×${d.bonus.toFixed(2)}</em></button>`).join("");
+  $("diffs").innerHTML = DIFF.map((d, i) => `<button data-diff="${i}" aria-pressed="${i === S.diff}"><b>${nameHtml(`diff.${i}.name`)}</b><span>${esc(t(`diff.${i}.desc`))}</span><em class="num">×${d.bonus.toFixed(2)}</em></button>`).join("");
   $("diffs").querySelectorAll("button").forEach((b) => (b.onclick = () => { S.diff = +b.dataset.diff; save(); renderSetup(); }));
-  $("freqs").innerHTML = FREQ.map((f, i) => `<button class="mini" data-freq="${i}" aria-pressed="${i === S.freq}">${f.name}</button>`).join("");
+  $("freqs").innerHTML = FREQ.map((f, i) => `<button class="mini" data-freq="${i}" aria-pressed="${i === S.freq}">${esc(t("freq." + i))}</button>`).join("");
   $("freqs").querySelectorAll("button").forEach((b) => (b.onclick = () => { S.freq = +b.dataset.freq; save(); renderSetup(); }));
   const box = $("slots"); box.innerHTML = "";
   S.slots.forEach((s, i) => {
     const d = document.createElement("div"); d.className = "slot";
-    d.innerHTML = `<span class="no">${"壱弐参"[i]}</span>
+    d.innerHTML = `<span class="no">${t("slot.no." + i)}</span>
       <div class="fields">
-        <select id="sl-p${i}" aria-label="得物${i + 1}の種類"><option value="">種類から選ぶ…</option>${PRESETS.map((p, j) => `<option value="${j}">${p.name}（${p.kg}kg・${p.sub}）</option>`).join("")}</select>
-        <input type="text" id="sl-n${i}" maxlength="10" aria-label="得物${i + 1}の名前" value="${esc(s.name)}">
-        <span class="row" style="gap:6px"><input type="number" id="sl-k${i}" min="0.1" max="20" step="0.1" aria-label="得物${i + 1}の重さ" value="${s.kg}"><span>kg</span></span>
+        <select id="sl-p${i}" aria-label="${esc(t("setup.slot.kind", { n: i + 1 }))}"><option value="">${esc(t("setup.slot.pick"))}</option>${PRESETS.map((p, j) => `<option value="${j}">${esc(t("preset.option", { name: t("preset." + p.id), kg: p.kg, sub: t("preset." + p.id + ".sub") }))}</option>`).join("")}</select>
+        <input type="text" id="sl-n${i}" maxlength="10" aria-label="${esc(t("setup.slot.name", { n: i + 1 }))}" value="${esc(s.name)}">
+        <span class="row" style="gap:6px"><input type="number" id="sl-k${i}" min="0.1" max="20" step="0.1" aria-label="${esc(t("setup.slot.kg", { n: i + 1 }))}" value="${s.kg}"><span>kg</span></span>
       </div>`;
     box.appendChild(d);
     d.querySelector("select").onchange = (e) => {
       const p = PRESETS[e.target.value]; if (!p) return;
-      s.name = p.name; s.kg = p.kg; S.active = i; save(); renderSetup();
+      s.name = t("preset." + p.id); s.kg = p.kg; S.active = i; save(); renderSetup();
     };
-    d.querySelector(`#sl-n${i}`).oninput = (e) => { s.name = e.target.value.trim() || `得物${i + 1}`; save(); };
+    d.querySelector(`#sl-n${i}`).oninput = (e) => { s.name = e.target.value.trim() || t("setup.slot.default", { n: i + 1 }); save(); };
     d.querySelector(`#sl-k${i}`).oninput = (e) => {
       const v = parseFloat(e.target.value); if (!(v > 0)) return;
       s.kg = Math.min(20, Math.max(0.1, v)); S.active = i; save(); renderStats();
@@ -638,12 +667,12 @@ function renderSetup() {
   renderStats();
 }
 function renderStats() {
-  const w = kg(), v = expectedPeak(w) * 0.85, ke = 0.5 * w * v * v;
+  const w = kg(), v = expectedPeak(w) * 0.85;
   $("wp-stats").innerHTML = `
-    <div><span>得物</span><b>${esc(wp().name)}</b></div>
-    <div><span>階級</span><b>${weightClass(w)}</b></div>
-    <div><span>COMBO受付</span><b class="num">${comboWindow().toFixed(2)}秒</b></div>
-    <div><span>標準の剣速</span><b class="num">${v.toFixed(1)}m/s</b></div>`;
+    <div><span>${esc(t("stats.weapon"))}</span><b>${esc(wp().name)}</b></div>
+    <div><span>${esc(t("stats.class"))}</span><b>${esc(wclassName(w))}</b></div>
+    <div><span>${esc(t("stats.combo"))}</span><b class="num">${esc(t("unit.sec", { v: comboWindow().toFixed(2) }))}</b></div>
+    <div><span>${esc(t("stats.speed"))}</span><b class="num">${v.toFixed(1)}m/s</b></div>`;
 }
 $("in-h").addEventListener("input", (e) => { const v = parseFloat(e.target.value); if (v >= 120 && v <= 220) { S.height = v; save(); renderStats(); } });
 $("in-atk").addEventListener("change", (e) => { S.enemyAtk = e.target.checked; save(); });
@@ -658,40 +687,40 @@ function arrowSvg(dir, big) {
   return `<svg class="${cls}" viewBox="0 0 40 40" aria-hidden="true"><g transform="rotate(${a.toFixed(1)} 20 20)"><line x1="5" y1="20" x2="31" y2="20" stroke="var(--kin)" stroke-width="3.5" stroke-linecap="round"/><path d="M24 12 L35 20 L24 28" fill="none" stroke="var(--kin)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></g></svg>`;
 }
 function renderForms() {
-  $("forms").innerHTML = TYPES.map((t) => {
-    const f = S.forms[t.id];
-    const st = f ? `<span class="small" style="color:var(--moe)">登録済 ・ ${f.peak.toFixed(1)}m/s（${f.kg.toFixed(1)}kg） ・ 振り幅${f.amp.toFixed(2)}m ・ ブレ${Math.round(f.wob * 100)}</span>`
-                 : `<span class="small muted">未登録（標準の値で判定）</span>`;
-    return `<div class="form-row">${arrowSvg(f ? f.dir : t.dir)}<div class="info"><b>${t.name}</b><span class="small muted">${t.hint}</span>${st}</div><button class="mini" data-reg="${t.id}">${f ? "撮り直す" : "登録"}</button></div>`;
+  $("forms").innerHTML = TYPES.map((x) => {
+    const f = S.forms[x.id];
+    const st = f ? `<span class="small" style="color:var(--moe)">${esc(t("forms.saved", { peak: f.peak.toFixed(1), kg: f.kg.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100) }))}</span>`
+                 : `<span class="small muted">${esc(t("forms.unsaved"))}</span>`;
+    return `<div class="form-row">${arrowSvg(f ? f.dir : x.dir)}<div class="info"><b>${nameHtml("type." + x.id)}</b><span class="small muted">${esc(t("type." + x.id + ".hint"))}</span>${st}</div><button class="mini" data-reg="${x.id}">${esc(t(f ? "forms.retake" : "forms.register"))}</button></div>`;
   }).join("");
   $("forms").querySelectorAll("[data-reg]").forEach((b) => (b.onclick = () => startReg([b.dataset.reg])));
 }
-$("reg-all").onclick = () => startReg(TYPES.map((t) => t.id));
-$("reg-missing").onclick = () => { const ids = TYPES.filter((t) => !S.forms[t.id]).map((t) => t.id); ids.length ? startReg(ids) : toast("9種類とも登録済みです"); };
+$("reg-all").onclick = () => startReg(TYPES.map((x) => x.id));
+$("reg-missing").onclick = () => { const ids = TYPES.filter((x) => !S.forms[x.id]).map((x) => x.id); ids.length ? startReg(ids) : toast(t("forms.allDone")); };
 
 // --- gear
 function itemName(it) {
   const top = Object.keys(it.mods).sort((a, b) => it.mods[b] / AFFIX[b].base - it.mods[a] / AFFIX[a].base)[0];
-  return `${AFFIX[top].pre}の${GEAR[it.slot]}`;
+  return t("item.name", { pre: t("affix." + top + ".pre"), slot: t("slot." + it.slot) });
 }
-const affixText = (m) => Object.entries(m).map(([k, v]) => `${MOD_TEXT[k].label} ${MOD_TEXT[k].fmt(v)}`).join(" ・ ");
+const affixText = (m) => Object.entries(m).map(([k, v]) => modText(k, v)).join(" ・ ");
 function itemCard(it, actions = "") {
   const on = Object.values(S.equip).includes(it.id);
-  return `<div class="item r${it.r}${on ? " on" : ""}"><div><div class="nm">${RARITY[it.r]}「${itemName(it)}」${on ? ' <span class="tag" style="color:var(--kin)">装備中</span>' : ""}</div><div class="af">${affixText(it.mods)}</div></div><div class="acts">${actions}</div></div>`;
+  return `<div class="item r${it.r}${on ? " on" : ""}"><div><div class="nm">${esc(t("item.title", { rarity: t("rarity." + it.r), name: itemName(it) }))}${on ? ` <span class="tag" style="color:var(--kin)">${esc(t("gear.equipped"))}</span>` : ""}</div><div class="af">${esc(affixText(it.mods))}</div></div><div class="acts">${actions}</div></div>`;
 }
 function renderGear() {
   const m = mods(), keys = Object.keys(m);
-  $("gear-total").innerHTML = keys.length ? keys.map((k) => `<div><span>${MOD_TEXT[k].label}</span><b class="num">${MOD_TEXT[k].fmt(m[k])}</b></div>`).join("") : `<div><span>まだ加護はありません</span><b></b></div>`;
-  $("gear-slots").innerHTML = Object.entries(GEAR).map(([slot, nm]) => {
+  $("gear-total").innerHTML = keys.length ? keys.map((k) => `<div><span>${esc(t("mod." + k))}</span><b class="num">${esc(MOD_FMT[k](m[k]))}</b></div>`).join("") : `<div><span>${esc(t("gear.noBonus"))}</span><b></b></div>`;
+  $("gear-slots").innerHTML = GEAR.map((slot) => {
     const it = S.inv.find((i) => i.id === S.equip[slot]);
-    return `<div class="panel" style="padding:10px;gap:2px"><span class="label">${nm}</span><b class="small" style="color:var(--r${it ? it.r : 0})">${it ? itemName(it) : "なし"}</b></div>`;
+    return `<div class="panel" style="padding:10px;gap:2px"><span class="label">${esc(t("slot." + slot))}</span><b class="small" style="color:var(--r${it ? it.r : 0})">${esc(it ? itemName(it) : t("gear.none"))}</b></div>`;
   }).join("");
   $("gear-count").textContent = `${S.inv.length} / 40`;
   const list = [...S.inv].sort((a, b) => b.r - a.r || b.id - a.id);
   $("gear-list").innerHTML = list.length ? list.map((it) => {
     const on = S.equip[it.slot] === it.id;
-    return itemCard(it, `<button class="mini" data-eq="${it.id}">${on ? "外す" : "装備"}</button>${on ? "" : `<button class="mini ghost" data-drop="${it.id}">手放す</button>`}`);
-  }).join("") : `<p class="muted small">まだ装具がありません。冒険の旅で妖怪を討伐すると手に入ります。</p>`;
+    return itemCard(it, `<button class="mini" data-eq="${it.id}">${esc(t(on ? "gear.unequip" : "gear.equip"))}</button>${on ? "" : `<button class="mini ghost" data-drop="${it.id}">${esc(t("gear.discard"))}</button>`}`);
+  }).join("") : `<p class="muted small">${esc(t("gear.empty"))}</p>`;
   $("gear-list").querySelectorAll("[data-eq]").forEach((b) => (b.onclick = () => {
     const it = S.inv.find((i) => i.id === +b.dataset.eq);
     S.equip[it.slot] = S.equip[it.slot] === it.id ? null : it.id; save(); renderGear();
@@ -701,7 +730,7 @@ function renderGear() {
 function makeItem(tier) {
   const roll = Math.random() + tier;
   const r = roll < 0.55 ? 0 : roll < 0.8 ? 1 : roll < 0.93 ? 2 : roll < 0.985 ? 3 : 4;
-  const slot = pick(Object.keys(GEAR));
+  const slot = pick(GEAR);
   const keys = Object.keys(AFFIX).sort(() => Math.random() - 0.5).slice(0, [1, 1, 2, 2, 3][r]);
   const m = {};
   keys.forEach((k) => (m[k] = +(AFFIX[k].base * (1 + r * 0.5) * rand(0.7, 1)).toFixed(3)));
@@ -720,16 +749,16 @@ function addItems(items) {
 // --- book
 function renderBook() {
   const tamed = Object.keys(S.shiki).length, golds = Object.values(S.shiki).filter((s) => s.gold).length;
-  $("book-sum").textContent = `式神 ${tamed} / ${MONSTERS.length} ・ 金色 ${golds} / ${MONSTERS.length}`;
+  $("book-sum").textContent = t("book.sum", { n: tamed, gold: golds, total: MONSTERS.length });
   $("book").innerHTML = MONSTERS.map((m) => {
     const sh = S.shiki[m.id], seen = S.mons[m.id];
-    if (!sh) return `<div class="card"><div class="seal locked">${seen ? m.glyph : "？"}</div><b>${seen ? m.name : "？？？"}</b><span class="small muted">${seen ? "まだ式神になっていない" : "未遭遇"}</span></div>`;
+    if (!sh) return `<div class="card"><div class="seal locked">${seen ? m.glyph : "？"}</div><b>${seen ? nameHtml("mon." + m.id) : "？？？"}</b><span class="small muted">${esc(t(seen ? "book.notTamed" : "book.unseen"))}</span></div>`;
     const isP = S.partner === m.id;
     return `<div class="card${isP ? " partner" : ""}"><div class="seal ${sh.gold ? "gold" : "tame"}">${m.glyph}</div>
-      <b>${m.name} ${sh.gold ? '<span class="tag gold">金色</span>' : ""}</b>
+      <b>${nameHtml("mon." + m.id)} ${sh.gold ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}</b>
       <span class="stars">${"★".repeat(sh.stars)}${"☆".repeat(5 - sh.stars)}</span>
-      <span class="small">${m.partner.text}</span>
-      <button class="mini" data-partner="${m.id}" aria-pressed="${isP}">${isP ? "供にしている" : "供にする"}</button></div>`;
+      <span class="small">${esc(t("partner." + m.id))}</span>
+      <button class="mini" data-partner="${m.id}" aria-pressed="${isP}">${esc(t(isP ? "book.isPartner" : "book.makePartner"))}</button></div>`;
   }).join("");
   $("book").querySelectorAll("[data-partner]").forEach((b) => (b.onclick = () => { S.partner = S.partner === b.dataset.partner ? null : b.dataset.partner; save(); renderBook(); }));
 }
@@ -737,26 +766,26 @@ function renderBook() {
 // --- map
 function renderMap() {
   $("m-lv").textContent = S.lv;
-  $("m-exp").textContent = `次のLVまで ${fmt(expNeed(S.lv) - S.exp)} EXP`;
+  $("m-exp").textContent = t("map.toNext", { n: fmt(expNeed(S.lv) - S.exp) });
   $("m-expbar").style.width = (100 * S.exp / expNeed(S.lv)) + "%";
   const got = SKILLS.filter((s) => S.lv >= s.lv), next = SKILLS.find((s) => S.lv < s.lv);
   const p = MONSTERS.find((m) => m.id === S.partner);
-  $("m-skills").innerHTML = (got.length ? "習得した技：" + got.map((s) => `<b>${s.name}</b>(${s.desc})`).join("、") : "まだ技はありません。")
-    + (next ? `<br><span class="muted">LV${next.lv}で「${next.name}」を習得</span>` : "")
-    + `<br>判定：<b>${diff().name}</b>（×${diff().bonus.toFixed(2)}） ・ 供：${p && S.shiki[p.id] ? `<b>${p.name}</b>` : "なし"}`;
+  $("m-skills").innerHTML = (got.length ? esc(t("map.skills")) + got.map((s) => `<b>${esc(skillName(s))}</b>(${esc(skillDesc(s))})`).join(t("list.sep")) : esc(t("map.noSkills")))
+    + (next ? `<br><span class="muted">${esc(t("map.nextSkill", { lv: next.lv, name: skillName(next) }))}</span>` : "")
+    + `<br>${esc(t("map.judge"))}<b>${esc(diffName())}</b>（×${diff().bonus.toFixed(2)}） ・ ${esc(t("map.partner"))}${p && S.shiki[p.id] ? `<b>${esc(monName(p))}</b>` : esc(t("map.none"))}`;
   const box = $("monsters"); box.innerHTML = "";
   MONSTERS.forEach((m, i) => {
     const locked = i > S.cleared, st = monState(m), mx = maxHp(m, st);
     const b = document.createElement("button");
     b.className = "mon"; b.disabled = locked;
     b.innerHTML = locked
-      ? `<div class="seal locked">？</div><div class="info"><b>？？？</b><span class="small muted">前の妖怪を討伐すると現れる</span></div><span></span>`
+      ? `<div class="seal locked">？</div><div class="info"><b>？？？</b><span class="small muted">${esc(t("map.locked"))}</span></div><span></span>`
       : `<div class="seal${st.gold ? " gold" : ""}">${m.glyph}</div>
-         <div class="info"><div class="row spread"><b>${m.name} ${st.gold ? '<span class="tag gold">金色</span>' : ""}</b><span class="small muted">${st.kills ? "討伐" + st.kills + "回" : ""}${S.shiki[m.id] ? " ・ 式神" : ""}</span></div>
+         <div class="info"><div class="row spread"><b>${nameHtml("mon." + m.id)} ${st.gold ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}</b><span class="small muted">${st.kills ? esc(t("map.kills", { n: st.kills })) : ""}${S.shiki[m.id] ? esc(t("map.tamed")) : ""}</span></div>
            <div class="hpbar"><i style="width:${100 * st.hp / mx}%"></i></div>
-           <span class="small muted num">HP ${fmt(st.hp)} / ${fmt(mx)} ・ 弱点 ${TYPE[m.weak].name}</span>
-           <span class="small muted num">${regenText(m, st)}</span></div>
-         <span class="small" style="color:var(--kin)">挑む</span>`;
+           <span class="small muted num">${esc(t("map.hpWeak", { hp: fmt(st.hp), max: fmt(mx), weak: typeName(m.weak) }))}</span>
+           <span class="small muted num">${esc(regenText(m, st))}</span></div>
+         <span class="small" style="color:var(--kin)">${esc(t("map.fight"))}</span>`;
     if (!locked) b.onclick = () => startBattle(m);
     box.appendChild(b);
   });
@@ -790,17 +819,17 @@ function renderSwitcher() {
 }
 function switchWeapon(i) {
   if (i === S.active) return;
-  if (musha && (musha.running || musha.done)) { toast("武者修行の計測中は持ち替えできません"); return; }
+  if (musha && (musha.running || musha.done)) { toast(t("toast.noSwitchMusha")); return; }
   S.active = i; save(); combo = 0; lastEnd = 0; $("combo").hidden = true;
   renderSwitcher(); renderHeader();
-  toast(`${wp().name}（${kg().toFixed(1)}kg）に持ち替えました。COMBO受付 ${comboWindow().toFixed(2)}秒`);
+  toast(t("toast.switched", { name: wp().name, kg: kg().toFixed(1), sec: comboWindow().toFixed(2) }));
 }
 
 function resetBattleUI() {
   combo = 0; lastEnd = 0; swingLog = 0; counter = false; lastValid = null;
   B = { dmg: 0, swings: 0, maxCombo: 0, best: 0, bestRank: "－", dodges: 0, hits: 0, t0: performance.now() };
-  $("log").innerHTML = `<li class="muted" style="display:block">ここに一振りごとの結果が並びます。</li>`;
-  $("ls-rank").textContent = "－"; $("ls-rank").className = "rank"; $("ls-type").textContent = "まだ振っていません";
+  $("log").innerHTML = `<li class="muted" style="display:block">${esc(t("battle.log.empty"))}</li>`;
+  $("ls-rank").textContent = "－"; $("ls-rank").className = "rank"; $("ls-type").textContent = t("ls.none");
   $("ls-score").textContent = ""; $("ls-calc").textContent = "";
   ["speed", "line", "amp", "zan"].forEach((k) => { $("ls-" + k).style.width = 0; $("ls-" + k + "-v").textContent = ""; });
   $("verdict").hidden = true; $("combo").hidden = true; $("regbox").hidden = true;
@@ -816,51 +845,52 @@ function startBattle(m) {
   if (!st.rolled) { st.rolled = true; st.gold = Math.random() < 0.12; if (st.gold) st.hp = maxHp(m, st); save(); }
   resetBattleUI();
   $("test-tools").hidden = false;
-  $("btn-retreat").textContent = "撤退";
+  $("btn-retreat").textContent = t("battle.retreat");
   if ($("scr-battle").hidden) show("battle");
   renderHeader(); scheduleAttack(performance.now() + 6000);
-  if (st.gold) toast(`金色の${m.name}が現れた！ HP・EXPが多く、式神にもなりやすい`);
+  if (st.gold) toast(t("toast.gold", { name: monName(m) }));
 }
 function renderHeader() {
   const seal = $("b-seal");
   seal.className = "seal big";
   if (reg) {
-    seal.textContent = "型"; $("b-name").textContent = "型の登録";
+    seal.textContent = "型"; $("b-name").textContent = t("menu.forms");
     $("b-hpbar").style.width = (100 * reg.i / reg.queue.length) + "%"; $("b-hpbar").style.background = "var(--kin)";
-    $("b-hp").textContent = `${reg.i} / ${reg.queue.length} 種類 登録済`;
+    $("b-hp").textContent = t("reg.progress", { i: reg.i, n: reg.queue.length });
     $("b-sub").textContent = `${wp().name} ${kg().toFixed(1)}kg`; $("b-regen").textContent = "";
     return;
   }
   if (musha) {
-    seal.textContent = "巻"; $("b-name").textContent = "巻藁";
+    seal.textContent = "巻"; $("b-name").textContent = t("musha.target");
     $("b-hpbar").style.width = "100%"; $("b-hpbar").style.background = "var(--kin)";
-    $("b-hp").textContent = `総ダメージ ${fmt(musha.total)}`;
+    $("b-hp").textContent = t("musha.total", { n: fmt(musha.total) });
     const w = musha.kg ?? kg(), best = S.best[mushaKey(w)];
-    $("b-sub").textContent = `${diff().name} ${weightClass(w)} ${w.toFixed(1)}kg ・ 自己ベスト ${best ? fmt(best) : "－"}`;
-    $("b-regen").textContent = "LV・装具なし";
+    $("b-sub").textContent = t("musha.sub", { diff: diffName(), cls: wclassName(w), kg: w.toFixed(1), best: best ? fmt(best) : "－" });
+    $("b-regen").textContent = t("musha.noBonus");
     return;
   }
   const st = monState(foe), mx = maxHp(foe, st);
   if (st.gold) seal.classList.add("gold");
-  seal.textContent = foe.glyph; $("b-name").textContent = (st.gold ? "金色の" : "") + foe.name;
+  seal.textContent = foe.glyph; $("b-name").textContent = st.gold ? t("mon.goldName", { name: monName(foe) }) : monName(foe);
   $("b-hpbar").style.background = ""; $("b-hpbar").style.width = (100 * st.hp / mx) + "%";
-  $("b-hp").textContent = `HP ${fmt(st.hp)} / ${fmt(mx)}`;
+  $("b-hp").textContent = t("battle.hp", { hp: fmt(st.hp), max: fmt(mx) });
   const p = MONSTERS.find((m) => m.id === S.partner);
-  $("b-sub").textContent = `弱点 ${TYPE[foe.weak].name} ・ ${diff().name}${p && S.shiki[p.id] ? " ・ 供 " + p.name : ""}`;
+  $("b-sub").textContent = t("battle.sub", { weak: typeName(foe.weak), diff: diffName() }) + (p && S.shiki[p.id] ? t("battle.subPartner", { name: monName(p) }) : "");
   $("b-regen").textContent = regenText(foe, st);
 }
 
-const mushaKey = (w) => `${S.diff}-${weightClass(w)}`;
+// best scores keep their old Japanese keys so existing records survive the language change
+const mushaKey = (w) => `${S.diff}-${{ light: "軽量級", mid: "中量級", heavy: "重量級" }[weightClass(w)]}`;
 function startMusha() {
   closeResult();
   foe = null; reg = null;
   musha = { start: 0, total: 0, swings: 0, running: false };
   resetBattleUI();
   $("musha-timer").hidden = false; $("musha-timer").textContent = MUSHA_SEC.toFixed(1);
-  $("btn-retreat").textContent = "やめる";
+  $("btn-retreat").textContent = t("musha.quit");
   if ($("scr-battle").hidden) show("battle");
   renderHeader();
-  showVerdict(`<h2>武者修行</h2><p>60秒間、素振りの威力だけを競います。<br>得物を選んでから、最初の一振りで計測が始まります。</p>`);
+  showVerdict(`<h2>${nameHtml("mode.musha")}</h2><p>${t("musha.intro")}</p>`);
 }
 
 function startReg(ids) {
@@ -868,33 +898,33 @@ function startReg(ids) {
   show("battle");
   reg = { queue: ids, i: 0, got: [] };
   resetBattleUI();
-  $("btn-retreat").textContent = "登録をやめる";
+  $("btn-retreat").textContent = t("reg.quit");
   renderHeader(); renderReg();
 }
 function renderReg() {
   if (!reg) return;
-  const t = TYPE[reg.queue[reg.i]];
+  const x = TYPE[reg.queue[reg.i]];
   $("regbox").hidden = false;
-  $("reg-who").textContent = `型の登録 ${reg.i + 1} / ${reg.queue.length}`;
-  $("reg-arrow").innerHTML = arrowSvg(t.dir, true);
-  $("reg-cue").textContent = t.name;
-  $("reg-hint").textContent = `${t.hint} ・ 理想の一振りを ${REG_REPS}回中 ${reg.got.length + 1}回目`;
+  $("reg-who").textContent = t("reg.who", { i: reg.i + 1, n: reg.queue.length });
+  $("reg-arrow").innerHTML = arrowSvg(x.dir, true);
+  $("reg-cue").innerHTML = nameHtml("type." + x.id);
+  $("reg-hint").textContent = t("reg.hint", { hint: t("type." + x.id + ".hint"), reps: REG_REPS, n: reg.got.length + 1 });
   renderHeader();
 }
 function regSwing(m) {
-  const t = TYPE[reg.queue[reg.i]];
-  if (angDeg(m.dir, t.dir) > 55) { note(`向きが違います：${t.hint}`); return; }
-  if (m.amp < 0.3 * t.amp) { note("振り幅が小さすぎます"); return; }
+  const x = TYPE[reg.queue[reg.i]];
+  if (angDeg(m.dir, x.dir) > 55) { note(t("reg.wrongDir", { hint: t("type." + x.id + ".hint") })); return; }
+  if (m.amp < 0.3 * x.amp) { note(t("reg.tooSmall")); return; }
   reg.got.push(m); lastValid = m;
-  popup("dodge", `${reg.got.length} / ${REG_REPS}`, `${t.name} ${m.peak.toFixed(1)}m/s`); sfx("A");
+  popup("dodge", `${reg.got.length} / ${REG_REPS}`, `${typeName(x.id)} ${m.peak.toFixed(1)}m/s`); sfx("A");
   if (reg.got.length >= REG_REPS) {
-    const g = reg.got, avg = (k) => g.reduce((s, x) => s + x[k], 0) / g.length;
-    S.forms[t.id] = { peak: avg("peak"), amp: avg("amp"), wob: avg("wob"), dip: avg("dip"), kg: kg(),
-      dir: norm(g.reduce((s, x) => [s[0] + x.dir[0], s[1] + x.dir[1], s[2] + x.dir[2]], [0, 0, 0])) };
+    const g = reg.got, avg = (k) => g.reduce((s, y) => s + y[k], 0) / g.length;
+    S.forms[x.id] = { peak: avg("peak"), amp: avg("amp"), wob: avg("wob"), dip: avg("dip"), kg: kg(),
+      dir: norm(g.reduce((s, y) => [s[0] + y.dir[0], s[1] + y.dir[1], s[2] + y.dir[2]], [0, 0, 0])) };
     save();
     reg.i++; reg.got = [];
     if (reg.i >= reg.queue.length) return finishReg();
-    toast(`${t.name}を登録しました。次は${TYPE[reg.queue[reg.i]].name}`);
+    toast(t("reg.saved", { name: typeName(x.id), next: typeName(reg.queue[reg.i]) }));
   }
   renderReg();
 }
@@ -903,10 +933,10 @@ function finishReg() {
   $("regbox").hidden = true;
   sfx("S");
   openResult(`
-    <div class="stamp kin">免許</div>
-    <div class="res-title" style="--d:.2s"><h2>型の登録 完了</h2><span class="muted">${done.length}種類の型を登録しました</span></div>
-    <div class="drops" style="--d:.35s">${done.map((t) => { const f = S.forms[t.id]; return `<div class="form-row">${arrowSvg(f.dir)}<div class="info"><b>${t.name}</b><span class="small muted num">${f.peak.toFixed(1)}m/s ・ 振り幅${f.amp.toFixed(2)}m ・ ブレ${Math.round(f.wob * 100)} ・ 減速${Math.round(f.dip * 100)}</span></div><span></span></div>`; }).join("")}</div>`,
-    { ok: { label: "タイトルへ", fn: () => { stopCamera(); show("title"); } }, ng: { label: "型の一覧へ", fn: () => { stopCamera(); show("forms"); } } });
+    <div class="stamp kin${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.menkyo"))}</div>
+    <div class="res-title" style="--d:.2s"><h2>${esc(t("reg.doneTitle"))}</h2><span class="muted">${esc(t("reg.doneSub", { n: done.length }))}</span></div>
+    <div class="drops" style="--d:.35s">${done.map((x) => { const f = S.forms[x.id]; return `<div class="form-row">${arrowSvg(f.dir)}<div class="info"><b>${nameHtml("type." + x.id)}</b><span class="small muted num">${esc(t("reg.doneRow", { peak: f.peak.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100), dip: Math.round(f.dip * 100) }))}</span></div><span></span></div>`; }).join("")}</div>`,
+    { ok: { label: t("reg.toTitle"), fn: () => { stopCamera(); show("title"); } }, ng: { label: t("reg.toForms"), fn: () => { stopCamera(); show("forms"); } } });
 }
 
 function retreat() {
@@ -914,11 +944,11 @@ function retreat() {
   if (reg) { show("forms"); return; }
   if (musha) { musha = null; show("title"); return; }
   const st = monState(foe);
-  save(); toast(`${foe.name}から撤退しました。${regenText(foe, st) || "HPは満タンです"}`);
+  save(); toast(t("toast.retreat", { name: monName(foe), regen: regenText(foe, st) || t("toast.retreatFull") }));
   show("map");
 }
 $("btn-retreat").onclick = retreat;
-$("btn-skip").onclick = () => { S.clock += 6 * 3600 * 1000; if (foe) renderHeader(); save(); toast("時間を6時間進めました（テスト用）"); };
+$("btn-skip").onclick = () => { S.clock += 6 * 3600 * 1000; if (foe) renderHeader(); save(); toast(t("toast.skipped")); };
 $("btn-atk-now").onclick = () => { if (foe && !atk && !resultActions) startAttack(performance.now()); };
 
 function showVerdict(html) {
@@ -929,7 +959,7 @@ function showVerdict(html) {
 function popup(cls, big, small) {
   const pop = document.createElement("div");
   pop.className = "pop " + cls;
-  pop.innerHTML = `<div class="d num">${big}</div><div class="t">${small}</div>`;
+  pop.innerHTML = `<div class="d num">${esc(big)}</div><div class="t">${esc(small)}</div>`;
   $("pops").appendChild(pop); setTimeout(() => pop.remove(), 1200);
 }
 function note(text) {
@@ -944,24 +974,24 @@ function isRecovery(m) {
 }
 function judge(m) {
   let best = null;
-  TYPES.forEach((t) => { const tm = tmpl(t), c = dot(m.dir, norm(tm.dir)); if (!best || c > best.c) best = { t, tm, c }; });
-  const { t, tm } = best, d = diff();
+  TYPES.forEach((x) => { const tm = tmpl(x), c = dot(m.dir, norm(tm.dir)); if (!best || c > best.c) best = { x, tm, c }; });
+  const { x, tm } = best, d = diff();
   const ang = angDeg(m.dir, tm.dir), sp = m.peak / tm.peak, ampR = m.amp / tm.amp;
   const wobEx = Math.max(0, m.wob - tm.wob), dipEx = Math.max(0, m.dip - tm.dip);
   const reasons = [];
-  if (sp < d.speed) reasons.push(`剣速不足 ${Math.round(sp * 100)}%`);
-  if (ang > d.ang) reasons.push(`向きのずれ ${Math.round(ang)}°`);
-  if (ampR < d.amp) reasons.push("振り幅不足");
-  if (wobEx > d.wob) reasons.push("ブレ");
-  if (dipEx > d.dip) reasons.push("途中で減速");
-  return { t, tm, ang, sp, ampR, wobEx, dipEx, ok: !reasons.length, reasons };
+  if (sp < d.speed) reasons.push(t("why.speed", { p: Math.round(sp * 100) }));
+  if (ang > d.ang) reasons.push(t("why.angle", { a: Math.round(ang) }));
+  if (ampR < d.amp) reasons.push(t("why.amp"));
+  if (wobEx > d.wob) reasons.push(t("why.wobble"));
+  if (dipEx > d.dip) reasons.push(t("why.dip"));
+  return { t: x, tm, ang, sp, ampR, wobEx, dipEx, ok: !reasons.length, reasons };
 }
 function onMeasure(m) {
   if ($("scr-battle").hidden || atk || resultActions) return; // swings during an enemy attack or on a result screen don't count
   if (!m.demo && isRecovery(m)) return;
   if (reg) return regSwing(m);
   const j = judge(m);
-  if (!j.ok) { if (m.peak >= 0.35 * j.tm.peak) note(`判定外（${j.t.name}?）：${j.reasons.join("・")}`); return; }
+  if (!j.ok) { if (m.peak >= 0.35 * j.tm.peak) note(t("why.note", { name: typeName(j.t.id), reasons: j.reasons.join(t("list.sep2")) })); return; }
   lastValid = m;
   onSwing(m, j);
 }
@@ -992,18 +1022,19 @@ function onSwing(m, j) {
 
   const v = m.peak, ke = 0.5 * w * v * v;    // ½mv² (J)
   let dmg = ke * 3 * (0.4 + form / 100) * mult;
-  const parts = [`½×${w.toFixed(1)}kg×${v.toFixed(1)}²=${ke.toFixed(1)}J`, `フォーム×${(0.4 + form / 100).toFixed(2)}`, `COMBO×${mult.toFixed(2)}`];
+  const parts = [`½×${w.toFixed(1)}kg×${v.toFixed(1)}²=${ke.toFixed(1)}J`, `${t("calc.form")}×${(0.4 + form / 100).toFixed(2)}`, `COMBO×${mult.toFixed(2)}`];
   const mul = (x, label) => { dmg *= x; parts.push(`${label}×${x.toFixed(2)}`); };
+  const weakHit = !musha && j.t.id === foe.weak;
   if (!musha) {
     if (S.lv > 1) mul(1 + 0.06 * (S.lv - 1), "LV");
-    if (diff().bonus > 1) mul(diff().bonus, diff().name);
-    if (md.atk) mul(1 + md.atk, "装具");
-    if (hasSkill("fumikomi")) mul(1.1, "踏み込み");
-    if (rank === "S" && (hasSkill("kaishin") || md.crit)) mul((hasSkill("kaishin") ? 1.5 : 1) + (md.crit || 0), "会心");
-    if (hasSkill("onikiri") && foe.oni) mul(1.3, "鬼斬り");
-    if (j.t.id === foe.weak) mul(1.5, "弱点");
-    if (j.t.id === "tsuki" && md.tsuki) mul(1 + md.tsuki, "突き");
-    if (counter) { mul(COUNTER + (md.counter || 0), "返し技"); counter = false; }
+    if (diff().bonus > 1) mul(diff().bonus, diffName());
+    if (md.atk) mul(1 + md.atk, t("calc.gear"));
+    if (hasSkill("fumikomi")) mul(1.1, skillName(SKILLS[0]));
+    if (rank === "S" && (hasSkill("kaishin") || md.crit)) mul((hasSkill("kaishin") ? 1.5 : 1) + (md.crit || 0), skillName(SKILLS[2]));
+    if (hasSkill("onikiri") && foe.oni) mul(1.3, skillName(SKILLS[4]));
+    if (weakHit) mul(1.5, t("calc.weak"));
+    if (j.t.id === "tsuki" && md.tsuki) mul(1 + md.tsuki, typeName("tsuki"));
+    if (counter) { mul(COUNTER + (md.counter || 0), t("calc.counter")); counter = false; }
   }
   dmg = Math.max(1, Math.round(dmg));
 
@@ -1011,14 +1042,14 @@ function onSwing(m, j) {
   if (score > B.best) { B.best = score; B.bestRank = rank; }
 
   $("ls-rank").textContent = rank; $("ls-rank").className = "rank " + rank;
-  $("ls-type").textContent = j.t.name + (broken ? "（太刀筋が乱れた）" : "") + (!musha && j.t.id === foe.weak ? " ・ 弱点" : "");
-  $("ls-score").textContent = score + "点";
+  $("ls-type").textContent = typeName(j.t.id) + (broken ? t("ls.broken") : "") + (weakHit ? t("ls.weak") : "");
+  $("ls-score").textContent = t("ls.score", { n: score });
   const bar = (k, val, max) => { $("ls-" + k).style.width = (100 * val / max) + "%"; $("ls-" + k + "-v").textContent = Math.round(val); };
   bar("speed", speedScore, 100); bar("line", line, 40); bar("amp", ampPts, 30); bar("zan", zan, 30);
   $("ls-calc").textContent = parts.join(" ・ ") + ` → ${fmt(dmg)}`;
 
-  logLine(`<span class="r">${rank}</span><span>${j.t.name}</span><span class="muted num">${m.peak.toFixed(1)}m/s ${combo}連 ×${mult.toFixed(2)}</span><b class="num">${fmt(dmg)}</b>`);
-  popup(rank, fmt(dmg), `${j.t.name} ${rank}${combo > 1 ? ` ・ ${combo} COMBO` : ""}${!musha && j.t.id === foe.weak ? " ・ 弱点" : ""}`);
+  logLine(`<span class="r">${rank}</span><span>${esc(typeName(j.t.id))}</span><span class="muted num">${esc(t("log.swing", { speed: m.peak.toFixed(1), n: combo, x: mult.toFixed(2) }))}</span><b class="num">${fmt(dmg)}</b>`);
+  popup(rank, fmt(dmg), `${typeName(j.t.id)} ${rank}${combo > 1 ? ` ・ ${combo} COMBO` : ""}${weakHit ? " ・ " + t("calc.weak") : ""}`);
   sfx(rank);
 
   if (musha) { musha.total += dmg; musha.swings++; renderHeader(); return; }
@@ -1063,29 +1094,27 @@ function defeat(m, st) {
 
   const secs = Math.round((performance.now() - B.t0) / 1000);
   const next = MONSTERS[idx + 1] && idx + 1 <= S.cleared ? MONSTERS[idx + 1] : m;
+  const name = monName(m), title = gold ? t("mon.goldName", { name }) : name;
   let d = 0.25; const dl = () => `--d:${(d += 0.15).toFixed(2)}s`;
+  const tile = (key, val) => `<div><span class="label">${esc(t(key))}</span><b class="num">${val}</b></div>`;
   openResult(`
-    <div class="stamp${gold ? " kin" : ""}">討伐</div>
-    <div class="res-title" style="${dl()}"><div class="seal big${gold ? " gold" : ""}">${m.glyph}</div><h2>${gold ? "金色の" : ""}${m.name}</h2><span class="muted small">${diff().name} ・ ${esc(wp().name)} ${kg().toFixed(1)}kg</span></div>
+    <div class="stamp${gold ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.slain"))}</div>
+    <div class="res-title" style="${dl()}"><div class="seal big${gold ? " gold" : ""}">${m.glyph}</div><h2>${gold ? esc(title) : nameHtml("mon." + m.id)}</h2><span class="muted small">${esc(diffName())} ・ ${esc(wp().name)} ${kg().toFixed(1)}kg</span></div>
     <div class="tiles" style="${dl()}">
-      <div><span class="label">この戦いの与ダメージ</span><b class="num">${fmt(B.dmg)}</b></div>
-      <div><span class="label">振った回数</span><b class="num">${B.swings}</b></div>
-      <div><span class="label">最大COMBO</span><b class="num">${B.maxCombo}</b></div>
-      <div><span class="label">最高の一振り</span><b class="num">${B.bestRank} ${B.best}点</b></div>
-      <div><span class="label">見切り</span><b class="num">${B.dodges} / ${B.dodges + B.hits}</b></div>
-      <div><span class="label">戦闘時間</span><b class="num">${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}</b></div>
+      ${tile("res.dmg", fmt(B.dmg))}${tile("res.swings", B.swings)}${tile("res.maxCombo", B.maxCombo)}
+      ${tile("res.best", esc(t("res.bestVal", { rank: B.bestRank, n: B.best })))}${tile("res.dodges", `${B.dodges} / ${B.dodges + B.hits}`)}${tile("res.time", `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`)}
     </div>
     <div class="expbox panel" style="${dl()}">
-      <div class="row spread"><span>EXP <b class="num" style="color:var(--kin)">+${fmt(exp)}</b>${gold ? " （金色×3）" : ""}</span><span class="small muted num">LV${S.lv} 次まで ${fmt(expNeed(S.lv) - S.exp)}</span></div>
+      <div class="row spread"><span>EXP <b class="num" style="color:var(--kin)">+${fmt(exp)}</b>${gold ? esc(t("res.goldExp")) : ""}</span><span class="small muted num">${esc(t("res.toNext", { lv: S.lv, n: fmt(expNeed(S.lv) - S.exp) }))}</span></div>
       <div class="hpbar"><i id="res-exp" style="width:0"></i></div>
       ${S.lv > before ? `<div class="lvup">LV ${before} → ${S.lv}</div>` : ""}
-      ${learned.map((s) => `<div>技「<b>${s.name}</b>」を習得：${s.desc}</div>`).join("")}
+      ${learned.map((s) => `<div>${esc(t("res.learned", { name: skillName(s), desc: skillDesc(s) }))}</div>`).join("")}
     </div>
-    <div style="${dl()}" class="drops"><span class="label">手に入れた装具</span>${drops.map((it) => itemCard(it)).join("")}</div>
-    ${tame ? `<div class="tame" style="${dl()}"><div class="seal ${gold ? "gold" : "tame"}">${m.glyph}</div><div><b>${m.name}が${tame.first ? "式神になった！" : "さらに心を許した"}</b><div class="small">${tame.first ? `加護：${m.partner.text}${S.partner === m.id ? "（供にしました）" : ""}` : `絆 ${"★".repeat(tame.stars)}`}</div></div></div>`
-           : `<div class="tame miss" style="${dl()}"><div class="seal locked">${m.glyph}</div><div><b>${m.name}は去っていった</b><div class="small muted">式神になる確率 ${gold ? "70" : "30"}%</div></div></div>`}`,
-    { ok: { label: next === m ? `もう一度 ${m.name}へ` : `次の敵へ（${next.name}）`, fn: () => startBattle(next) },
-      ng: { label: "討伐帳へ", fn: () => { stopCamera(); show("map"); } } });
+    <div style="${dl()}" class="drops"><span class="label">${esc(t("res.drops"))}</span>${drops.map((it) => itemCard(it)).join("")}</div>
+    ${tame ? `<div class="tame" style="${dl()}"><div class="seal ${gold ? "gold" : "tame"}">${m.glyph}</div><div><b>${esc(t(tame.first ? "res.tamed" : "res.bond", { name }))}</b><div class="small">${tame.first ? esc(t("res.blessing", { text: t("partner." + m.id) })) + (S.partner === m.id ? esc(t("res.madePartner")) : "") : esc(t("res.bondStars")) + " " + "★".repeat(tame.stars)}</div></div></div>`
+           : `<div class="tame miss" style="${dl()}"><div class="seal locked">${m.glyph}</div><div><b>${esc(t("res.left", { name }))}</b><div class="small muted">${esc(t("res.tameRate", { p: gold ? 70 : 30 }))}</div></div></div>`}`,
+    { ok: { label: next === m ? t("res.again", { name }) : t("res.next", { name: monName(next) }), fn: () => startBattle(next) },
+      ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("map"); } } });
   requestAnimationFrame(() => requestAnimationFrame(() => { const e = $("res-exp"); if (e) e.style.width = (100 * S.exp / expNeed(S.lv)) + "%"; }));
 }
 
@@ -1094,18 +1123,15 @@ function finishMusha() {
   const key = mushaKey(musha.kg), prev = S.best[key] || 0, nb = musha.total > prev;
   if (nb) { S.best[key] = musha.total; save(); }
   renderHeader(); fanfare();
+  const tile = (k, val) => `<div><span class="label">${esc(t(k))}</span><b class="num">${val}</b></div>`;
   openResult(`
-    <div class="stamp${nb ? " kin" : ""}">${nb ? "新記録" : "修了"}</div>
-    <div class="res-title" style="--d:.3s"><h2>武者修行</h2><span class="muted">${diff().name} ・ ${weightClass(musha.kg)} ${musha.kg.toFixed(1)}kg</span></div>
+    <div class="stamp${nb ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t(nb ? "stamp.record" : "stamp.done"))}</div>
+    <div class="res-title" style="--d:.3s"><h2>${nameHtml("mode.musha")}</h2><span class="muted">${esc(diffName())} ・ ${esc(wclassName(musha.kg))} ${musha.kg.toFixed(1)}kg</span></div>
     <div class="tiles" style="--d:.45s">
-      <div><span class="label">総ダメージ</span><b class="num">${fmt(musha.total)}</b></div>
-      <div><span class="label">振った回数</span><b class="num">${musha.swings}</b></div>
-      <div><span class="label">最大COMBO</span><b class="num">${B.maxCombo}</b></div>
-      <div><span class="label">最高の一振り</span><b class="num">${B.bestRank} ${B.best}点</b></div>
-      <div><span class="label">自己ベスト</span><b class="num">${fmt(Math.max(prev, musha.total))}</b></div>
-      <div><span class="label">前回までの最高</span><b class="num">${prev ? fmt(prev) : "－"}</b></div>
+      ${tile("res.total", fmt(musha.total))}${tile("res.swings", musha.swings)}${tile("res.maxCombo", B.maxCombo)}
+      ${tile("res.best", esc(t("res.bestVal", { rank: B.bestRank, n: B.best })))}${tile("res.pb", fmt(Math.max(prev, musha.total)))}${tile("res.prev", prev ? fmt(prev) : "－")}
     </div>`,
-    { ok: { label: "もう一度", fn: startMusha }, ng: { label: "やめる", fn: () => { stopCamera(); musha = null; show("title"); } } });
+    { ok: { label: t("musha.again"), fn: startMusha }, ng: { label: t("musha.quit"), fn: () => { stopCamera(); musha = null; show("title"); } } });
 }
 
 let resultActions = null;
@@ -1114,8 +1140,8 @@ function openResult(html, actions) {
   gesture.lock = true; // ignore a pose that was already being held when the screen opened
   $("res-inner").innerHTML = html + `
     <div class="gest">
-      <button id="g-ok"><b>${actions.ok.label}</b><span>両手を頭上に上げて1秒</span><div class="meter"><i id="g-ok-m"></i></div></button>
-      <button id="g-ng" class="ghost"><b>${actions.ng.label}</b><span>胸の前で腕を交差して1秒</span><div class="meter"><i id="g-ng-m"></i></div></button>
+      <button id="g-ok"><b>${esc(actions.ok.label)}</b><span>${esc(t("gesture.okHint"))}</span><div class="meter"><i id="g-ok-m"></i></div></button>
+      <button id="g-ng" class="ghost"><b>${esc(actions.ng.label)}</b><span>${esc(t("gesture.ngHint"))}</span><div class="meter"><i id="g-ng-m"></i></div></button>
     </div>`;
   $("g-ok").onclick = () => fireGesture("ok");
   $("g-ng").onclick = () => fireGesture("ng");
@@ -1131,17 +1157,17 @@ function fireGesture(kind) {
 // ---------- enemy attacks ----------
 let atk = null;          // { kind, t0, done, warn }
 let nextAtkAt = 0, lastDemoAt = -1e9;
-function scheduleAttack(t) {
+function scheduleAttack(at) {
   const base = foe ? foe.atk : 9;
-  nextAtkAt = t ?? performance.now() + base * FREQ[S.freq].mult * (1 + (mods().atkint || 0)) * rand(0.75, 1.25) * 1000;
+  nextAtkAt = at ?? performance.now() + base * FREQ[S.freq] * (1 + (mods().atkint || 0)) * rand(0.75, 1.25) * 1000;
 }
-function engaged(t) { return !!stream || t - lastDemoAt < 20000; }
-function startAttack(t) {
+function engaged(tt) { return !!stream || tt - lastDemoAt < 20000; }
+function startAttack(tt) {
   const kind = pick(ATTACKS);
-  atk = { kind, t0: t, done: false, warn: ATK_WARN + (mods().warn || 0) };
+  atk = { kind, t0: tt, done: false, warn: ATK_WARN + (mods().warn || 0) };
   dodge.arm();
-  $("atk-who").textContent = `${foe.name}の${kind.move}`;
-  $("atk-cue").textContent = kind.cue;
+  $("atk-who").textContent = t("atk.who", { name: monName(foe), move: t(`atk.${kind}.move`) });
+  $("atk-cue").textContent = t(`atk.${kind}.cue`);
   $("attack").className = "callout"; $("attack").hidden = false;
   $("atk-demo").hidden = !!stream;
   warnSfx();
@@ -1149,22 +1175,22 @@ function startAttack(t) {
 function resolveAttack(dodged, how) {
   if (!atk || atk.done) return;
   atk.done = true;
-  const md = mods();
+  const md = mods(), move = t(`atk.${atk.kind}.move`);
   if (dodged) {
     counter = true; B.dodges++;
     $("attack").className = "callout ok";
-    $("atk-cue").textContent = "見切った！";
-    popup("dodge", "見切り", `${DODGE_NAME[how]}成功 ・ 次の一振りが返し技×${(COUNTER + (md.counter || 0)).toFixed(1)}`);
-    logLine(`<span class="r">避</span><span>${atk.kind.move}</span><span class="muted">${DODGE_NAME[how]}でかわした</span><b style="color:var(--moe)">見切り</b>`);
+    $("atk-cue").textContent = t("atk.dodged");
+    popup("dodge", t("atk.dodgedBig"), t("atk.dodgedSub", { how: t("dodge." + how), x: (COUNTER + (md.counter || 0)).toFixed(1) }));
+    logLine(`<span class="r">${esc(t("log.dodgeMark"))}</span><span>${esc(move)}</span><span class="muted">${esc(t("log.dodged", { how: t("dodge." + how) }))}</span><b style="color:var(--moe)">${esc(t("atk.dodgedBig"))}</b>`);
     sfx("S");
   } else {
     B.hits++;
     const st = monState(foe), heal = Math.round(maxHp(foe, st) * ATK_HEAL * (1 - Math.min(0.9, md.heal || 0)));
     st.hp = Math.min(maxHp(foe, st), st.hp + heal); save(); renderHeader();
     combo = 0; lastEnd = 0; $("combo").hidden = true; counter = false;
-    $("atk-cue").textContent = how ? `${DODGE_NAME[how]}では防げない…` : "食らった…";
-    popup("heal", `+${fmt(heal)}`, `${foe.name}のHPが回復 ・ COMBO終了`);
-    logLine(`<span class="r" style="color:var(--shu)">傷</span><span>${atk.kind.move}</span><span class="muted">${how ? DODGE_NAME[how] + "は不正解" : "かわせなかった"}</span><b class="num" style="color:var(--moe)">+${fmt(heal)}</b>`);
+    $("atk-cue").textContent = how ? t("atk.wrong", { how: t("dodge." + how) }) : t("atk.hit");
+    popup("heal", `+${fmt(heal)}`, t("atk.healSub", { name: monName(foe) }));
+    logLine(`<span class="r" style="color:var(--shu)">${esc(t("log.hitMark"))}</span><span>${esc(move)}</span><span class="muted">${esc(how ? t("log.wrong", { how: t("dodge." + how) }) : t("log.hit"))}</span><b class="num" style="color:var(--moe)">+${fmt(heal)}</b>`);
     $("stage").classList.remove("hit"); void $("stage").offsetWidth; $("stage").classList.add("hit");
   }
   setTimeout(() => endAttack(), 900);
@@ -1173,12 +1199,12 @@ function endAttack(silent) {
   atk = null; $("attack").hidden = true;
   if (!silent && foe) scheduleAttack();
 }
-function attackTick(t) {
+function attackTick(tt) {
   const idle = !foe || musha || reg || !S.enemyAtk || $("scr-battle").hidden || resultActions;
-  if (idle || (!atk && !engaged(t))) { if (!atk) nextAtkAt = Math.max(nextAtkAt, t + 3000); return; }
-  if (!atk) { if (t >= nextAtkAt) startAttack(t); return; }
+  if (idle || (!atk && !engaged(tt))) { if (!atk) nextAtkAt = Math.max(nextAtkAt, tt + 3000); return; }
+  if (!atk) { if (tt >= nextAtkAt) startAttack(tt); return; }
   if (atk.done) return;
-  const el = (t - atk.t0) / 1000;
+  const el = (tt - atk.t0) / 1000;
   const c = $("atk-clock");
   c.style.width = (100 * Math.max(0, 1 - el / atk.warn)) + "%";
   c.className = el >= ATK_OPEN ? "open" : "";
@@ -1188,7 +1214,7 @@ function tryDodge(how) {
   if (!atk || atk.done) return;
   const el = (performance.now() - atk.t0) / 1000;
   if (el < ATK_OPEN) return;               // too early: still reading the telegraph
-  if (how === atk.kind.need) resolveAttack(true, how);
+  if (how === atk.kind) resolveAttack(true, how);
   else dodge.last = how;                    // wrong move is remembered for the message
 }
 document.querySelectorAll("[data-dodge]").forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); lastDemoAt = performance.now(); tryDodge(b.dataset.dodge); }));
@@ -1197,18 +1223,18 @@ document.querySelectorAll("[data-dodge]").forEach((b) => b.addEventListener("cli
 // ok = both hands above the head, ng = forearms crossed in front of the chest
 function gestureCtx() {
   if (resultActions) return { ...resultActions, hold: { ok: 1000, ng: 1000 } };
-  if (!$("scr-battle").hidden && !atk) return { ng: { label: reg ? "登録をやめる" : musha ? "修行をやめる" : "撤退", fn: retreat }, hold: { ng: 2000 } };
+  if (!$("scr-battle").hidden && !atk) return { ng: { label: t(reg ? "reg.quit" : musha ? "musha.quit" : "battle.retreat"), fn: retreat }, hold: { ng: 2000 } };
   return null;
 }
 const gesture = {
   kind: null, since: 0, lock: false,
-  update(t, kind) {
-    if (kind !== this.kind) { this.kind = kind; this.since = t; if (!kind) this.lock = false; }
+  update(tt, kind) {
+    if (kind !== this.kind) { this.kind = kind; this.since = tt; if (!kind) this.lock = false; }
     const ctx = gestureCtx();
     const act = ctx && kind && !this.lock ? ctx[kind] : null;
-    const p = act ? clamp01((t - this.since) / ctx.hold[kind]) : 0;
+    const p = act ? clamp01((tt - this.since) / ctx.hold[kind]) : 0;
     ["ok", "ng"].forEach((k) => { const el = $(`g-${k}-m`); if (el) el.style.width = (k === kind ? p * 100 : 0) + "%"; });
-    if (act && !resultActions) setChip(true, `${act.label}まで ${((1 - p) * ctx.hold[kind] / 1000).toFixed(1)}秒`);
+    if (act && !resultActions) setChip(true, t("chip.gesture", { label: act.label, s: ((1 - p) * ctx.hold[kind] / 1000).toFixed(1) }));
     if (act && p >= 1) { this.lock = true; fireGesture(kind); }
     return !!act;
   },
@@ -1216,9 +1242,9 @@ const gesture = {
 
 // ---------- HUD loop ----------
 function hud() {
-  const t = performance.now();
+  const tt = performance.now();
   if (combo > 0 && lastEnd) {
-    const left = comboWindow() - (t - lastEnd) / 1000;
+    const left = comboWindow() - (tt - lastEnd) / 1000;
     if (left <= 0) { combo = 0; $("combo").hidden = true; }
     else {
       $("combo").hidden = combo < 2;
@@ -1227,11 +1253,11 @@ function hud() {
     }
   }
   if (musha && musha.running) {
-    const left = MUSHA_SEC - (t - musha.start) / 1000;
+    const left = MUSHA_SEC - (tt - musha.start) / 1000;
     $("musha-timer").textContent = Math.max(0, left).toFixed(1);
     if (left <= 0) finishMusha();
   }
-  attackTick(t);
+  attackTick(tt);
   requestAnimationFrame(hud);
 }
 requestAnimationFrame(hud);
@@ -1262,8 +1288,8 @@ const fanfare = () => beep([392, 523, 659, 784, 1047], "triangle", 0.11, 0.5, 0.
 
 // ---------- demo swing (no camera) ----------
 function demoMeasure() {
-  const t = reg ? TYPE[reg.queue[reg.i]] : pick(TYPES);
-  const tm = tmpl(t), j = () => Math.random() - 0.5, n = performance.now();
+  const x = reg ? TYPE[reg.queue[reg.i]] : pick(TYPES);
+  const tm = tmpl(x), j = () => Math.random() - 0.5, n = performance.now();
   return {
     demo: true, peak: tm.peak * rand(0.55, 1.1), dir: norm([tm.dir[0] + j() * 0.5, tm.dir[1] + j() * 0.5, tm.dir[2] + j() * 0.3]),
     amp: tm.amp * rand(0.55, 1.15), wob: tm.wob + rand(0, 0.25), dip: tm.dip + rand(0, 0.3), settle: rand(0.1, 0.9), tStart: n - 350, tEnd: n,
@@ -1283,20 +1309,20 @@ let stream = null, landmarker = null, running = false, lastVideoTime = -1, wakeL
 
 async function startCamera() {
   const msg = $("cam-msg"); msg.hidden = false;
-  if (!navigator.mediaDevices?.getUserMedia) { msg.textContent = "このブラウザではカメラが使えません。スマホのChromeかSafariで、https のページとして開いてください。下の「試し振り」で動きは確認できます。"; return; }
-  $("btn-cam").disabled = true; msg.textContent = "カメラを起動しています…";
+  if (!navigator.mediaDevices?.getUserMedia) { msg.textContent = t("cam.unsupported"); return; }
+  $("btn-cam").disabled = true; msg.textContent = t("cam.starting");
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
   } catch (e) {
     stream = null; $("btn-cam").disabled = false;
-    msg.textContent = "カメラを使えませんでした（" + (e.name || "エラー") + "）。カメラの許可を確認してください。今は「試し振り」で動作を確認できます。";
+    msg.textContent = t("cam.denied", { err: e.name || "Error" });
     return;
   }
   video.srcObject = stream; await video.play();
   $("placeholder").hidden = true; $("btn-demo").hidden = true; $("atk-demo").hidden = true;
   try { wakeLock = await navigator.wakeLock?.request("screen"); } catch {}
   if (!landmarker) {
-    msg.textContent = "姿勢認識モデルを読み込んでいます（初回は数秒かかります）…";
+    msg.textContent = t("cam.loading");
     try {
       const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
       const files = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
@@ -1307,47 +1333,48 @@ async function startCamera() {
       try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("GPU")); }
       catch { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("CPU")); }
     } catch (e) {
-      msg.textContent = "姿勢認識モデルを読み込めませんでした。ネットワークに接続した状態で開き直してください。";
+      msg.textContent = t("cam.modelFail");
       stopCamera(); return;
     }
   }
-  msg.textContent = "頭から足まで映る位置に立ち、構えてから素振りしてください。判定外になった振りは、左上に理由が出ます。";
-  $("btn-cam").textContent = "カメラ停止"; $("btn-cam").disabled = false;
+  msg.textContent = t("cam.ready");
+  $("btn-cam").textContent = t("battle.camStop"); $("btn-cam").disabled = false;
   running = true; requestAnimationFrame(loop);
 }
 function stopCamera() {
   running = false;
-  if (stream) stream.getTracks().forEach((t) => t.stop());
+  if (stream) stream.getTracks().forEach((tr) => tr.stop());
   stream = null; video.srcObject = null;
   try { wakeLock?.release(); } catch {} wakeLock = null;
   ctx.clearRect(0, 0, cv.width, cv.height);
   $("placeholder").hidden = false; $("btn-demo").hidden = false; $("atk-demo").hidden = false;
-  $("btn-cam").textContent = "カメラで素振り開始"; $("btn-cam").disabled = false;
-  $("pose-chip").textContent = "カメラ停止中"; $("pose-chip").className = "chip";
+  $("btn-cam").textContent = t("battle.camStart"); $("btn-cam").disabled = false;
+  $("pose-chip").textContent = t("chip.camOff"); $("pose-chip").className = "chip";
 }
+$("btn-cam").textContent = t("battle.camStart");
 $("btn-cam").onclick = () => (stream ? stopCamera() : startCamera());
 
 function loop() {
   if (!running) return;
   if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
     lastVideoTime = video.currentTime;
-    const t = performance.now();
-    const res = landmarker.detectForVideo(video, t);
+    const tt = performance.now();
+    const res = landmarker.detectForVideo(video, tt);
     if (cv.width !== video.videoWidth) { cv.width = video.videoWidth; cv.height = video.videoHeight; }
     ctx.clearRect(0, 0, cv.width, cv.height);
     const lm = res.landmarks && res.landmarks[0];
-    if (lm) onPose(lm, res.worldLandmarks && res.worldLandmarks[0], t); else { detector.lost(); gesture.update(t, null); setChip(false); }
+    if (lm) onPose(lm, res.worldLandmarks && res.worldLandmarks[0], tt); else { detector.lost(); gesture.update(tt, null); setChip(false); }
   }
   requestAnimationFrame(loop);
 }
 function setChip(ok, txt) {
   const c = $("pose-chip");
-  c.textContent = ok ? (txt || "認識中") : "体が映っていません"; c.className = "chip " + (ok ? "ok" : "ng");
+  c.textContent = ok ? (txt || t("chip.tracking")) : t("chip.noBody"); c.className = "chip " + (ok ? "ok" : "ng");
 }
 
 let torsoPx = 0, kScale = 0, hand3 = null;
 const trail = [];
-function onPose(lm, wl, t) {
+function onPose(lm, wl, tt) {
   const W = cv.width, H = cv.height;
   const P = (i) => ({ x: lm[i].x * W, y: lm[i].y * H, v: lm[i].visibility ?? 1 });
   const nose = P(0), ls = P(11), rs = P(12), lh = P(23), rh = P(24), lw = P(15), rw = P(16), le = P(13), re = P(14);
@@ -1366,19 +1393,19 @@ function onPose(lm, wl, t) {
   [[ls, rs], [ls, le], [le, lw], [rs, re], [re, rw], [ls, lh], [rs, rh], [lh, rh]].forEach(([a, b]) => {
     if (a.v < 0.3 || b.v < 0.3) return; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
   });
-  trail.push({ ...hand2, t }); while (trail.length && t - trail[0].t > 400) trail.shift();
+  trail.push({ ...hand2, t: tt }); while (trail.length && tt - trail[0].t > 400) trail.shift();
   ctx.strokeStyle = "rgba(214,171,76,.95)"; ctx.lineWidth = Math.max(4, W / 90);
   ctx.beginPath(); trail.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y))); ctx.stroke();
 
   const visible = (ls.v > 0.5 || rs.v > 0.5) && (lw.v > 0.3 || rw.v > 0.3);
-  if (!visible) { gesture.update(t, null); setChip(false); return; }
+  if (!visible) { gesture.update(tt, null); setChip(false); return; }
 
   // remote-command poses (image space; the raw camera frame shows the player's left wrist on the right)
   const T0 = torsoPx;
   const handsUp = lw.v > 0.5 && rw.v > 0.5 && lw.y < nose.y - 0.15 * T0 && rw.y < nose.y - 0.15 * T0;
   const crossed = lw.v > 0.4 && rw.v > 0.4 && lw.x < rw.x - 0.12 * T0 &&
     [lw, rw].every((p) => p.y > sm.y - 0.3 * T0 && p.y < sm.y + 0.9 * T0);
-  const commanding = gesture.update(t, handsUp ? "ok" : crossed ? "ng" : null);
+  const commanding = gesture.update(tt, handsUp ? "ok" : crossed ? "ng" : null);
 
   // 3D hand position in the player's frame, metres: [right, down, toward camera], hip-centred so steps and crouches don't count as cuts
   if (wl) {
@@ -1392,13 +1419,13 @@ function onPose(lm, wl, t) {
   }
 
   if (atk) {
-    setChip(true, "回避中");
-    dodge.update({ t, T: torsoPx, sm, hand: hand2, nose, wristGap: Math.hypot(lw.x - rw.x, lw.y - rw.y), speed: detector.speed });
-    if (hand3) detector.reset(hand3, t);
+    setChip(true, t("chip.dodging"));
+    dodge.update({ t: tt, T: torsoPx, sm, hand: hand2, nose, wristGap: Math.hypot(lw.x - rw.x, lw.y - rw.y), speed: detector.speed });
+    if (hand3) detector.reset(hand3, tt);
   } else {
     dodge.baseline(sm);
-    if (!commanding) setChip(true, detector.state === "idle" ? "構え" : "斬撃中");
-    if (hand3) detector.update(hand3, t);
+    if (!commanding) setChip(true, t(detector.state === "idle" ? "chip.kamae" : "chip.cutting"));
+    if (hand3) detector.update(hand3, tt);
   }
 }
 
@@ -1407,14 +1434,14 @@ const dodge = {
   base: null, armed: null, guardSince: 0, last: null,
   baseline(sm) { this.base = this.base ? { x: this.base.x * 0.92 + sm.x * 0.08, y: this.base.y * 0.92 + sm.y * 0.08 } : { ...sm }; },
   arm() { this.armed = this.base ? { ...this.base } : null; this.guardSince = 0; this.last = null; },
-  update({ t, T, sm, hand, nose, wristGap, speed }) {
+  update({ t: tt, T, sm, hand, nose, wristGap, speed }) {
     if (!this.armed) { this.armed = { ...sm }; return; }
     const drop = (sm.y - this.armed.y) / T, shift = Math.abs(sm.x - this.armed.x) / T;
     if (drop > 0.45) return tryDodge("crouch");
     if (shift > 0.6) return tryDodge("step");
     // sword held upright in front of the face: hands together between chin and upper chest, held still
     const upright = hand.y < sm.y + 0.25 * T && hand.y > nose.y - 0.6 * T && wristGap < 0.7 * T && speed < 0.9;
-    if (upright) { this.guardSince = this.guardSince || t; if (t - this.guardSince > 250) tryDodge("guard"); }
+    if (upright) { this.guardSince = this.guardSince || tt; if (tt - this.guardSince > 250) tryDodge("guard"); }
     else this.guardSince = 0;
   },
 };
@@ -1424,17 +1451,17 @@ const START = 1.6, STOP = 0.6, ONSET = 0.45;
 const detector = {
   state: "idle", prev: null, speed: 0, hist: [], s: null, cool: 0,
   lost() { this.prev = null; this.speed = 0; this.state = "idle"; },
-  reset(p, t) { this.state = "idle"; this.hist = []; this.prev = { p, t }; this.speed = 0; this.cool = t + 600; },
-  update(p, t) {
+  reset(p, tt) { this.state = "idle"; this.hist = []; this.prev = { p, t: tt }; this.speed = 0; this.cool = tt + 600; },
+  update(p, tt) {
     if (this.prev) {
-      const dt = (t - this.prev.t) / 1000;
+      const dt = (tt - this.prev.t) / 1000;
       if (dt > 0) this.speed = this.speed * 0.4 + (len(sub(p, this.prev.p)) / dt) * 0.6;
     }
-    this.prev = { p, t };
-    this.hist.push({ p, t, s: this.speed }); while (this.hist.length && t - this.hist[0].t > 800) this.hist.shift();
+    this.prev = { p, t: tt };
+    this.hist.push({ p, t: tt, s: this.speed }); while (this.hist.length && tt - this.hist[0].t > 800) this.hist.shift();
 
     if (this.state === "idle") {
-      if (this.speed > START && t > this.cool) {
+      if (this.speed > START && tt > this.cool) {
         let i = this.hist.length - 1;
         while (i > 0 && this.hist[i - 1].s > ONSET) i--;      // walk back to where the motion began
         const from = this.hist.slice(Math.max(0, i - 1));
@@ -1443,14 +1470,14 @@ const detector = {
       }
     } else if (this.state === "swing") {
       const s = this.s; s.pts.push(p); s.speeds.push(this.speed);
-      if (this.speed < STOP) s.low = s.low || t; else s.low = 0;
-      if ((s.low && t - s.low > 80) || t - s.tStart > 1600) {
-        s.end = p; s.tEnd = t; s.settleSum = 0; s.settleN = 0;
+      if (this.speed < STOP) s.low = s.low || tt; else s.low = 0;
+      if ((s.low && tt - s.low > 80) || tt - s.tStart > 1600) {
+        s.end = p; s.tEnd = tt; s.settleSum = 0; s.settleN = 0;
         this.state = "settle";
       }
     } else if (this.state === "settle") {
       const s = this.s; s.settleSum += this.speed; s.settleN++;
-      if (t - s.tEnd > 280 || this.speed > START) this.finish();
+      if (tt - s.tEnd > 280 || this.speed > START) this.finish();
     }
   },
   finish() {
@@ -1469,5 +1496,4 @@ const detector = {
 
 show("title");
 </script>
-
 </body></html>
