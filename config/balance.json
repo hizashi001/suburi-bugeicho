@@ -7,17 +7,19 @@
     "encounterSec": 1.6,
     "bossEncounterSec": 3.5,
     "killPauseSec": 1.8,
-    "finisherSec": 15,
+    "finisherSec": 25,
     "zanshinSec": 3,
     "zanshinMaxSpeed": 0.5,
-    "iaiStillSec": 0.8,
+    "iaiStillSec": 0.5,
     "iaiStillSpeed": 0.4,
     "restAfterSec": 60,
     "finisherBase": 1.0,
     "finisherRoll": [
       0.92,
       1.08
-    ]
+    ],
+    "iaiMinSpeed": 0.6,
+    "finisherAnySpeed": 0.4
   },
   "weapons": [
     {
@@ -93,7 +95,8 @@
     "crit": 2.0,
     "weak": 1.5,
     "levelPerLv": 0.06,
-    "counter": 1.5
+    "counter": 2.0,
+    "counterSec": 2.5
   },
   "kinds": {
     "katana": {
@@ -114,8 +117,8 @@
     "perSwing": 7,
     "sRankMult": 1.5,
     "weakMult": 1.5,
-    "windowSec": 3,
-    "pairWindowSec": 4.5,
+    "windowSec": 5,
+    "pairWindowSec": 7,
     "pairChance": 0.3,
     "shinobiHits": 4,
     "shinobiWindowSec": 4
@@ -126,7 +129,9 @@
       "kesa",
       "gyakukesa",
       "tsuki"
-    ]
+    ],
+    "name_ja": "仮の秘伝",
+    "name_en": "Provisional Hiden"
   },
   "enemy": {
     "hpBase": 700,
@@ -372,7 +377,7 @@
     "hpPerFloor": 0.04
   },
   "judge": {
-    "_note": "判定の段階。上から入門・初段・二段・三段・免許皆伝。速さと振り幅は手本（登録した型、無ければ標準）に対する割合。null はその段階では見ない。軌道のきれいさは判定ではなく与ダメージの軌道係数（lineFloor〜1.0）に効く",
+    "_note": "判定の段階。上から入門・初段・二段・三段・免許皆伝。速さと振り幅は手本（登録した型、無ければ標準）に対する割合。null はその段階では見ない。軌道のきれいさは判定ではなく与ダメージの軌道係数（lineFloor〜1.0）に効く。stagAng は怯み（金の矢印）で呼ばれた向きにどれだけ近ければよいか（度）。finisherAny が true の段階では、とどめに居合・秘伝でなくても一定の速さの一振りで決まる",
     "levels": [
       {
         "speed": 0.3,
@@ -381,7 +386,9 @@
         "wob": null,
         "dip": null,
         "lineFloor": 0.7,
-        "bonus": 1.0
+        "bonus": 1.0,
+        "stagAng": 70,
+        "finisherAny": true
       },
       {
         "speed": 0.4,
@@ -390,7 +397,9 @@
         "wob": null,
         "dip": null,
         "lineFloor": 0.6,
-        "bonus": 1.1
+        "bonus": 1.1,
+        "stagAng": 60,
+        "finisherAny": true
       },
       {
         "speed": 0.55,
@@ -399,7 +408,9 @@
         "wob": 0.45,
         "dip": 0.6,
         "lineFloor": 0.5,
-        "bonus": 1.25
+        "bonus": 1.25,
+        "stagAng": 50,
+        "finisherAny": true
       },
       {
         "speed": 0.7,
@@ -408,7 +419,9 @@
         "wob": 0.3,
         "dip": 0.4,
         "lineFloor": 0.4,
-        "bonus": 1.5
+        "bonus": 1.5,
+        "stagAng": 40,
+        "finisherAny": true
       },
       {
         "speed": 0.85,
@@ -417,16 +430,55 @@
         "wob": 0.2,
         "dip": 0.25,
         "lineFloor": 0.3,
-        "bonus": 2.0
+        "bonus": 2.0,
+        "stagAng": 25,
+        "finisherAny": false
       }
     ],
     "comboBreakForm": 15,
-    "parryLateral": 0.75
+    "parryLateral": 0.75,
+    "recoveryPeak": 0.6,
+    "flow": {
+      "_note": "一筆書きのコンボを1振りずつに分ける。back=折り返したと見なす戻り(m)、minAmp=1振りの最小の長さ(m)、dip=減速の割合、ang=向きが変わったと見なす角度、settle=流れの途中の残心の値",
+      "back": 0.12,
+      "minAmp": 0.2,
+      "dip": 0.55,
+      "ang": 60,
+      "settle": 0.5
+    },
+    "parry": {
+      "_note": "受け：刀を立てたまま手を横に素早く動かす。windowMs の間に dist(m) 以上、縦の ratio 倍以上横に動けば成功",
+      "windowMs": 250,
+      "dist": 0.15,
+      "ratio": 1.5
+    }
   },
   "sound": {
     "_note": "COMBOごとに打撃音の高さを comboPitchStep ずつ上げ、comboPitchSteps 段で頭打ち。BGMの音量は0〜1",
     "comboPitchStep": 0.05,
     "comboPitchSteps": 11,
     "bgmVol": 0.35
+  },
+  "chain": {
+    "_note": "COMBOの締め：minHits 以上続いたら、合計×(perHit×(数−minHits+1)、最大 maxBonus)×平均の軌道係数 を上乗せ",
+    "minHits": 3,
+    "perHit": 0.05,
+    "maxBonus": 0.5
+  },
+  "barrage": {
+    "_note": "強敵（ボス・金色・大将）の連撃。COMBOが afterCombo の倍数になると count 回続けて攻撃。全部よけるとカウンター perfectCounter 倍",
+    "afterCombo": 6,
+    "count": 3,
+    "bossCount": 4,
+    "warnMult": 0.6,
+    "gapSec": 0.45,
+    "perfectCounter": 3.0
+  },
+  "tech": {
+    "_note": "登録した技（WORKOUTコンボ）が決まったときの倍率。クリティカルにも必ずなる",
+    "mult": 1.5
+  },
+  "gesture": {
+    "ngHoldMs": 3000
   }
 }
