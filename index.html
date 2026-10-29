@@ -858,7 +858,7 @@ function show(name) {
   closeResult();
   screens.forEach((s) => ($("scr-" + s).hidden = s !== name));
   document.body.classList.toggle("in-battle", name === "battle");
-  if (name !== "battle") { stopPlay(); ambience(false); if (ac) bgm("bgm_title"); }
+  if (name !== "battle") { stopPlay(); ambience(false); if (ac) bgm(menuBgm(name)); }
   ({ title: renderTitle, setup: renderSetup, forms: renderForms, gear: renderGear, swords: renderSwords, book: renderBook, map: renderMap, climb: renderClimb }[name] || (() => {}))();
   window.scrollTo(0, 0);
 }
@@ -1199,8 +1199,8 @@ function renderMap() {
 let pausedTotal = 0, pausedAt = 0;
 const gnow = () => (pausedAt ? pausedAt : performance.now()) - pausedTotal;
 function syncPause() {
-  if (document.hidden) { if (!pausedAt) pausedAt = performance.now(); }
-  else if (pausedAt) { pausedTotal += performance.now() - pausedAt; pausedAt = 0; }
+  if (document.hidden) { if (!pausedAt) { pausedAt = performance.now(); try { ac && ac.suspend(); } catch {} } }
+  else if (pausedAt) { pausedTotal += performance.now() - pausedAt; pausedAt = 0; try { ac && ac.resume(); } catch {} }
 }
 document.addEventListener("visibilitychange", syncPause);
 
@@ -1275,7 +1275,7 @@ function launch(m, r) {
   resetBattleUI();
   $("btn-retreat").textContent = t("battle.retreat");
   $("run-chip").hidden = false;
-  play("draw"); ambience(true); bgm(fightBgm());
+  play("kettei"); play("draw"); ambience(true); bgm(fightBgm());
   nextYokai();
 }
 // mostly the newest few
@@ -1310,7 +1310,7 @@ function nextYokai() {
     <div class="row" style="justify-content:center"><span class="tag">${esc(t(R.climb ? "climb.floor" : "run.wave", { n: R.wave }))}</span>${m === ZASHIKI ? `<span class="tag gold">${esc(t("tag.lucky"))}</span>` : ""}${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
     ${m.boss ? `<span class="hiden">${esc(t("enc.hiden", { seq: B.hiden.seq.map(typeName).join(" → ") }))}</span>` : ""}`,
     (m.boss ? B.bout.bossEncounterSec : B.bout.encounterSec) * 1000, () => beginFight());
-  bgm(m.boss ? "bgm_boss" : fightBgm());
+  bgm(m.boss ? bossBgm(R.wave) : fightBgm());
   if (m === ZASHIKI) { flash("goldfl"); setTimeout(() => flash("goldfl"), 450); play("suzu") || play("ring"); }
   else if (m.boss || variant !== "base") play("taiko");
 }
@@ -1407,22 +1407,34 @@ function tabataPlan() {
   const forms = Array.from({ length: B.tabata.rounds }, (_, i) => pool[i % pool.length]);
   return { forms, mons: forms.map(() => NORMALS[Math.floor(r() * NORMALS.length)]) };
 }
-function startTabata() {
+// With the workout track (bgm_tabata.mp3) the rounds follow the music: the first 20 s starts musicLeadSec into it.
+// The timer then runs on the audio clock, so music and rounds never drift apart. Without the track: prepSec and the game clock.
+async function startTabata() {
   closeResult();
   if ($("scr-battle").hidden) show("battle");
   mode = "tabata"; reg = null; R = null;
   P = newPlayer();
   const plan = tabataPlan();
-  TB = { round: 0, forms: plan.forms, mons: plan.mons, score: 0, kills: 0, rounds: [], until: 0 };
+  TB = { round: 0, forms: plan.forms, mons: plan.mons, score: 0, kills: 0, rounds: [], until: 0, now: gnow };
   resetBattleUI();
   $("btn-retreat").textContent = t("tabata.quit");
   $("b-timer").className = "timer num big";
-  ambience(true); bgm("bgm_tabata");
-  tabataRest(B.tabata.prepSec);
+  play("kettei");
+  audio();
+  const tb = TB, track = await bgmBuffer("bgm_tabata");
+  if (TB !== tb) return; // quit while loading
+  if (track && (await bgm("bgm_tabata", { loop: false }))) {
+    const t0 = ac.currentTime;
+    TB.now = () => (ac.currentTime - t0) * 1000;
+    tabataRest(B.tabata.musicLeadSec);
+  } else {
+    ambience(true);
+    tabataRest(B.tabata.prepSec);
+  }
 }
 function tabataRest(sec) {
   phase = "rest"; foe = null;
-  TB.until = gnow() + sec * 1000; TB.beeped = Math.ceil(sec);
+  TB.until = (TB.until || TB.now()) + sec * 1000; TB.beeped = Math.ceil(sec); // chained on the plan, so 3 minutes stay 3 minutes
   const f = TB.forms[TB.round];
   showCue(`<div class="full gold">${bigArrow(tmpl(TYPE[f]).dir, "var(--kin)")}</div><div class="label">${esc(t("tabata.next", { n: TB.round + 1, total: B.tabata.rounds }))}<br>${nameHtml("type." + f)}</div>`);
   renderHud();
@@ -1432,13 +1444,13 @@ function tabataWork() {
   const m = TB.mons[TB.round - 1];
   const max = Math.round(B.tabata.hp * (1 + B.tabata.hpPerRound * (TB.round - 1)));
   foe = { m, wave: TB.round, variant: "base", hp: max, max, dmg: 0, atkDmg: 0, tags: tagsOf(m.asset), stagger: B.stagger.max, form: TB.forms[TB.round - 1] };
-  phase = "fight"; TB.until = gnow() + B.tabata.workSec * 1000; TB.start = gnow();
+  phase = "fight"; TB.until = TB.until + B.tabata.workSec * 1000; TB.start = TB.now(); // from the planned start, so rounds stay on the beat
   showCue(`<div class="full" style="background:rgba(214,171,76,.07)">${bigArrow(tmpl(TYPE[foe.form]).dir, "rgba(214,171,76,.5)")}</div>`);
   play("gong"); renderHud();
 }
 function tabataRoundEnd(killed) {
   const r = { form: foe.form, m: foe.m, dmg: foe.dmg, killed, bonus: 0 };
-  if (killed) r.bonus = B.tabata.killBonus + Math.round(Math.max(0, (TB.until - gnow()) / 1000) * B.tabata.timeBonusPerSec);
+  if (killed) r.bonus = B.tabata.killBonus + Math.round(Math.max(0, (TB.until - TB.now()) / 1000) * B.tabata.timeBonusPerSec);
   TB.rounds.push(r); TB.score += r.dmg + r.bonus; if (killed) TB.kills++;
   if (killed) { flash("goldfl"); play("chime"); popup("S", t("stamp.slain"), `+${fmt(r.dmg + r.bonus)}`); }
   if (TB.round >= B.tabata.rounds) return finishTabata();
@@ -2133,7 +2145,7 @@ function hitstop() {
 const SOUND_IDS = ["swing_katana", "swing_tanto", "crit_katana", "crit_tanto", "cue_crouch", "cue_guard", "cue_step", "taiko", "chime", "hurt",
   "breath", "draw", "ring", "lvup", "fanfare", "gong", "whistle", "beep", "ambience_night",
   "voice_fuseyo", "voice_ukeyo", "voice_tobe", "voice_todome", "voice_zanshin", "suzu",
-  "hit_katana", "hit_tanto", "slay", "parry", "deden", "waza", "tally_tick", "tally_total"];
+  "hit_katana", "hit_tanto", "slay", "parry", "deden", "waza", "tally_tick", "tally_total", "kettei"];
 let ac = null, amb = null, soundsLoaded = false;
 const SFX = {};
 function audio() {
@@ -2189,6 +2201,7 @@ const SYNTH = {
   draw: () => { noise({ sec: 0.35, f0: 3000, f1: 7000, q: 2, vol: 0.2 }); tone({ f: 2600, sec: 0.6, vol: 0.06, delay: 0.3 }); },
   suzu: () => [0, 0.16, 0.32, 0.5].forEach((d, i) => [2637, 3520].forEach((f) => tone({ f: f * (1 + i * 0.02), sec: 0.5, vol: 0.07, delay: d, type: "triangle" }))),
   slay: () => { noise({ sec: 0.3, f0: 6000, f1: 900, q: 0.9, vol: 0.4 }); tone({ f: 70, f1: 40, sec: 0.6, vol: 0.5, delay: 0.05 }); noise({ sec: 0.9, f0: 900, f1: 300, q: 0.5, vol: 0.12, type: "lowpass", delay: 0.2 }); },
+  kettei: () => { tone({ f: 130, f1: 70, sec: 0.35, vol: 0.45 }); tone({ f: 880, sec: 0.25, vol: 0.08, type: "triangle", delay: 0.02 }); },
   deden: () => { tone({ f: 98, f1: 60, sec: 0.5, vol: 0.6 }); tone({ f: 73, f1: 45, sec: 0.8, vol: 0.7, delay: 0.28 }); noise({ sec: 0.2, f0: 700, f1: 200, type: "lowpass", vol: 0.4, delay: 0.28 }); [392, 523, 784].forEach((f) => tone({ f, sec: 1.1, vol: 0.06, type: "sawtooth", delay: 0.3 })); },
   waza: () => { noise({ sec: 0.35, f0: 1200, f1: 7000, q: 1.2, vol: 0.3 }); [1318, 1976].forEach((f, i) => tone({ f, sec: 0.9, vol: 0.08, type: "triangle", delay: 0.2 + i * 0.06 })); },
   tally_tick: (i = 0) => { noise({ sec: 0.06, f0: 2400, f1: 900, q: 1.2, vol: 0.28 }); tone({ f: COMBO_NOTES[Math.min(i, COMBO_NOTES.length - 1)], sec: 0.08, vol: 0.07, type: "square" }); },
@@ -2240,24 +2253,40 @@ function sndCue(k) {
 // a low night wind under the fight
 // background music: only from files (assets/sounds/bgm_*.mp3); without a file there is none
 let bgmNow = null, bgmSrc = null, bgmGain = null;
-async function bgm(id) {
-  if (bgmNow === id) return;
+// when a track is missing, the next one in line plays instead
+const BGM_FALLBACK = { bgm_menu: "bgm_title", bgm_boss1: "bgm_boss", bgm_boss2: "bgm_boss1", bgm_shop: "bgm_menu" };
+const bgmLoads = {};
+function loadBgm(id) {
+  const a = ac; if (!a) return Promise.resolve(null);
+  return (bgmLoads[id] ||= fetch(`assets/sounds/${id}.mp3`).then((r) => (r.ok ? r.arrayBuffer() : null)).then((b) => (b ? a.decodeAudioData(b) : null)).catch(() => null)
+    .then((buf) => { SFX[id] = buf; return buf; }));
+}
+async function bgmBuffer(id) {
+  for (let k = id; k; k = BGM_FALLBACK[k]) { const buf = await loadBgm(k); if (buf) return buf; }
+  return null;
+}
+// loop = false plays a track once from the start (TABATA's workout track); returns true when music started
+async function bgm(id, { loop = true } = {}) {
+  if (bgmNow === id) return !!bgmSrc;
   bgmNow = id;
-  const a = ac; if (!a) return;          // no music before the first tap
+  const a = ac; if (!a) return false;   // no music before the first tap
   if (bgmSrc) { const g = bgmGain, src = bgmSrc; g.gain.setTargetAtTime(0, a.currentTime, 0.3); setTimeout(() => { try { src.stop(); } catch {} }, 1500); bgmSrc = null; }
-  if (!id) return;
-  if (!(id in SFX)) {
-    SFX[id] = null;
-    try { const r = await fetch(`assets/sounds/${id}.mp3`); if (r.ok) SFX[id] = await a.decodeAudioData(await r.arrayBuffer()); } catch {}
-  }
-  if (bgmNow !== id || !SFX[id]) return;
+  if (!id) return false;
+  const buf = await bgmBuffer(id);
+  if (bgmNow !== id || !buf) return false;
   const src = a.createBufferSource(), g = a.createGain();
-  src.buffer = SFX[id]; src.loop = true; g.gain.value = B.sound.bgmVol;
+  src.buffer = buf; src.loop = loop; g.gain.value = B.sound.bgmVol;
   src.connect(g).connect(a.destination); src.start();
   bgmSrc = src; bgmGain = g;
+  return true;
 }
 const fightBgm = () => (mode === "climb" ? "bgm_climb" : mode === "tabata" ? "bgm_tabata" : "bgm_run");
-document.addEventListener("pointerdown", () => { if (!bgmNow && $("scr-battle").hidden) { audio(); bgm("bgm_title"); } }, { once: true });
+// boss music alternates: floors 5, 15, 25… boss1; 10, 20… boss2
+const bossBgm = (wave) => (Math.round(wave / B.run.bossEvery) % 2 === 1 ? "bgm_boss1" : "bgm_boss2");
+const menuBgm = (name) => (name === "title" ? "bgm_title" : "bgm_menu");
+document.addEventListener("pointerdown", () => {
+  if (!bgmNow && $("scr-battle").hidden) { audio(); bgm(menuBgm(screens.find((x) => !$("scr-" + x).hidden))); loadBgm("bgm_tabata"); }
+}, { once: true });
 function ambience(on) {
   const a = on ? audio() : ac; if (!a) return;
   if (on && !amb) {
@@ -2306,7 +2335,7 @@ function hud() {
     }
   }
   if (!pausedAt) {
-    if (mode === "tabata" && TB) tabataTick(now);
+    if (mode === "tabata" && TB) tabataTick(TB.now());
     if (fighting() && foe && P) {
       if (phase === "fight") {
         $("b-timer").textContent = `${Math.floor((now - P.fightStart) / 60000)}:${String(Math.floor(((now - P.fightStart) / 1000) % 60)).padStart(2, "0")}`;
@@ -2478,7 +2507,7 @@ function onPose(lm, wl, tt) {
     const torsoW = len(sub(m3(W3(11), W3(12)), m3(W3(23), W3(24))));
     if (!atk && torsoW > 0.15) { const k = torsoMeters() / torsoW; kScale = kScale ? kScale * 0.95 + k * 0.05 : k; }
     const a = W3(15), b = W3(16), s = kScale || 1;
-    const raw = [-((a.x * vl + b.x * vr) / (vl + vr)) * s, ((a.y * vl + b.y * vr) / (vl + vr)) * s, -((a.z * vl + b.z * vr) / (vl + vr)) * s];
+    const raw = [-((a.x * vl + b.x * vr) / (vl + vr)) * s, ((a.y * vl + b.y * vr) / (vl + vr)) * s, -((a.z * vl + b.z * vr) / (vl + vr)) * s * B.judge.depthGain];
     hand3 = hand3 ? [hand3[0] * 0.45 + raw[0] * 0.55, hand3[1] * 0.45 + raw[1] * 0.55, hand3[2] * 0.6 + raw[2] * 0.4] : raw; // depth is noisier
   }
 
