@@ -346,7 +346,8 @@
       "sword_22_kirigakure": "damage_taken",
       "sword_23_kagenui": "dodge_window",
       "sword_24_yonaki": "damage"
-    }
+    },
+    "zashikiTop": 0.3
   },
   "run": {
     "bossEvery": 5,
@@ -361,6 +362,14 @@
     "hp": 650,
     "hpPerRound": 0.1,
     "killBonus": 300,
-    "timeBonusPerSec": 30
+    "timeBonusPerSec": 30,
+    "_note": "型と妖怪の並びは日替わり（日本時間22時で切り替え）。同じ日は全員同じ"
+  },
+  "climb": {
+    "_note": "登頂。座敷童の出現率は武士部門の通常の階ごと。招福で2倍",
+    "zashikiChance": 0.02,
+    "shofukuMult": 2,
+    "healOnKill": 0.15,
+    "hpPerFloor": 0.04
   }
 }

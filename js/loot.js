@@ -71,7 +71,7 @@ export function rollItem(r, L, SW, opts) {
 }
 
 // everything one defeated yokai drops.
-// ctx: { asset, boss, gold, taisho, kind, dropRate (%) }
+// ctx: { asset, boss, gold, taisho, zashiki, kind, dropRate (%) }
 export function rollDrops(seed, L, SW, ctx) {
   const r = makeRng(seed);
   const out = [];
@@ -79,6 +79,7 @@ export function rollDrops(seed, L, SW, ctx) {
   for (let i = 0; i < n; i++) {
     let floor = ctx.gold ? L.goldFloor : 0;
     if (ctx.boss && i === 0) floor = Math.max(floor, L.bossFloor);
+    if (ctx.zashiki && i === 0 && r() < L.zashikiTop) floor = L.grades.length - 1; // 座敷童: 最上大業物
     out.push(rollItem(r, L, SW, { grade: rollGrade(r, L, { taisho: ctx.taisho, floor }), kind: ctx.kind }));
   }
   for (const s of SW.swords) {

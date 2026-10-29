@@ -287,6 +287,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .tiles > div { background: var(--ai-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tiles b { font-family: var(--f-display); font-size: 1.3rem; line-height: 1.2; }
+.climb-tiles { grid-template-columns: repeat(2, 1fr); }
 .expbox { display: flex; flex-direction: column; gap: 8px; }
 .expbar { height: 22px; background: rgba(0,0,0,.4); border-radius: 11px; overflow: hidden; position: relative; }
 .expbar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--kin); width: 0; }
@@ -330,7 +331,8 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
     </div>
     <p class="warn" id="t-formnote" data-i18n="title.formnote" hidden></p>
     <button class="mode kin" id="go-adv"><strong data-i18n="mode.adv"></strong><span data-i18n="mode.adv.desc"></span><span class="num" id="t-advbest"></span></button>
-    <button class="mode" id="go-tabata"><strong data-i18n="mode.tabata"></strong><span data-i18n="mode.tabata.desc"></span><span class="num" id="t-tabbest"></span></button>
+    <button class="mode" id="go-climb"><strong data-i18n="mode.climb"></strong><span data-i18n="mode.climb.desc"></span><span class="num" id="t-climb"></span></button>
+    <button class="mode" id="go-tabata"><strong data-i18n="mode.tabata"></strong><span data-i18n="mode.tabata.desc"></span><span class="small" id="t-tabtoday"></span><span class="num" id="t-tabbest"></span></button>
     <div class="grid2">
       <button class="tile-btn" id="go-gear"><b data-i18n="menu.gear"></b><span id="t-gear"></span></button>
       <button class="tile-btn" id="go-forms"><b data-i18n="menu.forms"></b><span data-i18n="menu.forms.desc"></span></button>
@@ -340,7 +342,6 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
     </div>
     <span class="label" data-i18n="soon.label"></span>
     <div class="soon">
-      <div><b data-i18n="soon.climb"></b><span data-i18n="soon.climb.desc"></span><em data-i18n="soon.phase3"></em></div>
       <div><b data-i18n="soon.raid"></b><span id="t-raid"></span><em data-i18n="soon.phase3"></em></div>
       <div><b data-i18n="soon.race"></b><span data-i18n="soon.race.desc"></span><em data-i18n="soon.phase2"></em></div>
       <div><b data-i18n="soon.rank"></b><span data-i18n="soon.rank.desc"></span><em data-i18n="soon.phase2"></em></div>
@@ -436,6 +437,29 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
     <p class="footer-note" data-i18n="map.note"></p>
   </section>
 
+  <!-- ===== 登頂 (climb) ===== -->
+  <section id="scr-climb" class="app" hidden>
+    <div class="row spread"><h2 data-i18n="mode.climb"></h2><button class="ghost" data-back="title" data-i18n="common.back"></button></div>
+    <p class="small muted" id="c-day"></p>
+    <div class="panel">
+      <span class="label" data-i18n="map.division"></span>
+      <div class="seg" id="c-divisions"></div>
+    </div>
+    <button class="mode kin" id="btn-climb"><strong id="c-start"></strong><span id="c-start-desc"></span></button>
+    <div class="tiles climb-tiles">
+      <div><span class="label" data-i18n="climb.reached"></span><b class="num" id="c-reached"></b></div>
+      <div><span class="label" data-i18n="climb.todayScore"></span><b class="num" id="c-score"></b></div>
+      <div><span class="label" data-i18n="climb.lv"></span><b class="num" id="c-lv"></b></div>
+      <div><span class="label" data-i18n="climb.gear"></span><b class="num" id="c-gear"></b></div>
+    </div>
+    <div class="panel">
+      <span class="label" data-i18n="climb.bosses"></span>
+      <div class="small" id="c-bosses"></div>
+    </div>
+    <p class="small num muted" id="c-best"></p>
+    <p class="footer-note" data-i18n="climb.note"></p>
+  </section>
+
   <!-- ===== Battle ===== -->
   <section id="scr-battle" class="app" hidden>
     <div class="stage" id="stage">
@@ -522,7 +546,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 <div class="toast" id="toast" hidden></div>
 
 <script type="module">
-import { rollDrops, newSeed, SWORD_PARTS, SLOTS } from "./js/loot.js";
+import { rollDrops, newSeed, makeRng, SWORD_PARTS, SLOTS } from "./js/loot.js";
 
 // ---------- language files and data ----------
 // Every on-screen string lives in lang/<code>.json. Names of forms, yokai, grades and swords stay in romaji in other languages, with a small gloss.
@@ -600,9 +624,11 @@ const MONSTERS = [
   { id: "shuten",     asset: "boss_01_shuten_doji",     glyph: "酒", exp: 700, atk: 5,   weak: "shinmen", boss: true, partner: { exp: 50 } },
 ]; // atk = average seconds between enemy attacks
 const NORMALS = MONSTERS.filter((m) => !m.boss), BOSSES = MONSTERS.filter((m) => m.boss);
+// 座敷童: the lucky yokai of the climb (武士部門 only). It never attacks and is not tamed.
+const ZASHIKI = { id: "zashiki", asset: "rare_01_zashiki_warashi", glyph: "童", exp: 300, atk: 0, weak: "kesa", single: true };
 const monName = (m) => t("mon." + m.id);
 const tagsOf = (asset) => Object.entries(SW.yokai_tags || {}).filter(([, ids]) => ids.includes(asset)).map(([k]) => k);
-const monFile = (m, variant) => (m.boss ? `${m.asset}.png` : `${m.asset}_${variant}.png`);
+const monFile = (m, variant) => (m.boss || m.single ? `${m.asset}.png` : `${m.asset}_${variant}.png`);
 function monArt(m, variant = "base") {
   const base = ASSET_PATH[monFile(m, "base")] ? monFile(m, "base") : null;
   const want = ASSET_PATH[monFile(m, variant)] ? monFile(m, variant) : base;
@@ -631,7 +657,7 @@ const fresh = () => ({
   ver: 3, lang: LANG,
   weapons: [{ opt: "bokuto", kg: 0.6, kind: "katana" }, { opt: "tanto", kg: 0.2, kind: "tanto" }], active: 0,
   height: 170, enemyAtk: true, freq: 1, diff: 1, forms: {}, division: "bushi",
-  lv: 1, exp: 0, kills: {}, bestScore: {}, bestRun: { score: 0, kills: 0 }, tabataBest: {},
+  lv: 1, exp: 0, kills: {}, bestScore: {}, bestRun: { score: 0, kills: 0 }, tabataBest: {}, tabataToday: null, climb: {}, climbBest: {},
   inv: [], equip: {}, nextId: 1, seen: {}, setDone: {},
   shiki: {}, partner: null,
 });
@@ -646,6 +672,23 @@ if (S.ver === 2) {
   delete S.shiki.inoshishi; if (S.partner === "inoshishi") S.partner = null;
 }
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+
+// ---------- the day: it turns over at 22:00 in Japan (UTC 13:00) for everyone ----------
+const DAY_MS = 86400000, TURN_MS = 13 * 3600000;
+const dayId = (now = Date.now()) => Math.floor((now - TURN_MS) / DAY_MS);
+// a seed everyone shares today; salt keeps the mountain, TABATA and so on independent
+function daySeed(salt) {
+  let h = (2166136261 ^ dayId()) >>> 0;
+  for (const c of salt) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return h >>> 0;
+}
+// 登頂: one state per division, cleared when the day turns over
+function climbOf(div = S.division) {
+  const d = dayId();
+  let c = S.climb[div];
+  if (!c || c.day !== d) c = S.climb[div] = { day: d, floor: 1, reached: 0, score: 0, lv: 1, exp: 0, inv: [], equip: {}, nextId: 1 };
+  return c;
+}
 
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => Math.round(n).toLocaleString(LOCALE);
@@ -681,11 +724,16 @@ const torsoMeters = () => (S.height / 100) * 0.29; // shoulder-to-hip ≈ 29% of
 
 const diff = () => DIFF[S.diff];
 const expNeed = (lv) => Math.round(100 * Math.pow(lv, 1.6));
-// what is being played: "run" (妖怪退治), "tabata" or "reg" (form registration)
+// what is being played: "run" (妖怪退治), "climb" (登頂), "tabata" or "reg" (form registration)
 let mode = null;
-// 武士部門 in a run: gear, sword kind, skills, level and shikigami count. Everything else is bare skill.
-const bushi = () => mode === "run" && S.division === "bushi";
-const hasSkill = (id) => bushi() && SKILLS.some((s) => s.id === id && S.lv >= s.lv);
+const fighting = () => mode === "run" || mode === "climb";
+// 武士部門 in a run or climb: gear, sword kind, skills, level and shikigami count. Everything else is bare skill.
+const bushi = () => fighting() && S.division === "bushi";
+// 登頂 starts from LV 1 every day and uses only the gear found on that day's mountain
+const climbNow = () => (R && R.c) || climbOf();
+const lvNow = () => (mode === "climb" ? climbNow().lv : S.lv);
+const gearBag = () => (mode === "climb" ? climbNow() : S);
+const hasSkill = (id) => bushi() && SKILLS.some((s) => s.id === id && lvNow() >= s.lv);
 
 function tmpl(x) {
   const f = S.forms[x.id];
@@ -694,10 +742,10 @@ function tmpl(x) {
 }
 
 // ---------- gear stats ----------
-const itemById = (id) => S.inv.find((i) => i.id === id);
+const itemById = (id) => gearBag().inv.find((i) => i.id === id);
 // equipped items that apply now: sword parts only of the kind you are holding
 function equippedItems(k = kind()) {
-  return SLOTS.map((slot) => itemById(S.equip[slot])).filter((it) => it && (!it.kind || it.kind === k));
+  return SLOTS.map((slot) => itemById(gearBag().equip[slot])).filter((it) => it && (!it.kind || it.kind === k));
 }
 function gearStats(on) {
   const o = { damage: 0, s_rank_damage: 0, hiden_damage: 0, combo_cap: 0, stagger: 0, finisher: 0, dodge_window: 0, combo_window: 0,
@@ -718,7 +766,7 @@ function gearStats(on) {
   else if (top === 2) { o.damage += L.set.two; o.setTier = 2; }
   if (Object.keys(counts).length === 4 && top === 1) { o.exp += L.set.mixedExp; o.mixed = true; }
   const p = MONSTERS.find((m) => m.id === S.partner);
-  if (p && S.shiki[p.id]) o.partner = p.partner;
+  if (p && S.shiki[p.id] && mode !== "climb") o.partner = p.partner; // nothing is carried up the mountain
   return o;
 }
 const stats = () => gearStats(bushi());
@@ -741,13 +789,13 @@ function warnSec(st = stats()) {
 const maxHp = (st = stats()) => Math.round(B.player.hp * (1 + st.max_hp / 100) * (has4(st, "sword_09_odenta") ? 1.3 : 1));
 
 // ---------- screens ----------
-const screens = ["title", "setup", "forms", "gear", "swords", "book", "map", "battle"];
+const screens = ["title", "setup", "forms", "gear", "swords", "book", "map", "climb", "battle"];
 function show(name) {
   closeResult();
   screens.forEach((s) => ($("scr-" + s).hidden = s !== name));
   document.body.classList.toggle("in-battle", name === "battle");
   if (name !== "battle") { stopPlay(); ambience(false); }
-  ({ title: renderTitle, setup: renderSetup, forms: renderForms, gear: renderGear, swords: renderSwords, book: renderBook, map: renderMap }[name] || (() => {}))();
+  ({ title: renderTitle, setup: renderSetup, forms: renderForms, gear: renderGear, swords: renderSwords, book: renderBook, map: renderMap, climb: renderClimb }[name] || (() => {}))();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", () => show(b.dataset.back)));
@@ -774,6 +822,11 @@ function renderTitle() {
   const tb = S.tabataBest[weightClassOf()];
   $("t-tabbest").textContent = tb ? t("title.tabBest", { cls: t("wclass." + weightClassOf()), score: fmt(tb) }) : "";
   $("t-raid").textContent = t("soon.raid.desc", { time: nextRaidLocal() });
+  const cb = S.climb.bushi?.day === dayId() ? S.climb.bushi.reached : 0, cs = S.climb.samurai?.day === dayId() ? S.climb.samurai.reached : 0;
+  $("t-climb").textContent = cb || cs ? t("title.climbToday", { bushi: cb, samurai: cs }) : "";
+  $("t-tabtoday").textContent = t("title.tabToday", { forms: tabataPlan().forms.map(typeName).join("・") });
+  const tt = S.tabataToday?.day === dayId() ? S.tabataToday.best[weightClassOf()] : 0;
+  if (tt) $("t-tabbest").textContent = t("title.tabTodayBest", { score: fmt(tt) }) + ($("t-tabbest").textContent ? " ・ " + $("t-tabbest").textContent : "");
 }
 
 // --- setup
@@ -999,6 +1052,32 @@ function renderBook() {
 }
 
 // --- 妖怪退治 lobby
+// ---------- 登頂 lobby ----------
+function renderClimb() {
+  const c = climbOf(); save();
+  $("c-divisions").innerHTML = ["bushi", "samurai"].map((d) => `<button data-div="${d}" aria-pressed="${S.division === d}"><b>${esc(t("division." + d))}</b><span>${esc(t("climb.div." + d))}</span></button>`).join("");
+  $("c-divisions").querySelectorAll("button").forEach((b) => (b.onclick = () => { S.division = b.dataset.div; save(); renderClimb(); }));
+  const left = (dayId() + 1) * DAY_MS + TURN_MS - Date.now();
+  $("c-day").textContent = t("climb.day", { h: Math.floor(left / 3600000), m: Math.floor((left % 3600000) / 60000), time: nextRaidLocal() });
+  $("c-start").textContent = c.floor > 1 ? t("climb.continue", { n: c.floor }) : t("climb.start");
+  $("c-start-desc").textContent = t("climb.start.desc");
+  $("c-reached").textContent = t("climb.floorN", { n: c.reached });
+  $("c-score").textContent = fmt(c.score);
+  $("c-lv").textContent = c.lv;
+  $("c-gear").textContent = S.division === "bushi" ? c.inv.length : "－";
+  $("c-bosses").innerHTML = [1, 2, 3, 4, 5].map((i) => i * B.run.bossEvery).map((f) => `${esc(t("climb.floor", { n: f }))} <b>${esc(monName(climbBoss(f)))}</b>`).join(" ・ ");
+  $("c-best").textContent = t("climb.best", { n: S.climbBest[S.division] || 0 });
+}
+// 登頂: the day's pickings go on at once when they beat what is worn (nothing else to choose from on the mountain)
+function climbEquip(c, items) {
+  for (const it of items) {
+    c.inv.push(it);
+    if (it.kind && it.kind !== kind()) continue;
+    const cur = c.inv.find((i) => i.id === c.equip[it.slot]);
+    if (!cur || it.grade > cur.grade || (it.grade === cur.grade && it.main.v > cur.main.v)) c.equip[it.slot] = it.id;
+  }
+}
+
 function renderMap() {
   $("divisions").innerHTML = ["bushi", "samurai"].map((d) => `<button data-div="${d}" aria-pressed="${S.division === d}"><b>${esc(t("division." + d))}</b><span>${esc(t("division." + d + ".desc"))}</span></button>`).join("");
   $("divisions").querySelectorAll("button").forEach((b) => (b.onclick = () => { S.division = b.dataset.div; save(); renderMap(); }));
@@ -1045,7 +1124,9 @@ $("go-swords").onclick = () => show("swords");
 $("go-book").onclick = () => show("book");
 $("go-adv").onclick = () => show("map");
 $("go-tabata").onclick = () => startTabata();
+$("go-climb").onclick = () => show("climb");
 $("btn-run").onclick = () => startRun();
+$("btn-climb").onclick = () => startClimb();
 
 function renderSwitcher() {
   $("switcher").innerHTML = S.weapons.map((w, i) => `<button class="mini" data-w="${i}" aria-pressed="${i === S.active}" title="${esc(wName(w))}">${esc(t("kind." + kindOf(w)))}<br>${w.kg}kg</button>`).join("");
@@ -1068,7 +1149,7 @@ function resetBattleUI() {
   $("ls-score").textContent = ""; $("ls-calc").textContent = "";
   ["speed", "line", "amp", "zan"].forEach((k) => { $("ls-" + k).style.width = 0; $("ls-" + k + "-v").textContent = ""; });
   $("verdict").hidden = true; $("combo").hidden = true; $("regbox").hidden = true; $("atk-demo").hidden = true; $("run-chip").hidden = true;
-  $("test-tools").hidden = mode !== "run"; $("hud-foe").hidden = false; $("b-timer").className = "timer num";
+  $("test-tools").hidden = !fighting(); $("hud-foe").hidden = false; $("b-timer").className = "timer num";
   clearCue(); endAttack(); renderSwitcher();
 }
 function newPlayer() {
@@ -1084,39 +1165,58 @@ function stopPlay() {
 }
 
 // ---------- 妖怪退治: an endless run, one yokai after another ----------
-function startRun() {
+function startRun() { launch("run", { wave: 0, startLv: S.lv, startExp: S.exp }); }
+// 登頂: on from the floor you stopped at, with full HP. The yokai you rested on starts again at full HP.
+function startClimb() {
+  const c = climbOf();
+  launch("climb", { climb: true, c, day: c.day, wave: c.floor - 1, startFloor: c.floor, startReached: c.reached, startLv: c.lv, startExp: c.exp });
+}
+function launch(m, r) {
   closeResult();
   if ($("scr-battle").hidden) show("battle");
-  mode = "run"; reg = null; TB = null;
+  mode = m; reg = null; TB = null;
+  R = { kills: 0, score: 0, drops: [], tamed: [], learned: [], exp: 0, ...r };
   P = newPlayer();
-  R = { wave: 0, kills: 0, score: 0, drops: [], tamed: [], learned: [], startLv: S.lv, startExp: S.exp, exp: 0 };
   resetBattleUI();
   $("btn-retreat").textContent = t("battle.retreat");
   $("run-chip").hidden = false;
   play("draw"); ambience(true);
   nextYokai();
 }
-function pickYokai(wave) {
-  if (wave % B.run.bossEvery === 0) return BOSSES[(wave / B.run.bossEvery - 1) % BOSSES.length];
-  const top = Math.min(NORMALS.length - 1, Math.floor((wave - 1) / 2));
-  return NORMALS[Math.max(0, top - Math.floor(Math.random() * 3))]; // mostly the newest few
+// mostly the newest few
+const normalFor = (wave, r) => NORMALS[Math.max(0, Math.min(NORMALS.length - 1, Math.floor((wave - 1) / 2)) - Math.floor(r() * 3))];
+const variantFor = (r, goldChance) => (r() < goldChance ? "gold" : r() < B.enemy.taishoChance ? "taisho" : "base");
+// the boss on a climb floor is the same for everyone today
+const climbBoss = (floor) => BOSSES[Math.floor(makeRng(daySeed("climb:" + floor))() * BOSSES.length)];
+function pickYokai(wave, st) {
+  const goldChance = B.enemy.goldChance * (1 + st.gold_rate / 100) * (st.rares.has("kinun") ? 1 + L.rareValues.kinun / 100 : 1) * (has4(st, "sword_05_kogitsunemaru") ? 1.3 : 1);
+  if (mode === "climb") {
+    if (wave % B.run.bossEvery === 0) return { m: climbBoss(wave), variant: "base" };
+    // 侍部門: everyone meets the same yokai. 武士部門: the same table but each player's own draw, and 座敷童 may appear.
+    const fixed = makeRng(daySeed("climb:" + wave)); fixed();
+    const r = bushi() ? Math.random : fixed;
+    if (bushi() && r() < B.climb.zashikiChance * (st.rares.has("shofuku") ? B.climb.shofukuMult : 1)) return { m: ZASHIKI, variant: "base" };
+    return { m: normalFor(wave, r), variant: variantFor(r, goldChance) };
+  }
+  if (wave % B.run.bossEvery === 0) return { m: BOSSES[(wave / B.run.bossEvery - 1) % BOSSES.length], variant: "base" };
+  return { m: normalFor(wave, Math.random), variant: variantFor(Math.random, goldChance) };
 }
 function nextYokai() {
+  if (R.climb && R.day !== dayId()) return endRun("newday");
   R.wave++;
-  const m = pickYokai(R.wave), st = P.st, E = B.enemy, tier = MONSTERS.indexOf(m);
-  const goldChance = E.goldChance * (1 + st.gold_rate / 100) * (st.rares.has("kinun") ? 1 + L.rareValues.kinun / 100 : 1) * (has4(st, "sword_05_kogitsunemaru") ? 1.3 : 1);
-  const variant = m.boss ? "base" : Math.random() < goldChance ? "gold" : Math.random() < E.taishoChance ? "taisho" : "base";
-  const max = Math.round(E.hpBase * (1 + E.hpPerTier * tier) * (1 + B.run.hpPerWave * (R.wave - 1)) * (m.boss ? E.bossHp : 1) * (variant === "gold" ? E.goldHp : variant === "taisho" ? E.taishoHp : 1));
+  const st = P.st, E = B.enemy, { m, variant } = pickYokai(R.wave, st), tier = Math.max(0, MONSTERS.indexOf(m));
+  const max = Math.round(E.hpBase * (1 + E.hpPerTier * tier) * (1 + (R.climb ? B.climb.hpPerFloor : B.run.hpPerWave) * (R.wave - 1)) * (m.boss ? E.bossHp : 1) * (variant === "gold" ? E.goldHp : variant === "taisho" ? E.taishoHp : 1));
   foe = { m, wave: R.wave, variant, hp: max, max, dmg: 0, atkDmg: E.atkBase * (1 + E.atkPerTier * tier) * (m.boss ? E.bossAtk : 1), tags: tagsOf(m.asset), stagger: B.stagger.max };
   P.fudoUsed = P.yagenUsed = P.rengekiUsed = false; P.stag = null; P.fightStart = 0;
   phase = "encounter";
   renderHud();
   const title = variant === "gold" ? t("mon.goldName", { name: monName(m) }) : variant === "taisho" ? t("mon.taishoName", { name: monName(m) }) : monName(m);
   showVerdict(`<div class="seal huge${variant === "gold" ? " gold" : ""}">${monArt(m, variant)}</div><h2>${variant === "base" ? nameHtml("mon." + m.id) : esc(title)}</h2>
-    <div class="row" style="justify-content:center"><span class="tag">${esc(t("run.wave", { n: R.wave }))}</span>${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
+    <div class="row" style="justify-content:center"><span class="tag">${esc(t(R.climb ? "climb.floor" : "run.wave", { n: R.wave }))}</span>${m === ZASHIKI ? `<span class="tag gold">${esc(t("tag.lucky"))}</span>` : ""}${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
     ${m.boss ? `<span class="hiden">${esc(t("enc.hiden", { seq: B.hiden.seq.map(typeName).join(" → ") }))}</span>` : ""}`,
     (m.boss ? B.bout.bossEncounterSec : B.bout.encounterSec) * 1000, () => beginFight());
-  if (m.boss || variant !== "base") play("taiko");
+  if (m === ZASHIKI) { flash("goldfl"); setTimeout(() => flash("goldfl"), 450); play("suzu") || play("ring"); }
+  else if (m.boss || variant !== "base") play("taiko");
 }
 function beginFight() {
   if (phase !== "encounter") return;
@@ -1134,17 +1234,25 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   S.bestScore[m.id] = Math.max(S.bestScore[m.id] || 0, points);
   const gold = foe.variant === "gold", taisho = foe.variant === "taisho";
   const exp = Math.round(m.exp * diff().bonus * (1 + (st.exp + (st.partner.exp || 0)) / 100) * (gold ? B.enemy.goldExp : taisho ? B.enemy.taishoExp : 1));
-  R.exp += exp; S.exp += exp;
-  while (S.exp >= expNeed(S.lv)) { S.exp -= expNeed(S.lv); S.lv++; SKILLS.filter((s) => s.lv === S.lv).forEach((s) => R.learned.push(s)); }
-  const drops = rollDrops(newSeed(), L, SW, { asset: m.asset, boss: !!m.boss, gold, taisho, kind: kind(), dropRate: st.drop_rate + (st.partner.drop_rate || 0) });
-  drops.forEach((it) => { it.id = S.nextId++; if (it.named) (S.seen[it.named] ||= {})[it.slot] = true; });
-  addItems(drops); R.drops.push(...drops);
-  if (Math.random() < (gold ? 0.7 : 0.3)) {
+  const lv = R.climb ? R.c : S; // the climb has its own level
+  R.exp += exp; lv.exp += exp;
+  while (lv.exp >= expNeed(lv.lv)) { lv.exp -= expNeed(lv.lv); lv.lv++; SKILLS.filter((s) => s.lv === lv.lv).forEach((s) => R.learned.push(s)); }
+  // 侍部門 on the mountain drops nothing; 武士部門 drops count only for today's climb
+  const drops = R.climb && !bushi() ? [] : rollDrops(newSeed(), L, SW, { asset: m.asset, boss: !!m.boss, gold, taisho, zashiki: m === ZASHIKI, kind: kind(), dropRate: st.drop_rate + (st.partner.drop_rate || 0) });
+  drops.forEach((it) => { it.id = R.climb ? R.c.nextId++ : S.nextId++; if (it.named) (S.seen[it.named] ||= {})[it.slot] = true; });
+  if (R.climb) climbEquip(R.c, drops); else addItems(drops);
+  R.drops.push(...drops);
+  if (R.climb) {
+    R.c.floor = R.wave + 1; R.c.reached = Math.max(R.c.reached, R.wave); R.c.score += points;
+    S.climbBest[S.division] = Math.max(S.climbBest[S.division] || 0, R.wave);
+    const hpGone = P.hpMax - P.hp; P.st = stats(); P.hpMax = maxHp(P.st); P.hp = P.hpMax - hpGone;
+  }
+  if (!R.climb && Math.random() < (gold ? 0.7 : 0.3)) {
     const sh = S.shiki[m.id];
     if (!sh) { S.shiki[m.id] = { stars: 1, gold }; R.tamed.push(m); if (!S.partner) S.partner = m.id; }
     else { sh.stars = Math.min(5, sh.stars + 1); sh.gold = sh.gold || gold; }
   }
-  P.hp = Math.min(P.hpMax, P.hp + P.hpMax * B.run.healOnKill);
+  P.hp = Math.min(P.hpMax, P.hp + P.hpMax * (R.climb ? B.climb.healOnKill : B.run.healOnKill));
   save(); renderHud();
   flash("goldfl"); play(m.boss ? "fanfare" : "chime");
   if (drops.some((it) => it.grade >= 3)) setTimeout(() => play("ring"), 500);
@@ -1152,16 +1260,18 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   showVerdict(`<div class="stamp sm${gold || m.boss ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.slain"))}</div>
     <span class="pts num">+${fmt(points)}</span>${finKind ? `<span class="small">${esc(t("res.scoreCalc", { dmg: fmt(foe.dmg), x: finMult.toFixed(2), how: t("fin." + finKind) }))}</span>` : ""}
     <div class="mini-drops">${drops.map((it, i) => `<div class="thumb g${it.grade}" style="animation-delay:${0.15 + i * 0.18}s">${SLOT_GLYPH[it.slot]}${imgTag(itemFile(it), "")}</div>`).join("")}</div>
-    <span class="small muted">EXP +${fmt(exp)}</span>`, ms, () => { if (mode === "run") nextYokai(); });
+    <span class="small muted">EXP +${fmt(exp)}</span>`, ms, () => { if (fighting()) nextYokai(); });
 }
 // the run ends: by retreating, resting (no swing for a minute) or falling. The yokai being fought scores 0.
 function endRun(reason) {
   if (!R) return;
-  const run = R, p = P;
+  const run = R, p = P, climb = !!run.climb, c = run.c;
   phase = "idle"; endAttack(); clearCue(); setFrame(0); clearTimeout(verdictTimer); $("verdict").hidden = true;
-  const record = run.score > S.bestRun.score;
-  if (record) S.bestRun.score = run.score;
-  S.bestRun.kills = Math.max(S.bestRun.kills, run.kills);
+  const record = climb ? c.reached > run.startReached : run.score > S.bestRun.score;
+  if (!climb) {
+    if (record) S.bestRun.score = run.score;
+    S.bestRun.kills = Math.max(S.bestRun.kills, run.kills);
+  }
   save();
   mode = null; R = null; foe = null;
   play(reason === "ko" ? "hurt" : "fanfare");
@@ -1169,33 +1279,42 @@ function endRun(reason) {
   const tile = (k, val) => `<div><span class="label">${esc(t(k))}</span><b class="num">${val}</b></div>`;
   openResult(`
     <div class="stamp${reason === "ko" ? " grey" : record ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.run." + reason))}</div>
-    <p class="small muted" style="text-align:center;${dl()}">${esc(t("run.end." + reason))}</p>
-    <div class="score" style="${dl()}"><span class="label">${esc(t(record ? "res.newRecord" : "res.score"))}</span><b class="num" id="res-score">0</b></div>
+    <p class="small muted" style="text-align:center;${dl()}">${esc(t((climb ? "climb.end." : "run.end.") + reason))}</p>
+    <div class="score" style="${dl()}"><span class="label">${esc(t(climb ? (record ? "climb.newFloor" : "climb.reached") : record ? "res.newRecord" : "res.score"))}</span><b class="num" id="res-score">0</b>${climb ? `<span class="small muted">${esc(t("climb.floorUnit"))}</span>` : ""}</div>
     <div class="tiles" style="${dl()}">
-      ${tile("res.kills", run.kills)}${tile("res.wave", run.wave)}${tile("res.maxCombo", p.maxCombo)}
+      ${tile("res.kills", run.kills)}${climb ? tile("climb.todayScore", fmt(c.score)) : tile("res.wave", run.wave)}${tile("res.maxCombo", p.maxCombo)}
       ${tile("res.best", esc(t("res.bestVal", { rank: p.bestRank, n: p.best })))}${tile("res.dodges", `${p.dodges} / ${p.dodges + p.hits}`)}${tile("res.swings", p.swings)}
     </div>
     <div class="expbox panel" style="${dl()}">
-      <div class="row spread"><span>EXP <b class="num" style="color:var(--kin);font-size:1.4rem">+${fmt(run.exp)}</b></span><span class="small muted num" id="res-lvtxt">LV ${run.startLv}</span></div>
+      <div class="row spread"><span>EXP <b class="num" style="color:var(--kin);font-size:1.4rem">+${fmt(run.exp)}</b></span><span class="small muted num">${climb ? esc(t("mode.climb")) + " " : ""}<span id="res-lvtxt">LV ${run.startLv}</span></span></div>
       <div class="expbar" id="res-expbar"><i id="res-exp"></i></div>
       <div id="res-lvup"></div>
       ${run.learned.map((s) => `<div>${esc(t("res.learned", { name: skillName(s), desc: skillDesc(s) }))}</div>`).join("")}
     </div>
-    ${run.drops.length ? `<div style="${dl()}" class="drops"><span class="label">${esc(t("res.drops"))}</span>${[...run.drops].sort((a, b) => b.grade - a.grade).map((it) => `<div class="drop-big g${it.grade}">${itemThumb(it, true)}<div><div class="nm">${esc(itemName(it))}</div><div class="af">${itemLines(it)}</div></div></div>`).join("")}</div>` : ""}
+    ${run.drops.length ? `<div style="${dl()}" class="drops"><span class="label">${esc(t(climb ? "climb.drops" : "res.drops"))}</span>${[...run.drops].sort((a, b) => b.grade - a.grade).map((it) => `<div class="drop-big g${it.grade}">${itemThumb(it, true)}<div><div class="nm">${esc(itemName(it))}</div><div class="af">${itemLines(it)}</div></div></div>`).join("")}</div>` : ""}
     ${run.tamed.map((m) => `<div class="tame" style="${dl()}"><div class="seal tame">${monArt(m)}</div><div><b>${esc(t("res.tamed", { name: monName(m) }))}</b><div class="small">${esc(t("res.blessing", { text: t("partner." + m.id) }))}</div></div></div>`).join("")}`,
-    { ok: { label: t("run.again"), fn: () => startRun() }, ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("map"); } } });
-  countUp($("res-score"), run.score);
+    climb
+      ? { ok: { label: t("climb.again", { n: c.floor }), fn: () => startClimb() }, ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("climb"); } } }
+      : { ok: { label: t("run.again"), fn: () => startRun() }, ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("map"); } } });
+  countUp($("res-score"), climb ? c.reached : run.score);
   animateExp(run.startLv, run.startExp, run.exp);
 }
 
 // ---------- TABATA: 20 s with one yokai and one fixed form, 10 s rest, six times (3 minutes) ----------
+// today's forms and yokai: the same for everyone, new every day at 22:00 JST
+function tabataPlan() {
+  const r = makeRng(daySeed("tabata"));
+  const pool = TYPES.map((x) => x.id).map((v) => [r(), v]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  const forms = Array.from({ length: B.tabata.rounds }, (_, i) => pool[i % pool.length]);
+  return { forms, mons: forms.map(() => NORMALS[Math.floor(r() * NORMALS.length)]) };
+}
 function startTabata() {
   closeResult();
   if ($("scr-battle").hidden) show("battle");
   mode = "tabata"; reg = null; R = null;
   P = newPlayer();
-  const pool = shuffle(TYPES.map((x) => x.id));
-  TB = { round: 0, forms: Array.from({ length: B.tabata.rounds }, (_, i) => pool[i % pool.length]), score: 0, kills: 0, rounds: [], until: 0 };
+  const plan = tabataPlan();
+  TB = { round: 0, forms: plan.forms, mons: plan.mons, score: 0, kills: 0, rounds: [], until: 0 };
   resetBattleUI();
   $("btn-retreat").textContent = t("tabata.quit");
   $("b-timer").className = "timer num big";
@@ -1211,7 +1330,7 @@ function tabataRest(sec) {
 }
 function tabataWork() {
   TB.round++;
-  const m = NORMALS[(TB.round - 1) % NORMALS.length];
+  const m = TB.mons[TB.round - 1];
   const max = Math.round(B.tabata.hp * (1 + B.tabata.hpPerRound * (TB.round - 1)));
   foe = { m, wave: TB.round, variant: "base", hp: max, max, dmg: 0, atkDmg: 0, tags: tagsOf(m.asset), stagger: B.stagger.max, form: TB.forms[TB.round - 1] };
   phase = "fight"; TB.until = gnow() + B.tabata.workSec * 1000; TB.start = gnow();
@@ -1239,7 +1358,10 @@ function tabataTick(now) {
 }
 function finishTabata() {
   const tb = TB, p = P, cls = weightClassOf(), prev = S.tabataBest[cls] || 0, nb = tb.score > prev;
-  if (nb) { S.tabataBest[cls] = tb.score; save(); }
+  if (nb) S.tabataBest[cls] = tb.score;
+  if (S.tabataToday?.day !== dayId()) S.tabataToday = { day: dayId(), best: {} };
+  S.tabataToday.best[cls] = Math.max(S.tabataToday.best[cls] || 0, tb.score);
+  save();
   phase = "idle"; clearCue(); mode = null; TB = null; foe = null;
   play("fanfare");
   openResult(`
@@ -1305,13 +1427,13 @@ function finishReg() {
 function retreat() {
   if (mode === "reg") { stopCamera(); show("forms"); return; }
   if (mode === "tabata") { stopCamera(); show("title"); return; }
-  if (mode === "run") { endRun("retreat"); return; }
+  if (fighting()) { endRun("retreat"); return; }
   stopCamera(); show("title");
 }
 $("btn-retreat").onclick = retreat;
-$("btn-atk-now").onclick = () => { if (mode === "run" && phase === "fight" && !atk && !P.stag) startAttack(gnow()); };
-$("btn-stag-now").onclick = () => { if (mode === "run" && phase === "fight" && !P.stag) { foe.stagger = 0; startStagger(); } };
-$("btn-kill-now").onclick = () => { if (mode === "run" && phase === "fight") { foe.hp = 1; toast(t("toast.hp1")); renderHud(); } };
+$("btn-atk-now").onclick = () => { if (fighting() && phase === "fight" && !atk && !P.stag) startAttack(gnow()); };
+$("btn-stag-now").onclick = () => { if (fighting() && phase === "fight" && !P.stag) { foe.stagger = 0; startStagger(); } };
+$("btn-kill-now").onclick = () => { if (fighting() && phase === "fight") { foe.hp = 1; toast(t("toast.hp1")); renderHud(); } };
 
 let verdictTimer = 0;
 function showVerdict(html, ms, then) {
@@ -1335,7 +1457,7 @@ function flash(cls) { const s = $("stage"); s.classList.remove("hit", "ok", "fla
 function renderHud() {
   const seal = $("b-seal");
   seal.className = "seal sm";
-  const showP = mode === "run";
+  const showP = fighting();
   $("p-hpbar-wrap").hidden = !showP; $("b-stagbar").hidden = !showP;
   if (mode === "reg") {
     seal.textContent = "型"; $("b-name").textContent = t("menu.forms");
@@ -1359,7 +1481,7 @@ function renderHud() {
   $("b-stag").style.width = (100 * foe.stagger / B.stagger.max) + "%";
   $("p-hpbar").style.width = (100 * P.hp / P.hpMax) + "%";
   $("p-hp").textContent = t("battle.php", { hp: Math.ceil(P.hp), max: P.hpMax });
-  $("run-chip").textContent = t("run.chip", { kills: R.kills, score: fmt(R.score) });
+  $("run-chip").textContent = R.climb ? t("climb.chip", { n: R.wave, score: fmt(R.c.score) }) : t("run.chip", { kills: R.kills, score: fmt(R.score) });
 }
 
 // ---------- judging (unchanged: swings are compared with your registered forms) ----------
@@ -1437,7 +1559,7 @@ function onSwing(m, j) {
 
   mul(diff().bonus, diffName());
   if (bushi()) {
-    if (S.lv > 1) mul(1 + D.levelPerLv * (S.lv - 1), "LV");
+    if (lvNow() > 1) mul(1 + D.levelPerLv * (lvNow() - 1), "LV");
     let pctUp = st.damage + (st.partner.damage || 0);
     if (has4(st, "sword_16_kageuchi")) pctUp += 20;
     if (pctUp) mul(1 + pctUp / 100, t("calc.gear"));
@@ -1496,7 +1618,7 @@ function onSwing(m, j) {
   if (isS || crit) hitstop();
 
   // stagger gauge (run only)
-  if (mode === "run" && !P.stag) {
+  if (fighting() && !P.stag) {
     const s = B.stagger.perSwing * (isS ? B.stagger.sRankMult : 1) * (weakHit ? B.stagger.weakMult : 1) * (1 + (st.stagger || 0) / 100) * (bushi() && has4(st, "sword_04_shishiou") ? 1.4 : 1);
     foe.stagger = Math.max(0, foe.stagger - s);
   }
@@ -1507,7 +1629,7 @@ function onSwing(m, j) {
     if (mode === "tabata") return tabataRoundEnd(true);
     return foe.m.boss ? startFinisher() : killYokai();
   }
-  if (mode === "run" && !P.stag && foe.stagger <= 0) startStagger();
+  if (fighting() && !P.stag && foe.stagger <= 0) startStagger();
 }
 function logLine(html) {
   const li = document.createElement("li"); li.innerHTML = html;
@@ -1724,16 +1846,16 @@ function resolveAttack(dodged, how) {
     popup("hurt", `-${dmg}`, t("atk.hitSub"));
     logLine(`<span class="r" style="color:var(--shu)">✕</span><span>${esc(t(`atk.${atk.kind}.move`))}</span><span class="muted">${esc(how ? t("log.wrong", { how: t("dodge." + how) }) : t("log.hit"))}</span><b class="num" style="color:var(--shu)">-${dmg}</b>`);
     renderHud();
-    if (P.hp <= 0) { P.hp = 0; renderHud(); setTimeout(() => mode === "run" && endRun("ko"), 700); }
+    if (P.hp <= 0) { P.hp = 0; renderHud(); setTimeout(() => fighting() && endRun("ko"), 700); }
   }
   setTimeout(() => { if (atk && atk.done) { endAttack(); if (phase === "fight") scheduleAttack(); } }, 700);
 }
 function endAttack() {
   atk = null; $("atk-demo").hidden = true; setFrame(0);
-  if (!P || !P.stag) { if (phase === "fight" && mode === "run") clearCue(); }
+  if (!P || !P.stag) { if (phase === "fight" && fighting()) clearCue(); }
 }
 function attackTick(tt) {
-  if (mode !== "run" || phase !== "fight" || !foe || !S.enemyAtk || P.stag || resultActions) return;
+  if (!fighting() || phase !== "fight" || !foe || !foe.m.atk || !S.enemyAtk || P.stag || resultActions) return;
   if (!atk && !engaged()) { nextAtkAt = Math.max(nextAtkAt, tt + 3000); return; }
   if (!atk) { if (tt >= nextAtkAt) startAttack(tt); return; }
   if (atk.done) return;
@@ -1775,7 +1897,7 @@ const slashes = [];
 let fxDirty = false;
 let hist2 = []; // recent 2D hand positions (camera pixels, performance.now time) to draw the cut
 function trailColor() {
-  const it = P && bushi() ? itemById(S.equip.tosin) : null;
+  const it = P && bushi() ? itemById(gearBag().equip.tosin) : null;
   return it && it.named && it.kind === kind() ? AURA[swordOf(it.named)?.look?.aura] || "#d6ab4c" : "#d6ab4c";
 }
 function slash(m, strong) {
@@ -1830,7 +1952,7 @@ function hitstop() {
 // See docs/効果音の入れ方.md for the list of ids.
 const SOUND_IDS = ["swing_katana", "swing_tanto", "crit_katana", "crit_tanto", "cue_crouch", "cue_guard", "cue_step", "taiko", "chime", "hurt",
   "breath", "draw", "ring", "lvup", "fanfare", "gong", "whistle", "beep", "ambience_night",
-  "voice_fuseyo", "voice_ukeyo", "voice_tobe", "voice_todome", "voice_zanshin"];
+  "voice_fuseyo", "voice_ukeyo", "voice_tobe", "voice_todome", "voice_zanshin", "suzu"];
 let ac = null, amb = null, soundsLoaded = false;
 const SFX = {};
 function audio() {
@@ -1884,6 +2006,7 @@ const SYNTH = {
   hurt: () => { tone({ f: 120, f1: 60, sec: 0.35, vol: 0.4, type: "square" }); noise({ sec: 0.25, f0: 1200, f1: 300, type: "lowpass", vol: 0.25 }); },
   breath: () => noise({ sec: 0.28, f0: 1100, f1: 500, q: 0.7, vol: 0.18, delay: 0.02 }),
   draw: () => { noise({ sec: 0.35, f0: 3000, f1: 7000, q: 2, vol: 0.2 }); tone({ f: 2600, sec: 0.6, vol: 0.06, delay: 0.3 }); },
+  suzu: () => [0, 0.16, 0.32, 0.5].forEach((d, i) => [2637, 3520].forEach((f) => tone({ f: f * (1 + i * 0.02), sec: 0.5, vol: 0.07, delay: d, type: "triangle" }))),
   ring: () => [1046, 1568, 2093].forEach((f, i) => tone({ f, sec: 1.4, vol: 0.08, delay: i * 0.09, type: "triangle" })),
   lvup: () => [523, 659, 784, 1046].forEach((f, i) => tone({ f, sec: 0.35, vol: 0.12, delay: i * 0.08, type: "triangle" })),
   fanfare: () => [392, 523, 659, 784, 1047].forEach((f, i) => tone({ f, sec: 0.5, vol: 0.14, delay: i * 0.11, type: "triangle" })),
@@ -1964,7 +2087,7 @@ function hud() {
   }
   if (!pausedAt) {
     if (mode === "tabata" && TB) tabataTick(now);
-    if (mode === "run" && foe && P) {
+    if (fighting() && foe && P) {
       if (phase === "fight") {
         $("b-timer").textContent = `${Math.floor((now - P.fightStart) / 60000)}:${String(Math.floor(((now - P.fightStart) / 1000) % 60)).padStart(2, "0")}`;
         if (now - P.lastSwingAt > B.bout.restAfterSec * 1000) endRun("rest");
