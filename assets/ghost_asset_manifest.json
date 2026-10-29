@@ -1,12 +1,14 @@
 {
  "app": "NINJA SAMURAI WORKOUT: GHOST",
- "version": "2026-10-29",
+ "version": "2026-10-29b",
  "naming_rules": [
   "lowercase ascii, digits, underscore only; extension .png",
   "yokai_{NNN}_{romaji}_{variant}.png  variant = base | gold | taisho",
   "boss_{NN}_{romaji}.png / rare_{NN}_{romaji}.png",
   "mask_{free|shop|award|drop}_{...}.png",
-  "gear_{slot}_{g1-g5}.png  g1=kazuuchi g2=wazamono g3=yoki_wazamono g4=o_wazamono g5=saijo_o_wazamono",
+  "gear_{hachigane|kote|do|suneate|omamori}_{g1-g5}.png  g1=kazuuchi g2=wazamono g3=yoki_wazamono g4=o_wazamono g5=saijo_o_wazamono",
+  "blade_{katana|tanto}_{tosin|saya|tsuba|tsuka}_{g1-g5}.png  (unnamed sword parts)",
+  "sword_{NN}_{id}_{tosin|saya|tsuba|tsuka}.png / sword_{NN}_{id}_full.png  (named swords, see data/swords.json)",
   "shadow_{samurai|shinobi}_{kamae|kiri|zanshin}.png / shadow_part_{part}.png"
  ],
  "assets": [
@@ -2921,51 +2923,6 @@
   },
   {
    "section": "gear",
-   "id": "gear_tsuba_g1",
-   "variant": "g1",
-   "file": "gear_tsuba_g1.png",
-   "name_ja": "鍔・数打",
-   "ratio": "1:1",
-   "grade": "kazuuchi"
-  },
-  {
-   "section": "gear",
-   "id": "gear_tsuba_g2",
-   "variant": "g2",
-   "file": "gear_tsuba_g2.png",
-   "name_ja": "鍔・業物",
-   "ratio": "1:1",
-   "grade": "wazamono"
-  },
-  {
-   "section": "gear",
-   "id": "gear_tsuba_g3",
-   "variant": "g3",
-   "file": "gear_tsuba_g3.png",
-   "name_ja": "鍔・良業物",
-   "ratio": "1:1",
-   "grade": "yoki_wazamono"
-  },
-  {
-   "section": "gear",
-   "id": "gear_tsuba_g4",
-   "variant": "g4",
-   "file": "gear_tsuba_g4.png",
-   "name_ja": "鍔・大業物",
-   "ratio": "1:1",
-   "grade": "o_wazamono"
-  },
-  {
-   "section": "gear",
-   "id": "gear_tsuba_g5",
-   "variant": "g5",
-   "file": "gear_tsuba_g5.png",
-   "name_ja": "鍔・最上大業物",
-   "ratio": "1:1",
-   "grade": "saijo_o_wazamono"
-  },
-  {
-   "section": "gear",
    "id": "gear_omamori_g1",
    "variant": "g1",
    "file": "gear_omamori_g1.png",
@@ -3008,6 +2965,1326 @@
    "name_ja": "御守・最上大業物",
    "ratio": "1:1",
    "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tosin_g1",
+   "variant": "g1",
+   "file": "blade_katana_tosin_g1.png",
+   "name_ja": "刀の刀身・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tosin_g2",
+   "variant": "g2",
+   "file": "blade_katana_tosin_g2.png",
+   "name_ja": "刀の刀身・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tosin_g3",
+   "variant": "g3",
+   "file": "blade_katana_tosin_g3.png",
+   "name_ja": "刀の刀身・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tosin_g4",
+   "variant": "g4",
+   "file": "blade_katana_tosin_g4.png",
+   "name_ja": "刀の刀身・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tosin_g5",
+   "variant": "g5",
+   "file": "blade_katana_tosin_g5.png",
+   "name_ja": "刀の刀身・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_saya_g1",
+   "variant": "g1",
+   "file": "blade_katana_saya_g1.png",
+   "name_ja": "刀の鞘・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_saya_g2",
+   "variant": "g2",
+   "file": "blade_katana_saya_g2.png",
+   "name_ja": "刀の鞘・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_saya_g3",
+   "variant": "g3",
+   "file": "blade_katana_saya_g3.png",
+   "name_ja": "刀の鞘・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_saya_g4",
+   "variant": "g4",
+   "file": "blade_katana_saya_g4.png",
+   "name_ja": "刀の鞘・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_saya_g5",
+   "variant": "g5",
+   "file": "blade_katana_saya_g5.png",
+   "name_ja": "刀の鞘・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuba_g1",
+   "variant": "g1",
+   "file": "blade_katana_tsuba_g1.png",
+   "name_ja": "刀の鍔・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuba_g2",
+   "variant": "g2",
+   "file": "blade_katana_tsuba_g2.png",
+   "name_ja": "刀の鍔・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuba_g3",
+   "variant": "g3",
+   "file": "blade_katana_tsuba_g3.png",
+   "name_ja": "刀の鍔・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuba_g4",
+   "variant": "g4",
+   "file": "blade_katana_tsuba_g4.png",
+   "name_ja": "刀の鍔・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuba_g5",
+   "variant": "g5",
+   "file": "blade_katana_tsuba_g5.png",
+   "name_ja": "刀の鍔・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuka_g1",
+   "variant": "g1",
+   "file": "blade_katana_tsuka_g1.png",
+   "name_ja": "刀の柄・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuka_g2",
+   "variant": "g2",
+   "file": "blade_katana_tsuka_g2.png",
+   "name_ja": "刀の柄・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuka_g3",
+   "variant": "g3",
+   "file": "blade_katana_tsuka_g3.png",
+   "name_ja": "刀の柄・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuka_g4",
+   "variant": "g4",
+   "file": "blade_katana_tsuka_g4.png",
+   "name_ja": "刀の柄・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_katana_tsuka_g5",
+   "variant": "g5",
+   "file": "blade_katana_tsuka_g5.png",
+   "name_ja": "刀の柄・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tosin_g1",
+   "variant": "g1",
+   "file": "blade_tanto_tosin_g1.png",
+   "name_ja": "短刀の刀身・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tosin_g2",
+   "variant": "g2",
+   "file": "blade_tanto_tosin_g2.png",
+   "name_ja": "短刀の刀身・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tosin_g3",
+   "variant": "g3",
+   "file": "blade_tanto_tosin_g3.png",
+   "name_ja": "短刀の刀身・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tosin_g4",
+   "variant": "g4",
+   "file": "blade_tanto_tosin_g4.png",
+   "name_ja": "短刀の刀身・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tosin_g5",
+   "variant": "g5",
+   "file": "blade_tanto_tosin_g5.png",
+   "name_ja": "短刀の刀身・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_saya_g1",
+   "variant": "g1",
+   "file": "blade_tanto_saya_g1.png",
+   "name_ja": "短刀の鞘・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_saya_g2",
+   "variant": "g2",
+   "file": "blade_tanto_saya_g2.png",
+   "name_ja": "短刀の鞘・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_saya_g3",
+   "variant": "g3",
+   "file": "blade_tanto_saya_g3.png",
+   "name_ja": "短刀の鞘・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_saya_g4",
+   "variant": "g4",
+   "file": "blade_tanto_saya_g4.png",
+   "name_ja": "短刀の鞘・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_saya_g5",
+   "variant": "g5",
+   "file": "blade_tanto_saya_g5.png",
+   "name_ja": "短刀の鞘・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuba_g1",
+   "variant": "g1",
+   "file": "blade_tanto_tsuba_g1.png",
+   "name_ja": "短刀の鍔・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuba_g2",
+   "variant": "g2",
+   "file": "blade_tanto_tsuba_g2.png",
+   "name_ja": "短刀の鍔・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuba_g3",
+   "variant": "g3",
+   "file": "blade_tanto_tsuba_g3.png",
+   "name_ja": "短刀の鍔・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuba_g4",
+   "variant": "g4",
+   "file": "blade_tanto_tsuba_g4.png",
+   "name_ja": "短刀の鍔・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuba_g5",
+   "variant": "g5",
+   "file": "blade_tanto_tsuba_g5.png",
+   "name_ja": "短刀の鍔・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuka_g1",
+   "variant": "g1",
+   "file": "blade_tanto_tsuka_g1.png",
+   "name_ja": "短刀の柄・数打（無銘）",
+   "ratio": "1:1",
+   "grade": "kazuuchi"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuka_g2",
+   "variant": "g2",
+   "file": "blade_tanto_tsuka_g2.png",
+   "name_ja": "短刀の柄・業物（無銘）",
+   "ratio": "1:1",
+   "grade": "wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuka_g3",
+   "variant": "g3",
+   "file": "blade_tanto_tsuka_g3.png",
+   "name_ja": "短刀の柄・良業物（無銘）",
+   "ratio": "1:1",
+   "grade": "yoki_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuka_g4",
+   "variant": "g4",
+   "file": "blade_tanto_tsuka_g4.png",
+   "name_ja": "短刀の柄・大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "blade_tanto_tsuka_g5",
+   "variant": "g5",
+   "file": "blade_tanto_tsuka_g5.png",
+   "name_ja": "短刀の柄・最上大業物（無銘）",
+   "ratio": "1:1",
+   "grade": "saijo_o_wazamono"
+  },
+  {
+   "section": "sword",
+   "id": "sword_01_doujigiri_tosin",
+   "variant": "named",
+   "file": "sword_01_doujigiri_tosin.png",
+   "name_ja": "童子切安綱の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_01_doujigiri_saya",
+   "variant": "named",
+   "file": "sword_01_doujigiri_saya.png",
+   "name_ja": "童子切安綱の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_01_doujigiri_tsuba",
+   "variant": "named",
+   "file": "sword_01_doujigiri_tsuba.png",
+   "name_ja": "童子切安綱の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_01_doujigiri_tsuka",
+   "variant": "named",
+   "file": "sword_01_doujigiri_tsuka.png",
+   "name_ja": "童子切安綱の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_01_doujigiri_full",
+   "variant": "full",
+   "file": "sword_01_doujigiri_full.png",
+   "name_ja": "童子切安綱（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_02_higekiri_tosin",
+   "variant": "named",
+   "file": "sword_02_higekiri_tosin.png",
+   "name_ja": "髭切の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_02_higekiri_saya",
+   "variant": "named",
+   "file": "sword_02_higekiri_saya.png",
+   "name_ja": "髭切の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_02_higekiri_tsuba",
+   "variant": "named",
+   "file": "sword_02_higekiri_tsuba.png",
+   "name_ja": "髭切の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_02_higekiri_tsuka",
+   "variant": "named",
+   "file": "sword_02_higekiri_tsuka.png",
+   "name_ja": "髭切の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_02_higekiri_full",
+   "variant": "full",
+   "file": "sword_02_higekiri_full.png",
+   "name_ja": "髭切（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_03_kumokiri_tosin",
+   "variant": "named",
+   "file": "sword_03_kumokiri_tosin.png",
+   "name_ja": "蜘蛛切の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_03_kumokiri_saya",
+   "variant": "named",
+   "file": "sword_03_kumokiri_saya.png",
+   "name_ja": "蜘蛛切の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_03_kumokiri_tsuba",
+   "variant": "named",
+   "file": "sword_03_kumokiri_tsuba.png",
+   "name_ja": "蜘蛛切の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_03_kumokiri_tsuka",
+   "variant": "named",
+   "file": "sword_03_kumokiri_tsuka.png",
+   "name_ja": "蜘蛛切の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_03_kumokiri_full",
+   "variant": "full",
+   "file": "sword_03_kumokiri_full.png",
+   "name_ja": "蜘蛛切（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_04_shishiou_tosin",
+   "variant": "named",
+   "file": "sword_04_shishiou_tosin.png",
+   "name_ja": "獅子王の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_04_shishiou_saya",
+   "variant": "named",
+   "file": "sword_04_shishiou_saya.png",
+   "name_ja": "獅子王の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_04_shishiou_tsuba",
+   "variant": "named",
+   "file": "sword_04_shishiou_tsuba.png",
+   "name_ja": "獅子王の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_04_shishiou_tsuka",
+   "variant": "named",
+   "file": "sword_04_shishiou_tsuka.png",
+   "name_ja": "獅子王の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_04_shishiou_full",
+   "variant": "full",
+   "file": "sword_04_shishiou_full.png",
+   "name_ja": "獅子王（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_05_kogitsunemaru_tosin",
+   "variant": "named",
+   "file": "sword_05_kogitsunemaru_tosin.png",
+   "name_ja": "小狐丸の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_05_kogitsunemaru_saya",
+   "variant": "named",
+   "file": "sword_05_kogitsunemaru_saya.png",
+   "name_ja": "小狐丸の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_05_kogitsunemaru_tsuba",
+   "variant": "named",
+   "file": "sword_05_kogitsunemaru_tsuba.png",
+   "name_ja": "小狐丸の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_05_kogitsunemaru_tsuka",
+   "variant": "named",
+   "file": "sword_05_kogitsunemaru_tsuka.png",
+   "name_ja": "小狐丸の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_05_kogitsunemaru_full",
+   "variant": "full",
+   "file": "sword_05_kogitsunemaru_full.png",
+   "name_ja": "小狐丸（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_06_sohaya_tosin",
+   "variant": "named",
+   "file": "sword_06_sohaya_tosin.png",
+   "name_ja": "騒速の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_06_sohaya_saya",
+   "variant": "named",
+   "file": "sword_06_sohaya_saya.png",
+   "name_ja": "騒速の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_06_sohaya_tsuba",
+   "variant": "named",
+   "file": "sword_06_sohaya_tsuba.png",
+   "name_ja": "騒速の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_06_sohaya_tsuka",
+   "variant": "named",
+   "file": "sword_06_sohaya_tsuka.png",
+   "name_ja": "騒速の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_06_sohaya_full",
+   "variant": "full",
+   "file": "sword_06_sohaya_full.png",
+   "name_ja": "騒速（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_07_onimaru_tosin",
+   "variant": "named",
+   "file": "sword_07_onimaru_tosin.png",
+   "name_ja": "鬼丸国綱の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_07_onimaru_saya",
+   "variant": "named",
+   "file": "sword_07_onimaru_saya.png",
+   "name_ja": "鬼丸国綱の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_07_onimaru_tsuba",
+   "variant": "named",
+   "file": "sword_07_onimaru_tsuba.png",
+   "name_ja": "鬼丸国綱の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_07_onimaru_tsuka",
+   "variant": "named",
+   "file": "sword_07_onimaru_tsuka.png",
+   "name_ja": "鬼丸国綱の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_07_onimaru_full",
+   "variant": "full",
+   "file": "sword_07_onimaru_full.png",
+   "name_ja": "鬼丸国綱（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_08_mikazuki_tosin",
+   "variant": "named",
+   "file": "sword_08_mikazuki_tosin.png",
+   "name_ja": "三日月宗近の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_08_mikazuki_saya",
+   "variant": "named",
+   "file": "sword_08_mikazuki_saya.png",
+   "name_ja": "三日月宗近の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_08_mikazuki_tsuba",
+   "variant": "named",
+   "file": "sword_08_mikazuki_tsuba.png",
+   "name_ja": "三日月宗近の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_08_mikazuki_tsuka",
+   "variant": "named",
+   "file": "sword_08_mikazuki_tsuka.png",
+   "name_ja": "三日月宗近の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_08_mikazuki_full",
+   "variant": "full",
+   "file": "sword_08_mikazuki_full.png",
+   "name_ja": "三日月宗近（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_09_odenta_tosin",
+   "variant": "named",
+   "file": "sword_09_odenta_tosin.png",
+   "name_ja": "大典太光世の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_09_odenta_saya",
+   "variant": "named",
+   "file": "sword_09_odenta_saya.png",
+   "name_ja": "大典太光世の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_09_odenta_tsuba",
+   "variant": "named",
+   "file": "sword_09_odenta_tsuba.png",
+   "name_ja": "大典太光世の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_09_odenta_tsuka",
+   "variant": "named",
+   "file": "sword_09_odenta_tsuka.png",
+   "name_ja": "大典太光世の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_09_odenta_full",
+   "variant": "full",
+   "file": "sword_09_odenta_full.png",
+   "name_ja": "大典太光世（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_10_amenohabakiri_tosin",
+   "variant": "named",
+   "file": "sword_10_amenohabakiri_tosin.png",
+   "name_ja": "天羽々斬の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_10_amenohabakiri_saya",
+   "variant": "named",
+   "file": "sword_10_amenohabakiri_saya.png",
+   "name_ja": "天羽々斬の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_10_amenohabakiri_tsuba",
+   "variant": "named",
+   "file": "sword_10_amenohabakiri_tsuba.png",
+   "name_ja": "天羽々斬の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_10_amenohabakiri_tsuka",
+   "variant": "named",
+   "file": "sword_10_amenohabakiri_tsuka.png",
+   "name_ja": "天羽々斬の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_10_amenohabakiri_full",
+   "variant": "full",
+   "file": "sword_10_amenohabakiri_full.png",
+   "name_ja": "天羽々斬（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_11_amenoohabari_tosin",
+   "variant": "named",
+   "file": "sword_11_amenoohabari_tosin.png",
+   "name_ja": "天之尾羽張の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_11_amenoohabari_saya",
+   "variant": "named",
+   "file": "sword_11_amenoohabari_saya.png",
+   "name_ja": "天之尾羽張の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_11_amenoohabari_tsuba",
+   "variant": "named",
+   "file": "sword_11_amenoohabari_tsuba.png",
+   "name_ja": "天之尾羽張の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_11_amenoohabari_tsuka",
+   "variant": "named",
+   "file": "sword_11_amenoohabari_tsuka.png",
+   "name_ja": "天之尾羽張の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_11_amenoohabari_full",
+   "variant": "full",
+   "file": "sword_11_amenoohabari_full.png",
+   "name_ja": "天之尾羽張（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_12_shionari_tosin",
+   "variant": "named",
+   "file": "sword_12_shionari_tosin.png",
+   "name_ja": "潮鳴の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_12_shionari_saya",
+   "variant": "named",
+   "file": "sword_12_shionari_saya.png",
+   "name_ja": "潮鳴の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_12_shionari_tsuba",
+   "variant": "named",
+   "file": "sword_12_shionari_tsuba.png",
+   "name_ja": "潮鳴の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_12_shionari_tsuka",
+   "variant": "named",
+   "file": "sword_12_shionari_tsuka.png",
+   "name_ja": "潮鳴の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_12_shionari_full",
+   "variant": "full",
+   "file": "sword_12_shionari_full.png",
+   "name_ja": "潮鳴（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_13_isokiri_tosin",
+   "variant": "named",
+   "file": "sword_13_isokiri_tosin.png",
+   "name_ja": "磯切の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_13_isokiri_saya",
+   "variant": "named",
+   "file": "sword_13_isokiri_saya.png",
+   "name_ja": "磯切の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_13_isokiri_tsuba",
+   "variant": "named",
+   "file": "sword_13_isokiri_tsuba.png",
+   "name_ja": "磯切の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_13_isokiri_tsuka",
+   "variant": "named",
+   "file": "sword_13_isokiri_tsuka.png",
+   "name_ja": "磯切の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_13_isokiri_full",
+   "variant": "full",
+   "file": "sword_13_isokiri_full.png",
+   "name_ja": "磯切（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_14_mukurodachi_tosin",
+   "variant": "named",
+   "file": "sword_14_mukurodachi_tosin.png",
+   "name_ja": "骸断の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_14_mukurodachi_saya",
+   "variant": "named",
+   "file": "sword_14_mukurodachi_saya.png",
+   "name_ja": "骸断の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_14_mukurodachi_tsuba",
+   "variant": "named",
+   "file": "sword_14_mukurodachi_tsuba.png",
+   "name_ja": "骸断の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_14_mukurodachi_tsuka",
+   "variant": "named",
+   "file": "sword_14_mukurodachi_tsuka.png",
+   "name_ja": "骸断の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_14_mukurodachi_full",
+   "variant": "full",
+   "file": "sword_14_mukurodachi_full.png",
+   "name_ja": "骸断（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_15_karahashi_tosin",
+   "variant": "named",
+   "file": "sword_15_karahashi_tosin.png",
+   "name_ja": "唐橋の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_15_karahashi_saya",
+   "variant": "named",
+   "file": "sword_15_karahashi_saya.png",
+   "name_ja": "唐橋の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_15_karahashi_tsuba",
+   "variant": "named",
+   "file": "sword_15_karahashi_tsuba.png",
+   "name_ja": "唐橋の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_15_karahashi_tsuka",
+   "variant": "named",
+   "file": "sword_15_karahashi_tsuka.png",
+   "name_ja": "唐橋の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_15_karahashi_full",
+   "variant": "full",
+   "file": "sword_15_karahashi_full.png",
+   "name_ja": "唐橋（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_16_kageuchi_tosin",
+   "variant": "named",
+   "file": "sword_16_kageuchi_tosin.png",
+   "name_ja": "影打の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_16_kageuchi_saya",
+   "variant": "named",
+   "file": "sword_16_kageuchi_saya.png",
+   "name_ja": "影打の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_16_kageuchi_tsuba",
+   "variant": "named",
+   "file": "sword_16_kageuchi_tsuba.png",
+   "name_ja": "影打の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_16_kageuchi_tsuka",
+   "variant": "named",
+   "file": "sword_16_kageuchi_tsuka.png",
+   "name_ja": "影打の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_16_kageuchi_full",
+   "variant": "full",
+   "file": "sword_16_kageuchi_full.png",
+   "name_ja": "影打（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_17_imanotsurugi_tosin",
+   "variant": "named",
+   "file": "sword_17_imanotsurugi_tosin.png",
+   "name_ja": "今剣の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_17_imanotsurugi_saya",
+   "variant": "named",
+   "file": "sword_17_imanotsurugi_saya.png",
+   "name_ja": "今剣の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_17_imanotsurugi_tsuba",
+   "variant": "named",
+   "file": "sword_17_imanotsurugi_tsuba.png",
+   "name_ja": "今剣の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_17_imanotsurugi_tsuka",
+   "variant": "named",
+   "file": "sword_17_imanotsurugi_tsuka.png",
+   "name_ja": "今剣の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_17_imanotsurugi_full",
+   "variant": "full",
+   "file": "sword_17_imanotsurugi_full.png",
+   "name_ja": "今剣（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_18_yagentoushirou_tosin",
+   "variant": "named",
+   "file": "sword_18_yagentoushirou_tosin.png",
+   "name_ja": "薬研藤四郎の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_18_yagentoushirou_saya",
+   "variant": "named",
+   "file": "sword_18_yagentoushirou_saya.png",
+   "name_ja": "薬研藤四郎の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_18_yagentoushirou_tsuba",
+   "variant": "named",
+   "file": "sword_18_yagentoushirou_tsuba.png",
+   "name_ja": "薬研藤四郎の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_18_yagentoushirou_tsuka",
+   "variant": "named",
+   "file": "sword_18_yagentoushirou_tsuka.png",
+   "name_ja": "薬研藤四郎の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_18_yagentoushirou_full",
+   "variant": "full",
+   "file": "sword_18_yagentoushirou_full.png",
+   "name_ja": "薬研藤四郎（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_19_nikkari_tosin",
+   "variant": "named",
+   "file": "sword_19_nikkari_tosin.png",
+   "name_ja": "にっかり青江の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_19_nikkari_saya",
+   "variant": "named",
+   "file": "sword_19_nikkari_saya.png",
+   "name_ja": "にっかり青江の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_19_nikkari_tsuba",
+   "variant": "named",
+   "file": "sword_19_nikkari_tsuba.png",
+   "name_ja": "にっかり青江の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_19_nikkari_tsuka",
+   "variant": "named",
+   "file": "sword_19_nikkari_tsuka.png",
+   "name_ja": "にっかり青江の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_19_nikkari_full",
+   "variant": "full",
+   "file": "sword_19_nikkari_full.png",
+   "name_ja": "にっかり青江（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_20_honebami_tosin",
+   "variant": "named",
+   "file": "sword_20_honebami_tosin.png",
+   "name_ja": "骨喰藤四郎の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_20_honebami_saya",
+   "variant": "named",
+   "file": "sword_20_honebami_saya.png",
+   "name_ja": "骨喰藤四郎の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_20_honebami_tsuba",
+   "variant": "named",
+   "file": "sword_20_honebami_tsuba.png",
+   "name_ja": "骨喰藤四郎の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_20_honebami_tsuka",
+   "variant": "named",
+   "file": "sword_20_honebami_tsuka.png",
+   "name_ja": "骨喰藤四郎の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_20_honebami_full",
+   "variant": "full",
+   "file": "sword_20_honebami_full.png",
+   "name_ja": "骨喰藤四郎（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_21_kamaitachi_tosin",
+   "variant": "named",
+   "file": "sword_21_kamaitachi_tosin.png",
+   "name_ja": "鎌鼬の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_21_kamaitachi_saya",
+   "variant": "named",
+   "file": "sword_21_kamaitachi_saya.png",
+   "name_ja": "鎌鼬の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_21_kamaitachi_tsuba",
+   "variant": "named",
+   "file": "sword_21_kamaitachi_tsuba.png",
+   "name_ja": "鎌鼬の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_21_kamaitachi_tsuka",
+   "variant": "named",
+   "file": "sword_21_kamaitachi_tsuka.png",
+   "name_ja": "鎌鼬の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_21_kamaitachi_full",
+   "variant": "full",
+   "file": "sword_21_kamaitachi_full.png",
+   "name_ja": "鎌鼬（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_22_kirigakure_tosin",
+   "variant": "named",
+   "file": "sword_22_kirigakure_tosin.png",
+   "name_ja": "霧隠の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_22_kirigakure_saya",
+   "variant": "named",
+   "file": "sword_22_kirigakure_saya.png",
+   "name_ja": "霧隠の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_22_kirigakure_tsuba",
+   "variant": "named",
+   "file": "sword_22_kirigakure_tsuba.png",
+   "name_ja": "霧隠の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_22_kirigakure_tsuka",
+   "variant": "named",
+   "file": "sword_22_kirigakure_tsuka.png",
+   "name_ja": "霧隠の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_22_kirigakure_full",
+   "variant": "full",
+   "file": "sword_22_kirigakure_full.png",
+   "name_ja": "霧隠（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_23_kagenui_tosin",
+   "variant": "named",
+   "file": "sword_23_kagenui_tosin.png",
+   "name_ja": "影縫の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_23_kagenui_saya",
+   "variant": "named",
+   "file": "sword_23_kagenui_saya.png",
+   "name_ja": "影縫の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_23_kagenui_tsuba",
+   "variant": "named",
+   "file": "sword_23_kagenui_tsuba.png",
+   "name_ja": "影縫の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_23_kagenui_tsuka",
+   "variant": "named",
+   "file": "sword_23_kagenui_tsuka.png",
+   "name_ja": "影縫の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_23_kagenui_full",
+   "variant": "full",
+   "file": "sword_23_kagenui_full.png",
+   "name_ja": "影縫（揃いの一枚絵）",
+   "ratio": "3:4"
+  },
+  {
+   "section": "sword",
+   "id": "sword_24_yonaki_tosin",
+   "variant": "named",
+   "file": "sword_24_yonaki_tosin.png",
+   "name_ja": "夜啼の刀身",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_24_yonaki_saya",
+   "variant": "named",
+   "file": "sword_24_yonaki_saya.png",
+   "name_ja": "夜啼の鞘",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_24_yonaki_tsuba",
+   "variant": "named",
+   "file": "sword_24_yonaki_tsuba.png",
+   "name_ja": "夜啼の鍔",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_24_yonaki_tsuka",
+   "variant": "named",
+   "file": "sword_24_yonaki_tsuka.png",
+   "name_ja": "夜啼の柄",
+   "ratio": "1:1"
+  },
+  {
+   "section": "sword",
+   "id": "sword_24_yonaki_full",
+   "variant": "full",
+   "file": "sword_24_yonaki_full.png",
+   "name_ja": "夜啼（揃いの一枚絵）",
+   "ratio": "3:4"
   },
   {
    "section": "shadow",

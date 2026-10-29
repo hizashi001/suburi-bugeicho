@@ -1,0 +1,910 @@
+{
+ "version": "2026-10-29",
+ "note_ja": "数値はすべて初期値。複数人のテストで調整する。装具・刀が効くのは武士部門だけ",
+ "equipment_slots": [
+  {
+   "slot": "hachigane",
+   "ja": "鉢金",
+   "main": "stagger_gauge_damage",
+   "main_ja": "怯みゲージの減り"
+  },
+  {
+   "slot": "kote",
+   "ja": "籠手",
+   "main": "combo_window",
+   "main_ja": "COMBOの受付時間"
+  },
+  {
+   "slot": "do",
+   "ja": "胴",
+   "main": "max_hp",
+   "main_ja": "最大HP"
+  },
+  {
+   "slot": "suneate",
+   "ja": "脛当",
+   "main": "dodge_window",
+   "main_ja": "回避の受付時間"
+  },
+  {
+   "slot": "omamori",
+   "ja": "御守",
+   "main": "drop_rate",
+   "main_ja": "ドロップ率"
+  },
+  {
+   "slot": "tosin",
+   "ja": "刀身",
+   "main": "damage",
+   "main_ja": "与ダメージ",
+   "sword_part": true
+  },
+  {
+   "slot": "saya",
+   "ja": "鞘",
+   "main": "finisher_multiplier",
+   "main_ja": "とどめの倍率（居合）",
+   "sword_part": true
+  },
+  {
+   "slot": "tsuba",
+   "ja": "鍔",
+   "main": "damage_taken_reduction",
+   "main_ja": "受けるダメージの軽減",
+   "sword_part": true
+  },
+  {
+   "slot": "tsuka",
+   "ja": "柄",
+   "main": "s_rank_damage",
+   "main_ja": "S判定のときの与ダメージ",
+   "sword_part": true
+  }
+ ],
+ "sword_kinds": {
+  "katana": {
+   "ja": "刀",
+   "class": "samurai",
+   "class_ja": "侍",
+   "mods": {
+    "s_rank_multiplier": 1.15,
+    "finisher_multiplier": 1.1
+   },
+   "mods_ja": "S判定の倍率×1.15、とどめの倍率×1.10。型の正確さで稼ぐ"
+  },
+  "tanto": {
+   "ja": "短刀",
+   "class": "shinobi",
+   "class_ja": "忍",
+   "mods": {
+    "hit_damage": 0.8,
+    "combo_window": 1.3,
+    "dodge_window": 1.15,
+    "chain_bonus_per_hit": 0.05,
+    "chain_bonus_max": 0.3,
+    "chain_interval_sec": 1.5
+   },
+   "mods_ja": "一撃×0.80、COMBOの受付×1.30、回避の受付×1.15。前の命中から1.5秒以内に当てるたびに与ダメージ+5%（上限+30%、途切れたら0）。手数で稼ぐ"
+  }
+ },
+ "kind_rules_ja": [
+  "得物（手に持つ物）が刀の類なら侍、短刀の類なら忍。装備できる刀の部品は、侍は刀、忍は短刀だけ",
+  "刀と短刀の個性（mods）は武士部門だけで効く。侍部門は素の実力の勝負なので効かせない"
+ ],
+ "named_grade": {
+  "ja": "名物",
+  "main_range_pct": [
+   18,
+   22
+  ],
+  "fixed_affix": 1,
+  "random_affix": 2,
+  "affix_scale": 2.0,
+  "note_ja": "名物の部品は最上大業物より一段上。主性能は+18〜22%、その刀に合った付与効果1つが固定、残り2つは抽選"
+ },
+ "named_drop": {
+  "from_boss_pct": 30,
+  "from_yokai_pct": 3,
+  "from_special": "条件を満たしたとき1つ確定",
+  "note_ja": "落ちる部品は4つの中から抽選。同じ部品が重なっても、付与効果の数値は毎回違う"
+ },
+ "set_bonus": {
+  "2": {
+   "ja": "与ダメージ+5%"
+  },
+  "3": {
+   "ja": "与ダメージ+10%（2点の効果と入れ替わる）"
+  },
+  "4": {
+   "ja": "その刀の銘効果（下の set4）"
+  },
+  "mixed_4": {
+   "ja": "違う名物の部品を4つそろえた『寄せ拵え』：獲得EXP+10%"
+  }
+ },
+ "yokai_tags": {
+  "oni": [
+   "yokai_012_aka_oni",
+   "yokai_013_ao_oni",
+   "yokai_058_yanari",
+   "yokai_097_amanojaku",
+   "yokai_055_sazae_oni",
+   "yokai_100_uwan",
+   "boss_01_shuten_doji",
+   "boss_02_ibaraki_doji",
+   "boss_04_otakemaru",
+   "boss_09_ushi_oni"
+  ],
+  "kitsune": [
+   "yokai_003_yako",
+   "boss_03_tamamo_no_mae"
+  ],
+  "ghost": [
+   "yokai_007_nukekubi",
+   "yokai_040_funayurei",
+   "yokai_042_onibi",
+   "yokai_028_hone_onna",
+   "yokai_082_kyokotsu",
+   "yokai_070_kosode_no_te",
+   "yokai_029_kerakera_onna",
+   "yokai_080_hashihime",
+   "yokai_083_gaki",
+   "yokai_041_bake_kujira",
+   "boss_08_gashadokuro"
+  ]
+ },
+ "swords": [
+  {
+   "no": 1,
+   "id": "sword_01_doujigiri",
+   "ja": "童子切安綱",
+   "kana": "どうじぎりやすつな",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "大原安綱（伯耆国）",
+   "lore_ja": "源頼光が大江山の鬼の頭領・酒呑童子の首を落としたと伝わる太刀。天下五剣の一つに数えられる。",
+   "flavor_ja": "鬼の名を聞けば、鞘の内で刃が鳴る。",
+   "set4_ja": "鬼の妖怪に与ダメージ+40%",
+   "source": {
+    "type": "boss",
+    "id": "boss_01_shuten_doji"
+   },
+   "images": {
+    "tosin": "sword_01_doujigiri_tosin.png",
+    "saya": "sword_01_doujigiri_saya.png",
+    "tsuba": "sword_01_doujigiri_tsuba.png",
+    "tsuka": "sword_01_doujigiri_tsuka.png",
+    "full": "sword_01_doujigiri_full.png"
+   },
+   "look": {
+    "blade": "a long deeply curved tachi blade with a narrow, subtly irregular temper line",
+    "saya": "black lacquer scabbard with a faint crimson sheen",
+    "tsuba": "a round iron guard with a small oni-face motif",
+    "tsuka": "handle wrapped in dark red silk cord over white ray skin",
+    "aura": "crimson",
+    "motif": "the shadow of a towering oni lord"
+   }
+  },
+  {
+   "no": 2,
+   "id": "sword_02_higekiri",
+   "ja": "髭切",
+   "kana": "ひげきり",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "不詳（源氏重代の宝刀）",
+   "lore_ja": "試し斬りで罪人の髭まで断ったことから名付けられた源氏の宝刀。渡辺綱が一条戻橋で鬼の腕を斬った刀とも伝わる。",
+   "flavor_ja": "鬼の腕を断った刃は、二度目を逃さない。",
+   "set4_ja": "S判定が3回続くと、次の一撃が必ずクリティカル",
+   "source": {
+    "type": "boss",
+    "id": "boss_02_ibaraki_doji"
+   },
+   "images": {
+    "tosin": "sword_02_higekiri_tosin.png",
+    "saya": "sword_02_higekiri_saya.png",
+    "tsuba": "sword_02_higekiri_tsuba.png",
+    "tsuka": "sword_02_higekiri_tsuka.png",
+    "full": "sword_02_higekiri_full.png"
+   },
+   "look": {
+    "blade": "an elegant curved tachi blade with a straight temper line",
+    "saya": "silver-flecked black lacquer scabbard",
+    "tsuba": "a lobed iron guard with a bridge and willow motif",
+    "tsuka": "handle wrapped in indigo silk cord",
+    "aura": "pale silver",
+    "motif": "a severed ghostly oni arm dissolving into mist"
+   }
+  },
+  {
+   "no": 3,
+   "id": "sword_03_kumokiri",
+   "ja": "蜘蛛切",
+   "kana": "くもきり",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "不詳（源氏重代、膝丸とも）",
+   "lore_ja": "試し斬りで膝まで断ったことから膝丸と呼ばれ、病床の源頼光が土蜘蛛を斬って蜘蛛切と改めたと伝わる。髭切と対をなす源氏の宝刀。",
+   "flavor_ja": "糸が張られる前に、気配を断つ。",
+   "set4_ja": "敵の攻撃の予告が0.3秒早く出る",
+   "source": {
+    "type": "boss",
+    "id": "boss_07_tsuchigumo"
+   },
+   "images": {
+    "tosin": "sword_03_kumokiri_tosin.png",
+    "saya": "sword_03_kumokiri_saya.png",
+    "tsuba": "sword_03_kumokiri_tsuba.png",
+    "tsuka": "sword_03_kumokiri_tsuka.png",
+    "full": "sword_03_kumokiri_full.png"
+   },
+   "look": {
+    "blade": "a curved tachi blade with a wavy temper line like spun thread",
+    "saya": "deep purple lacquer scabbard with fine web-like gold lines",
+    "tsuba": "an openwork iron guard shaped like a spider web",
+    "tsuka": "handle wrapped in purple silk cord",
+    "aura": "violet",
+    "motif": "a giant spider web torn in two"
+   }
+  },
+  {
+   "no": 4,
+   "id": "sword_04_shishiou",
+   "ja": "獅子王",
+   "kana": "ししおう",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "不詳",
+   "lore_ja": "源頼政が御所に現れた鵺を射落とした褒美として、帝から賜ったと伝わる太刀。",
+   "flavor_ja": "雷雲の奥に潜むものほど、よく怯む。",
+   "set4_ja": "怯みゲージの減り+40%",
+   "source": {
+    "type": "boss",
+    "id": "boss_06_nue"
+   },
+   "images": {
+    "tosin": "sword_04_shishiou_tosin.png",
+    "saya": "sword_04_shishiou_saya.png",
+    "tsuba": "sword_04_shishiou_tsuba.png",
+    "tsuka": "sword_04_shishiou_tsuka.png",
+    "full": "sword_04_shishiou_full.png"
+   },
+   "look": {
+    "blade": "a stout curved tachi blade with a bold temper line",
+    "saya": "black lacquer scabbard with a golden lion-mane pattern",
+    "tsuba": "a round guard with a lion's head in relief",
+    "tsuka": "handle wrapped in black silk with gold accents",
+    "aura": "thunder yellow",
+    "motif": "black thunderclouds splitting apart"
+   }
+  },
+  {
+   "no": 5,
+   "id": "sword_05_kogitsunemaru",
+   "ja": "小狐丸",
+   "kana": "こぎつねまる",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "三条宗近",
+   "lore_ja": "稲荷明神の化身の狐が相槌を打ち、三条宗近が鍛え上げたと謡曲「小鍛冶」に語られる太刀。",
+   "flavor_ja": "狐が打った刃は、狐を見逃さない。",
+   "set4_ja": "狐の妖怪に与ダメージ+40%、金色の妖怪の出現率+30%",
+   "source": {
+    "type": "boss",
+    "id": "boss_03_tamamo_no_mae"
+   },
+   "images": {
+    "tosin": "sword_05_kogitsunemaru_tosin.png",
+    "saya": "sword_05_kogitsunemaru_saya.png",
+    "tsuba": "sword_05_kogitsunemaru_tsuba.png",
+    "tsuka": "sword_05_kogitsunemaru_tsuka.png",
+    "full": "sword_05_kogitsunemaru_full.png"
+   },
+   "look": {
+    "blade": "a slender graceful tachi blade with a soft flame-like temper line",
+    "saya": "white lacquer scabbard with red fox markings",
+    "tsuba": "a small guard shaped like a coiled fox tail",
+    "tsuka": "handle wrapped in white silk cord with red tassel",
+    "aura": "foxfire blue",
+    "motif": "a fox spirit glowing with blue foxfire"
+   }
+  },
+  {
+   "no": 6,
+   "id": "sword_06_sohaya",
+   "ja": "騒速",
+   "kana": "そはや",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "不詳",
+   "lore_ja": "坂上田村麻呂の佩刀と伝わる剣。田村麻呂は伝説の中で、鬼神・大嶽丸を討ったとされる。",
+   "flavor_ja": "嵐を連れた鬼も、名乗る前に斬られる。",
+   "set4_ja": "COMBOが10以上のとき、与ダメージ+25%",
+   "source": {
+    "type": "boss",
+    "id": "boss_04_otakemaru"
+   },
+   "images": {
+    "tosin": "sword_06_sohaya_tosin.png",
+    "saya": "sword_06_sohaya_saya.png",
+    "tsuba": "sword_06_sohaya_tsuba.png",
+    "tsuka": "sword_06_sohaya_tsuka.png",
+    "full": "sword_06_sohaya_full.png"
+   },
+   "look": {
+    "blade": "an ancient nearly straight blade with a calm straight temper line",
+    "saya": "dark lacquer scabbard with old bronze fittings",
+    "tsuba": "a simple ancient oval guard of dark bronze",
+    "tsuka": "handle wrapped in faded green cord",
+    "aura": "storm grey",
+    "motif": "storm clouds with lightning and snow"
+   }
+  },
+  {
+   "no": 7,
+   "id": "sword_07_onimaru",
+   "ja": "鬼丸国綱",
+   "kana": "おにまるくにつな",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "粟田口国綱",
+   "lore_ja": "北条時頼の夢に夜ごと現れた小鬼を、立てかけてあった太刀がひとりでに倒れて斬ったと伝わる。天下五剣の一つ。",
+   "flavor_ja": "夢の中でさえ、先に動くのは刃だ。",
+   "set4_ja": "戦闘が始まってから10秒間、与ダメージ+50%",
+   "source": {
+    "type": "special",
+    "id": "tower_oni_taisho",
+    "note_ja": "登頂で、鬼の妖怪の大将を倒したとき"
+   },
+   "images": {
+    "tosin": "sword_07_onimaru_tosin.png",
+    "saya": "sword_07_onimaru_saya.png",
+    "tsuba": "sword_07_onimaru_tsuba.png",
+    "tsuka": "sword_07_onimaru_tsuka.png",
+    "full": "sword_07_onimaru_full.png"
+   },
+   "look": {
+    "blade": "a wide powerful tachi blade with a bold irregular temper line",
+    "saya": "black lacquer scabbard with a pattern of small horns",
+    "tsuba": "a heavy iron guard with a sleeping-oni motif",
+    "tsuka": "handle wrapped in black silk cord",
+    "aura": "dark red",
+    "motif": "a small oni fleeing from a falling sword in a dream haze"
+   }
+  },
+  {
+   "no": 8,
+   "id": "sword_08_mikazuki",
+   "ja": "三日月宗近",
+   "kana": "みかづきむねちか",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "三条宗近",
+   "lore_ja": "刃文の中に三日月形の模様が浮かぶ太刀。天下五剣の中で最も美しいと称される。",
+   "flavor_ja": "美しい一振りに、言い訳はいらない。",
+   "set4_ja": "S判定のときの与ダメージ+40%",
+   "source": {
+    "type": "special",
+    "id": "tower_floor_30",
+    "note_ja": "登頂の30階以上"
+   },
+   "images": {
+    "tosin": "sword_08_mikazuki_tosin.png",
+    "saya": "sword_08_mikazuki_saya.png",
+    "tsuba": "sword_08_mikazuki_tsuba.png",
+    "tsuka": "sword_08_mikazuki_tsuka.png",
+    "full": "sword_08_mikazuki_full.png"
+   },
+   "look": {
+    "blade": "a slender deeply curved tachi blade with crescent-moon shapes floating in its temper line",
+    "saya": "deep indigo lacquer scabbard with gold crescent moons",
+    "tsuba": "a delicate round guard with crescent moon openwork",
+    "tsuka": "handle wrapped in deep indigo silk cord",
+    "aura": "moonlight gold",
+    "motif": "a crescent moon over still water"
+   }
+  },
+  {
+   "no": 9,
+   "id": "sword_09_odenta",
+   "ja": "大典太光世",
+   "kana": "おおでんたみつよ",
+   "kind": "katana",
+   "origin_ja": "史実",
+   "smith_ja": "三池典太光世",
+   "lore_ja": "加賀の前田家に伝わり、病に伏した姫の枕元に置くと病が癒えたと伝わる太刀。天下五剣の一つ。",
+   "flavor_ja": "刃が守るのは、斬る者の命でもある。",
+   "set4_ja": "最大HP+30%。30秒ごとにHPが5%回復",
+   "source": {
+    "type": "special",
+    "id": "tower_floor_20",
+    "note_ja": "登頂の20階以上"
+   },
+   "images": {
+    "tosin": "sword_09_odenta_tosin.png",
+    "saya": "sword_09_odenta_saya.png",
+    "tsuba": "sword_09_odenta_tsuba.png",
+    "tsuka": "sword_09_odenta_tsuka.png",
+    "full": "sword_09_odenta_full.png"
+   },
+   "look": {
+    "blade": "a very wide, short, powerful tachi blade with a straight temper line",
+    "saya": "vermilion lacquer scabbard with gold plum blossoms",
+    "tsuba": "a thick round guard with plum blossom openwork",
+    "tsuka": "handle wrapped in vermilion silk cord",
+    "aura": "warm gold",
+    "motif": "plum blossoms falling in moonlight"
+   }
+  },
+  {
+   "no": 10,
+   "id": "sword_10_amenohabakiri",
+   "ja": "天羽々斬",
+   "kana": "あめのはばきり",
+   "kind": "katana",
+   "origin_ja": "神話",
+   "smith_ja": "神代の剣",
+   "lore_ja": "素戔嗚尊が八岐大蛇を斬った十拳剣の名の一つ。大蛇の尾を斬ったとき刃が欠け、尾の中から一振りの剣が現れたと語られる。",
+   "flavor_ja": "八つの首より、一つの覚悟。",
+   "set4_ja": "ボスに与ダメージ+35%",
+   "source": {
+    "type": "boss",
+    "id": "boss_05_yamata_no_orochi"
+   },
+   "images": {
+    "tosin": "sword_10_amenohabakiri_tosin.png",
+    "saya": "sword_10_amenohabakiri_saya.png",
+    "tsuba": "sword_10_amenohabakiri_tsuba.png",
+    "tsuka": "sword_10_amenohabakiri_tsuka.png",
+    "full": "sword_10_amenohabakiri_full.png"
+   },
+   "look": {
+    "blade": "an ancient straight double-edged divine sword with a small chip in its edge",
+    "saya": "scabbard of white wood bound with sacred straw rope",
+    "tsuba": "an ancient guard of gilded bronze",
+    "tsuka": "a long hilt wrapped in white cord with a ring pommel",
+    "aura": "divine white",
+    "motif": "eight serpent heads silhouetted in storm clouds"
+   }
+  },
+  {
+   "no": 11,
+   "id": "sword_11_amenoohabari",
+   "ja": "天之尾羽張",
+   "kana": "あめのおはばり",
+   "kind": "katana",
+   "origin_ja": "神話",
+   "smith_ja": "神代の剣",
+   "lore_ja": "伊邪那岐命が火の神・迦具土を斬った十拳剣と古事記に記される。",
+   "flavor_ja": "神をも斬った刃が、いま汝の腰にある。",
+   "set4_ja": "クリティカルのとき、炎の追加ダメージ+20%",
+   "source": {
+    "type": "special",
+    "id": "raid_rare",
+    "note_ja": "22時の一斉討伐（まれ）"
+   },
+   "images": {
+    "tosin": "sword_11_amenoohabari_tosin.png",
+    "saya": "sword_11_amenoohabari_saya.png",
+    "tsuba": "sword_11_amenoohabari_tsuba.png",
+    "tsuka": "sword_11_amenoohabari_tsuka.png",
+    "full": "sword_11_amenoohabari_full.png"
+   },
+   "look": {
+    "blade": "an ancient straight divine sword with flame patterns glowing in the steel",
+    "saya": "scabbard of black lacquer with bronze flame fittings",
+    "tsuba": "a gilded bronze guard shaped like rising flames",
+    "tsuka": "a long hilt wrapped in vermilion cord",
+    "aura": "divine flame",
+    "motif": "a pillar of sacred fire"
+   }
+  },
+  {
+   "no": 12,
+   "id": "sword_12_shionari",
+   "ja": "潮鳴",
+   "kana": "しおなり",
+   "kind": "katana",
+   "origin_ja": "オリジナル",
+   "smith_ja": "不詳",
+   "lore_ja": "嵐の夜、海坊主の影を斬った漁村の侍が、波間から拾い上げたと語られる太刀。刃を耳に当てると潮騒が聞こえる。",
+   "flavor_ja": "波が引く一瞬を、斬れ。",
+   "set4_ja": "回避の受付時間+30%",
+   "source": {
+    "type": "boss",
+    "id": "boss_11_umibozu"
+   },
+   "images": {
+    "tosin": "sword_12_shionari_tosin.png",
+    "saya": "sword_12_shionari_saya.png",
+    "tsuba": "sword_12_shionari_tsuba.png",
+    "tsuka": "sword_12_shionari_tsuka.png",
+    "full": "sword_12_shionari_full.png"
+   },
+   "look": {
+    "blade": "a curved katana blade with a temper line like breaking waves",
+    "saya": "sea-blue lacquer scabbard with silver wave crests",
+    "tsuba": "a guard shaped like a curling wave",
+    "tsuka": "handle wrapped in sea-blue silk cord",
+    "aura": "sea blue",
+    "motif": "a colossal wave rising in the night"
+   }
+  },
+  {
+   "no": 13,
+   "id": "sword_13_isokiri",
+   "ja": "磯切",
+   "kana": "いそきり",
+   "kind": "katana",
+   "origin_ja": "オリジナル",
+   "smith_ja": "浜の鍛冶（名は伝わらない）",
+   "lore_ja": "磯に現れる牛鬼を退けるため、浜の鍛冶が鉄に貝殻の粉を混ぜて鍛えたという太刀。潮を浴びても錆びない。",
+   "flavor_ja": "荒磯の岩ほど、この刃は固い。",
+   "set4_ja": "受けるダメージ−25%",
+   "source": {
+    "type": "boss",
+    "id": "boss_09_ushi_oni"
+   },
+   "images": {
+    "tosin": "sword_13_isokiri_tosin.png",
+    "saya": "sword_13_isokiri_saya.png",
+    "tsuba": "sword_13_isokiri_tsuba.png",
+    "tsuka": "sword_13_isokiri_tsuka.png",
+    "full": "sword_13_isokiri_full.png"
+   },
+   "look": {
+    "blade": "a thick sturdy katana blade with a mottled temper line like sea foam",
+    "saya": "scabbard of black lacquer inlaid with mother-of-pearl",
+    "tsuba": "a heavy guard inlaid with shell",
+    "tsuka": "handle wrapped in dark grey cord",
+    "aura": "pearl white",
+    "motif": "rocky shore under crashing surf"
+   }
+  },
+  {
+   "no": 14,
+   "id": "sword_14_mukurodachi",
+   "ja": "骸断",
+   "kana": "むくろだち",
+   "kind": "katana",
+   "origin_ja": "オリジナル",
+   "smith_ja": "名もなき刀工",
+   "lore_ja": "戦場に積もった骨から生まれた巨大な骸を断つため、名もなき刀工が一生をかけて打った太刀。",
+   "flavor_ja": "巨きなものほど、一太刀で崩れる。",
+   "set4_ja": "とどめの倍率+35%",
+   "source": {
+    "type": "boss",
+    "id": "boss_08_gashadokuro"
+   },
+   "images": {
+    "tosin": "sword_14_mukurodachi_tosin.png",
+    "saya": "sword_14_mukurodachi_saya.png",
+    "tsuba": "sword_14_mukurodachi_tsuba.png",
+    "tsuka": "sword_14_mukurodachi_tsuka.png",
+    "full": "sword_14_mukurodachi_full.png"
+   },
+   "look": {
+    "blade": "a long heavy katana blade with a stark white temper line",
+    "saya": "bone-white lacquer scabbard with black cracks",
+    "tsuba": "a square guard carved with skull motifs",
+    "tsuka": "handle wrapped in black cord over bone-white ray skin",
+    "aura": "bone white",
+    "motif": "a giant skeleton's hand crumbling"
+   }
+  },
+  {
+   "no": 15,
+   "id": "sword_15_karahashi",
+   "ja": "唐橋",
+   "kana": "からはし",
+   "kind": "katana",
+   "origin_ja": "オリジナル",
+   "smith_ja": "不詳",
+   "lore_ja": "瀬田の唐橋に伝わる大百足退治の伝説にちなんで名付けられた太刀。百の足を数えるように、刃は休まない。",
+   "flavor_ja": "百の足より、一の連なり。",
+   "set4_ja": "COMBO倍率の上限+0.5",
+   "source": {
+    "type": "boss",
+    "id": "boss_12_omukade"
+   },
+   "images": {
+    "tosin": "sword_15_karahashi_tosin.png",
+    "saya": "sword_15_karahashi_saya.png",
+    "tsuba": "sword_15_karahashi_tsuba.png",
+    "tsuka": "sword_15_karahashi_tsuka.png",
+    "full": "sword_15_karahashi_full.png"
+   },
+   "look": {
+    "blade": "a long katana blade with a temper line like a chain of segments",
+    "saya": "vermilion lacquer scabbard with segmented black bands",
+    "tsuba": "a guard shaped like an arched bridge",
+    "tsuka": "handle wrapped in black and vermilion cord",
+    "aura": "ember orange",
+    "motif": "an arched bridge over a lake at dusk"
+   }
+  },
+  {
+   "no": 16,
+   "id": "sword_16_kageuchi",
+   "ja": "影打",
+   "kana": "かげうち",
+   "kind": "katana",
+   "origin_ja": "オリジナル",
+   "smith_ja": "師範",
+   "lore_ja": "名刀を打つとき、本命の真打と並べて鍛える控えの一振りを影打という。師範の影を斬った者だけに渡される、この道場の影打。",
+   "flavor_ja": "影を斬った者は、影を打つ。",
+   "set4_ja": "与ダメージ+20%、受けるダメージ−10%。影斬りの演出が金色になる",
+   "source": {
+    "type": "special",
+    "id": "kagegiri_samurai",
+    "note_ja": "師範の影を初めて影斬りしたとき（侍）"
+   },
+   "images": {
+    "tosin": "sword_16_kageuchi_tosin.png",
+    "saya": "sword_16_kageuchi_saya.png",
+    "tsuba": "sword_16_kageuchi_tsuba.png",
+    "tsuka": "sword_16_kageuchi_tsuka.png",
+    "full": "sword_16_kageuchi_full.png"
+   },
+   "look": {
+    "blade": "a katana blade of smoky dark steel with a faint grey temper line",
+    "saya": "matte black scabbard with a grey shadow pattern",
+    "tsuba": "a plain dark iron guard with a single cutout",
+    "tsuka": "handle wrapped in charcoal grey cord",
+    "aura": "shadow grey",
+    "motif": "a grey human shadow split in two"
+   }
+  },
+  {
+   "no": 17,
+   "id": "sword_17_imanotsurugi",
+   "ja": "今剣",
+   "kana": "いまのつるぎ",
+   "kind": "tanto",
+   "origin_ja": "史実",
+   "smith_ja": "三条宗近と伝わる",
+   "lore_ja": "源義経の守り刀と伝わる短刀。義経は幼い頃、鞍馬山で天狗に兵法を学んだと語られる。",
+   "flavor_ja": "天狗に習った足は、地を踏まずに跳ぶ。",
+   "set4_ja": "回避に成功すると、続く3回の連撃の与ダメージ+30%",
+   "source": {
+    "type": "boss",
+    "id": "boss_10_dai_tengu"
+   },
+   "images": {
+    "tosin": "sword_17_imanotsurugi_tosin.png",
+    "saya": "sword_17_imanotsurugi_saya.png",
+    "tsuba": "sword_17_imanotsurugi_tsuba.png",
+    "tsuka": "sword_17_imanotsurugi_tsuka.png",
+    "full": "sword_17_imanotsurugi_full.png"
+   },
+   "look": {
+    "blade": "a small curved dagger blade with a straight temper line",
+    "saya": "black lacquer scabbard with a single tengu feather motif",
+    "tsuba": "no guard, a slim collar ring",
+    "tsuka": "handle wrapped in black cord with a feather charm",
+    "aura": "mountain green",
+    "motif": "tengu feathers swirling on a mountain wind"
+   }
+  },
+  {
+   "no": 18,
+   "id": "sword_18_yagentoushirou",
+   "ja": "薬研藤四郎",
+   "kana": "やげんとうしろう",
+   "kind": "tanto",
+   "origin_ja": "史実",
+   "smith_ja": "粟田口吉光",
+   "lore_ja": "鉄の薬研さえ貫きながら、持ち主だけは決して傷つけなかったという逸話を持つ短刀。",
+   "flavor_ja": "鉄は貫く。主は守る。",
+   "set4_ja": "1戦に1回、倒れるほどの被弾をHP1で耐える",
+   "source": {
+    "type": "special",
+    "id": "tower_floor_25",
+    "note_ja": "登頂の25階以上"
+   },
+   "images": {
+    "tosin": "sword_18_yagentoushirou_tosin.png",
+    "saya": "sword_18_yagentoushirou_saya.png",
+    "tsuba": "sword_18_yagentoushirou_tsuba.png",
+    "tsuka": "sword_18_yagentoushirou_tsuka.png",
+    "full": "sword_18_yagentoushirou_full.png"
+   },
+   "look": {
+    "blade": "a straight dagger blade with a calm straight temper line",
+    "saya": "dark brown lacquer scabbard",
+    "tsuba": "a small plain round guard",
+    "tsuka": "handle wrapped in brown cord",
+    "aura": "iron grey",
+    "motif": "an iron mortar pierced clean through"
+   }
+  },
+  {
+   "no": 19,
+   "id": "sword_19_nikkari",
+   "ja": "にっかり青江",
+   "kana": "にっかりあおえ",
+   "kind": "tanto",
+   "origin_ja": "史実",
+   "smith_ja": "青江派",
+   "lore_ja": "夜道で「にっかり」と笑いかけた女の幽霊を斬ると、翌朝そこには両断された石灯籠があったと伝わる脇差。",
+   "flavor_ja": "笑い声の主が、人とは限らない。",
+   "set4_ja": "霊の妖怪に与ダメージ+40%",
+   "source": {
+    "type": "yokai",
+    "id": "yokai_029_kerakera_onna"
+   },
+   "images": {
+    "tosin": "sword_19_nikkari_tosin.png",
+    "saya": "sword_19_nikkari_saya.png",
+    "tsuba": "sword_19_nikkari_tsuba.png",
+    "tsuka": "sword_19_nikkari_tsuka.png",
+    "full": "sword_19_nikkari_full.png"
+   },
+   "look": {
+    "blade": "a short sword blade with a pale, ghostly temper line",
+    "saya": "black lacquer scabbard with a faint white smile motif",
+    "tsuba": "a small guard shaped like a stone lantern",
+    "tsuka": "handle wrapped in pale grey cord",
+    "aura": "ghost white",
+    "motif": "a stone lantern cut in two in the night"
+   }
+  },
+  {
+   "no": 20,
+   "id": "sword_20_honebami",
+   "ja": "骨喰藤四郎",
+   "kana": "ほねばみとうしろう",
+   "kind": "tanto",
+   "origin_ja": "史実",
+   "smith_ja": "粟田口吉光と伝わる",
+   "lore_ja": "斬る真似をしただけで相手の骨まで砕けると言われ、その名がついた。もとは薙刀だったと伝わる。",
+   "flavor_ja": "振る前から、勝負は始まっている。",
+   "set4_ja": "怯みのときに求められる連撃の回数−1",
+   "source": {
+    "type": "yokai",
+    "id": "yokai_028_hone_onna"
+   },
+   "images": {
+    "tosin": "sword_20_honebami_tosin.png",
+    "saya": "sword_20_honebami_saya.png",
+    "tsuba": "sword_20_honebami_tsuba.png",
+    "tsuka": "sword_20_honebami_tsuka.png",
+    "full": "sword_20_honebami_full.png"
+   },
+   "look": {
+    "blade": "a short sword blade reshaped from a glaive, with a bold temper line",
+    "saya": "black lacquer scabbard with bone-white bands",
+    "tsuba": "a small guard with a bone pattern",
+    "tsuka": "handle wrapped in bone-white cord",
+    "aura": "bone white",
+    "motif": "cracked bones scattered like petals"
+   }
+  },
+  {
+   "no": 21,
+   "id": "sword_21_kamaitachi",
+   "ja": "鎌鼬",
+   "kana": "かまいたち",
+   "kind": "tanto",
+   "origin_ja": "オリジナル",
+   "smith_ja": "不詳",
+   "lore_ja": "つむじ風に乗る鎌鼬の爪を柄に仕込んだと言われる短刀。振ると、風が遅れてついてくる。",
+   "flavor_ja": "風より先に斬り、風より先に去れ。",
+   "set4_ja": "連撃の受付時間+30%",
+   "source": {
+    "type": "yokai",
+    "id": "yokai_015_kamaitachi"
+   },
+   "images": {
+    "tosin": "sword_21_kamaitachi_tosin.png",
+    "saya": "sword_21_kamaitachi_saya.png",
+    "tsuba": "sword_21_kamaitachi_tsuba.png",
+    "tsuka": "sword_21_kamaitachi_tsuka.png",
+    "full": "sword_21_kamaitachi_full.png"
+   },
+   "look": {
+    "blade": "a sickle-curved dagger blade",
+    "saya": "pale green lacquer scabbard with wind swirls",
+    "tsuba": "no guard, a slim collar ring",
+    "tsuka": "handle wrapped in pale green cord",
+    "aura": "wind green",
+    "motif": "a whirlwind carrying leaves"
+   }
+  },
+  {
+   "no": 22,
+   "id": "sword_22_kirigakure",
+   "ja": "霧隠",
+   "kana": "きりがくれ",
+   "kind": "tanto",
+   "origin_ja": "オリジナル",
+   "smith_ja": "山里の忍び",
+   "lore_ja": "霧深い山里の忍びが代々受け継いだ短刀。鞘から抜くと、刃のまわりに薄い霧が立つ。",
+   "flavor_ja": "見えぬものは、斬れぬ。",
+   "set4_ja": "被弾したあと2秒間、受けるダメージ0",
+   "source": {
+    "type": "special",
+    "id": "yokai_rare",
+    "note_ja": "通常の妖怪からまれに"
+   },
+   "images": {
+    "tosin": "sword_22_kirigakure_tosin.png",
+    "saya": "sword_22_kirigakure_saya.png",
+    "tsuba": "sword_22_kirigakure_tsuba.png",
+    "tsuka": "sword_22_kirigakure_tsuka.png",
+    "full": "sword_22_kirigakure_full.png"
+   },
+   "look": {
+    "blade": "a straight ninja dagger blade with a misty temper line",
+    "saya": "dark grey lacquer scabbard",
+    "tsuba": "a small square iron guard",
+    "tsuka": "handle wrapped in dark grey cord",
+    "aura": "mist grey",
+    "motif": "mountain mist hiding a village"
+   }
+  },
+  {
+   "no": 23,
+   "id": "sword_23_kagenui",
+   "ja": "影縫",
+   "kana": "かげぬい",
+   "kind": "tanto",
+   "origin_ja": "オリジナル",
+   "smith_ja": "師範",
+   "lore_ja": "師範の影を斬った忍びにだけ渡される短刀。影を地に縫い止め、相手の動きをわずかに遅らせる。",
+   "flavor_ja": "影を縫えば、体は遅れる。",
+   "set4_ja": "敵の攻撃の予告が0.5秒長くなる",
+   "source": {
+    "type": "special",
+    "id": "kagegiri_shinobi",
+    "note_ja": "師範の影を初めて影斬りしたとき（忍）"
+   },
+   "images": {
+    "tosin": "sword_23_kagenui_tosin.png",
+    "saya": "sword_23_kagenui_saya.png",
+    "tsuba": "sword_23_kagenui_tsuba.png",
+    "tsuka": "sword_23_kagenui_tsuka.png",
+    "full": "sword_23_kagenui_full.png"
+   },
+   "look": {
+    "blade": "a slim straight dagger blade of dark smoky steel",
+    "saya": "matte black scabbard with a stitched-thread pattern",
+    "tsuba": "a tiny square guard",
+    "tsuka": "handle wrapped in charcoal cord",
+    "aura": "shadow grey",
+    "motif": "a shadow pinned to the ground by a needle"
+   }
+  },
+  {
+   "no": 24,
+   "id": "sword_24_yonaki",
+   "ja": "夜啼",
+   "kana": "よなき",
+   "kind": "tanto",
+   "origin_ja": "オリジナル",
+   "smith_ja": "不詳",
+   "lore_ja": "夜雀の声が聞こえる夜にだけ、鞘の中でかすかに鳴くという短刀。",
+   "flavor_ja": "夜の稽古は、刃も目を覚ます。",
+   "set4_ja": "現地時刻の20時から翌4時まで、与ダメージ+25%",
+   "source": {
+    "type": "yokai",
+    "id": "yokai_099_yosuzume"
+   },
+   "images": {
+    "tosin": "sword_24_yonaki_tosin.png",
+    "saya": "sword_24_yonaki_saya.png",
+    "tsuba": "sword_24_yonaki_tsuba.png",
+    "tsuka": "sword_24_yonaki_tsuka.png",
+    "full": "sword_24_yonaki_full.png"
+   },
+   "look": {
+    "blade": "a short curved dagger blade with a dark blue temper line",
+    "saya": "night-blue lacquer scabbard with tiny sparrow motifs",
+    "tsuba": "a small guard shaped like a sparrow",
+    "tsuka": "handle wrapped in night-blue cord",
+    "aura": "night blue",
+    "motif": "a sparrow silhouette against the moon"
+   }
+  }
+ ]
+}
