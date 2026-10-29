@@ -307,8 +307,30 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 .gest .meter i { background: var(--kin); width: 0; }
 .setdone { position: fixed; inset: 0; z-index: 35; background: rgba(8,12,24,.94); display: grid; place-items: center; text-align: center; padding: 24px; }
 .setdone > div { display: flex; flex-direction: column; gap: 14px; align-items: center; max-width: 420px; }
+/* hit: the stage shakes a little */
+.stage.shake { animation: shake .36s linear; }
+@keyframes shake { 0%, 100% { transform: none; } 20% { transform: translate(-7px, 3px); } 40% { transform: translate(6px, -4px); } 60% { transform: translate(-4px, 3px); } 80% { transform: translate(3px, -2px); } }
+/* slain: the yokai is cut in two along the stroke and burns away into embers (no blood) */
+.slain { position: relative; width: 150px; height: 200px; margin: 0 auto; }
+.slain .half { position: absolute; inset: 0; display: grid; place-items: center; }
+.slain .half .seal { width: 100%; height: 100%; font-size: 5.5rem; }
+.slain .half.a { clip-path: polygon(0 0, 100% 0, 0 100%); animation: cutA 1.4s cubic-bezier(.2,.7,.3,1) .18s forwards; }
+.slain .half.b { clip-path: polygon(100% 0, 100% 100%, 0 100%); animation: cutB 1.4s cubic-bezier(.2,.7,.3,1) .18s forwards; }
+.slain .cut { position: absolute; left: 50%; top: 50%; width: 150%; height: 6px; background: #fff; box-shadow: 0 0 18px #fff, 0 0 36px var(--kin); transform: translate(-50%, -50%) rotate(-45deg) scaleX(0); animation: cutLine .5s ease-out forwards; }
+.slain .ember { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; border-radius: 50%; background: #ffb347; box-shadow: 0 0 8px #ff7a2e; opacity: 0; animation: ember 1.2s ease-out forwards; animation-delay: var(--dl); }
+@keyframes cutA { 0% { transform: none; filter: none; } 35% { transform: translate(-12px, -12px) rotate(-5deg); filter: brightness(1.6); } 100% { transform: translate(-56px, -60px) rotate(-16deg); filter: brightness(2.2) sepia(1) blur(3px); opacity: 0; } }
+@keyframes cutB { 0% { transform: none; filter: none; } 35% { transform: translate(12px, 12px) rotate(5deg); filter: brightness(1.6); } 100% { transform: translate(56px, 52px) rotate(16deg); filter: brightness(2.2) sepia(1) blur(3px); opacity: 0; } }
+@keyframes cutLine { 0% { transform: translate(-50%, -50%) rotate(-45deg) scaleX(0); opacity: 1; } 40% { transform: translate(-50%, -50%) rotate(-45deg) scaleX(1); opacity: 1; } 100% { transform: translate(-50%, -50%) rotate(-45deg) scaleX(1); opacity: 0; } }
+@keyframes ember { 0% { opacity: 0; transform: translate(-50%, -50%); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.3); } }
+/* errors on screen, for testing on the phone */
+#errbox { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 99; background: #5c1414; color: #fff; border: 1px solid #e0473f; border-radius: 8px; padding: 8px 10px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; word-break: break-all; max-height: 30vh; overflow: auto; }
+@supports not (aspect-ratio: 1) {
+  .dressing { height: 0; padding-bottom: 125%; }
+  .dressing .ds .thumb { height: 68px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .pop { animation: fade 1.1s linear forwards; }
+  .stage.shake { animation: none; }
   .res-inner > *, .stamp, .lvup, .verdict .mini-drops .thumb { animation: none !important; }
   @keyframes fade { to { opacity: 0; } }
 }
@@ -545,6 +567,16 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 <div class="setdone" id="setdone" hidden><div id="setdone-body"></div></div>
 <div class="toast" id="toast" hidden></div>
 
+<div id="errbox" hidden></div>
+<script>
+// any error is shown on screen, so it can be read off the phone during testing
+(function () {
+  const show = (msg) => { const b = document.getElementById("errbox"); if (!b) return; b.hidden = false; b.textContent = ("⚠ " + msg + "\n" + b.textContent).slice(0, 1200); };
+  window.addEventListener("error", (e) => show(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno || ""})`));
+  window.addEventListener("unhandledrejection", (e) => show(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+  document.addEventListener("click", (e) => { if (e.target.id === "errbox") e.target.hidden = true; });
+})();
+</script>
 <script type="module">
 import { rollDrops, newSeed, makeRng, SWORD_PARTS, SLOTS } from "./js/loot.js";
 
@@ -603,13 +635,8 @@ const TYPES = [
 const TYPE = Object.fromEntries(TYPES.map((x) => [x.id, x]));
 const typeName = (id) => t("type." + id);
 // speed = min share of your registered peak; ang = max degrees off; wob/dip = allowed excess over your registered blur/slow-down; amp = min share of registered reach
-const DIFF = [
-  { speed: .45, ang: 45, wob: .40, dip: .60, amp: .40, bonus: 1.0 },
-  { speed: .60, ang: 35, wob: .30, dip: .45, amp: .50, bonus: 1.1 },
-  { speed: .72, ang: 27, wob: .20, dip: .30, amp: .60, bonus: 1.25 },
-  { speed: .85, ang: 18, wob: .12, dip: .18, amp: .70, bonus: 1.5 },
-  { speed: .95, ang: 10, wob: .05, dip: .08, amp: .80, bonus: 2.0 },
-];
+// judging levels live in config/balance.json (judge.levels). null = that check is off at this level.
+const DIFF = B.judge.levels;
 const diffName = (i = S.diff) => t(`diff.${i}.name`);
 // `asset` is the id in the manifest; `id` stays as before so saved progress carries over. Their order is the tier.
 const MONSTERS = [
@@ -656,7 +683,7 @@ const AURA = {
 const fresh = () => ({
   ver: 3, lang: LANG,
   weapons: [{ opt: "bokuto", kg: 0.6, kind: "katana" }, { opt: "tanto", kg: 0.2, kind: "tanto" }], active: 0,
-  height: 170, enemyAtk: true, freq: 1, diff: 1, forms: {}, division: "bushi",
+  height: 170, enemyAtk: true, freq: 1, diff: 0, forms: {}, division: "bushi",
   lv: 1, exp: 0, kills: {}, bestScore: {}, bestRun: { score: 0, kills: 0 }, tabataBest: {}, tabataToday: null, climb: {}, climbBest: {},
   inv: [], equip: {}, nextId: 1, seen: {}, setDone: {},
   shiki: {}, partner: null,
@@ -794,7 +821,7 @@ function show(name) {
   closeResult();
   screens.forEach((s) => ($("scr-" + s).hidden = s !== name));
   document.body.classList.toggle("in-battle", name === "battle");
-  if (name !== "battle") { stopPlay(); ambience(false); }
+  if (name !== "battle") { stopPlay(); ambience(false); if (ac) bgm("bgm_title"); }
   ({ title: renderTitle, setup: renderSetup, forms: renderForms, gear: renderGear, swords: renderSwords, book: renderBook, map: renderMap, climb: renderClimb }[name] || (() => {}))();
   window.scrollTo(0, 0);
 }
@@ -930,8 +957,9 @@ const SLOT_POS = {
 };
 function figureSvg(k) {
   const eq = (slot) => { const it = itemById(S.equip[slot]); return it && (!it.kind || it.kind === k) ? it : null; };
-  const gc = (it) => (it ? (it.named ? AURA[swordOf(it.named)?.look?.aura] || "var(--g5)" : `var(--g${it.grade})`) : null);
-  const ink = "var(--ink)";
+  const css = (v, fb) => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || fb;
+  const gc = (it) => (it ? (it.named ? AURA[swordOf(it.named)?.look?.aura] || css("--g5", "#e0473f") : css(`--g${it.grade}`, "#c9b98f")) : null);
+  const ink = css("--ink", "#0c1222");
   const blade = gc(eq("tosin")) || "#5d6678", tsuka = gc(eq("tsuka")) || ink, tsuba = gc(eq("tsuba")) || ink, saya = gc(eq("saya")) || ink;
   const band = gc(eq("hachigane")), kote = gc(eq("kote")), dou = gc(eq("do")), shin = gc(eq("suneate"));
   const shinobi = k === "tanto";
@@ -1180,7 +1208,7 @@ function launch(m, r) {
   resetBattleUI();
   $("btn-retreat").textContent = t("battle.retreat");
   $("run-chip").hidden = false;
-  play("draw"); ambience(true);
+  play("draw"); ambience(true); bgm(fightBgm());
   nextYokai();
 }
 // mostly the newest few
@@ -1215,6 +1243,7 @@ function nextYokai() {
     <div class="row" style="justify-content:center"><span class="tag">${esc(t(R.climb ? "climb.floor" : "run.wave", { n: R.wave }))}</span>${m === ZASHIKI ? `<span class="tag gold">${esc(t("tag.lucky"))}</span>` : ""}${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
     ${m.boss ? `<span class="hiden">${esc(t("enc.hiden", { seq: B.hiden.seq.map(typeName).join(" → ") }))}</span>` : ""}`,
     (m.boss ? B.bout.bossEncounterSec : B.bout.encounterSec) * 1000, () => beginFight());
+  bgm(m.boss ? "bgm_boss" : fightBgm());
   if (m === ZASHIKI) { flash("goldfl"); setTimeout(() => flash("goldfl"), 450); play("suzu") || play("ring"); }
   else if (m.boss || variant !== "base") play("taiko");
 }
@@ -1254,10 +1283,13 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   }
   P.hp = Math.min(P.hpMax, P.hp + P.hpMax * (R.climb ? B.climb.healOnKill : B.run.healOnKill));
   save(); renderHud();
-  flash("goldfl"); play(m.boss ? "fanfare" : "chime");
+  flash("goldfl"); play("slay"); setTimeout(() => play(m.boss ? "fanfare" : "chime"), 350);
   if (drops.some((it) => it.grade >= 3)) setTimeout(() => play("ring"), 500);
   const ms = (B.bout.killPauseSec + 0.35 * drops.length + (m.boss ? 1.2 : 0)) * 1000;
-  showVerdict(`<div class="stamp sm${gold || m.boss ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.slain"))}</div>
+  const art = `<div class="seal huge${gold ? " gold" : ""}">${monArt(m, foe.variant)}</div>`;
+  const embers = Array.from({ length: 12 }, (_, i) => `<i class="ember" style="--dx:${Math.round(rand(-90, 90))}px;--dy:${Math.round(rand(-120, -20))}px;--dl:${(0.25 + i * 0.05).toFixed(2)}s"></i>`).join("");
+  showVerdict(`<div class="slain"><div class="half a">${art}</div><div class="half b">${art}</div><i class="cut"></i>${embers}</div>
+    <div class="stamp sm${gold || m.boss ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.slain"))}</div>
     <span class="pts num">+${fmt(points)}</span>${finKind ? `<span class="small">${esc(t("res.scoreCalc", { dmg: fmt(foe.dmg), x: finMult.toFixed(2), how: t("fin." + finKind) }))}</span>` : ""}
     <div class="mini-drops">${drops.map((it, i) => `<div class="thumb g${it.grade}" style="animation-delay:${0.15 + i * 0.18}s">${SLOT_GLYPH[it.slot]}${imgTag(itemFile(it), "")}</div>`).join("")}</div>
     <span class="small muted">EXP +${fmt(exp)}</span>`, ms, () => { if (fighting()) nextYokai(); });
@@ -1318,7 +1350,7 @@ function startTabata() {
   resetBattleUI();
   $("btn-retreat").textContent = t("tabata.quit");
   $("b-timer").className = "timer num big";
-  ambience(true);
+  ambience(true); bgm("bgm_tabata");
   tabataRest(B.tabata.prepSec);
 }
 function tabataRest(sec) {
@@ -1453,6 +1485,7 @@ function note(text) {
   const c = $("note-chip"); c.textContent = text; c.hidden = false;
   clearTimeout(note.h); note.h = setTimeout(() => (c.hidden = true), 1600);
 }
+function shake() { const s = $("stage"); s.classList.remove("shake"); void s.offsetWidth; s.classList.add("shake"); }
 function flash(cls) { const s = $("stage"); s.classList.remove("hit", "ok", "flash", "goldfl"); void s.offsetWidth; s.classList.add(cls); }
 function renderHud() {
   const seal = $("b-seal");
@@ -1496,11 +1529,12 @@ function judge(m) {
   const ang = angDeg(m.dir, tm.dir), sp = m.peak / tm.peak, ampR = m.amp / tm.amp;
   const wobEx = Math.max(0, m.wob - tm.wob), dipEx = Math.max(0, m.dip - tm.dip);
   const reasons = [];
+  // the gates only ask "was this a real cut?"; how clean the line was goes into the damage (lineCoef)
   if (sp < d.speed) reasons.push(t("why.speed", { p: Math.round(sp * 100) }));
-  if (ang > d.ang) reasons.push(t("why.angle", { a: Math.round(ang) }));
-  if (ampR < d.amp) reasons.push(t("why.amp"));
-  if (wobEx > d.wob) reasons.push(t("why.wobble"));
-  if (dipEx > d.dip) reasons.push(t("why.dip"));
+  if (d.ang != null && ang > d.ang) reasons.push(t("why.angle", { a: Math.round(ang) }));
+  if (d.amp != null && ampR < d.amp) reasons.push(t("why.amp"));
+  if (d.wob != null && wobEx > d.wob) reasons.push(t("why.wobble"));
+  if (d.dip != null && dipEx > d.dip) reasons.push(t("why.dip"));
   return { t: x, tm, ang, sp, ampR, wobEx, dipEx, ok: !reasons.length, reasons };
 }
 function scoreSwing(m, j) {
@@ -1520,8 +1554,9 @@ function onMeasure(m) {
   if ($("scr-battle").hidden || resultActions || !$("verdict").hidden) return;
   if (!m.demo && isRecovery(m)) return;
   if (mode === "reg") return regSwing(m);
-  if (atk && !atk.done) return; // swings during an enemy attack's warning don't count
-  const j = judge(m);
+  // 受け: during a guard warning, a quick cut to either side knocks the blow away
+  if (atk && !atk.done && atk.kind === "guard" && Math.abs(m.dir[0]) >= B.judge.parryLateral) { tryDodge("guard"); if (atk.done) return; }
+  const j = judge(m); // cuts during other warnings still land
   if (phase === "finisher") return finisherSwing(m, j);
   if (phase !== "fight" || !foe) return;
   if (!j.ok) { if (m.peak >= 0.35 * j.tm.peak) note(t("why.note", { name: typeName(j.t.id), reasons: j.reasons.join(t("list.sep2")) })); return; }
@@ -1533,7 +1568,7 @@ function onMeasure(m) {
 function onSwing(m, j) {
   const st = P.st, sc = scoreSwing(m, j), D = B.damage, now = gnow(), tnow = performance.now();
   const gap = (m.tStart - lastEnd) / 1000;
-  const broken = sc.form < 35;
+  const broken = sc.form < B.judge.comboBreakForm;
   let keepCombo = lastEnd && gap <= comboWindow(st) && !broken;
   if (!keepCombo && combo > 1 && st.rares.has("rengeki") && !P.rengekiUsed && bushi()) { keepCombo = true; P.rengekiUsed = true; note(t("rare.rengeki.name")); }
   combo = keepCombo ? combo + 1 : 1;
@@ -1541,8 +1576,10 @@ function onSwing(m, j) {
   P.lastSwingAt = now;
   const mult = comboMult(combo, st);
 
-  let dmg = D.base * weightMult() * Math.pow(Math.min(j.sp, D.speedCap), D.speedExp) * (D.formMin + sc.form / 100) * mult;
-  const parts = [`${t("calc.base")}${fmt(D.base * weightMult())}`, `${t("calc.speed")}×${Math.pow(Math.min(j.sp, D.speedCap), D.speedExp).toFixed(2)}`, `${t("calc.form")}×${(D.formMin + sc.form / 100).toFixed(2)}`, `COMBO×${mult.toFixed(2)}`];
+  // 軌道係数: a clean line (direction, wobble, dip, reach, zanshin) earns full damage; a rough one still lands at the level's floor
+  const lineCoef = diff().lineFloor + (1 - diff().lineFloor) * sc.form / 100;
+  let dmg = D.base * weightMult() * Math.pow(Math.min(j.sp, D.speedCap), D.speedExp) * lineCoef * mult;
+  const parts = [`${t("calc.base")}${fmt(D.base * weightMult())}`, `${t("calc.speed")}×${Math.pow(Math.min(j.sp, D.speedCap), D.speedExp).toFixed(2)}`, `${t("calc.form")}×${lineCoef.toFixed(2)}`, `COMBO×${mult.toFixed(2)}`];
   const mul = (x, label) => { if (x === 1) return; dmg *= x; parts.push(`${label}×${x.toFixed(2)}`); };
   const isS = sc.rank === "S";
   let crit = false;
@@ -1613,7 +1650,7 @@ function onSwing(m, j) {
   logLine(`<span class="r">${sc.rank}</span><span>${esc(typeName(j.t.id))}</span><span class="muted num">${esc(t("log.swing", { speed: m.peak.toFixed(1), n: combo, x: mult.toFixed(2) }))}</span><b class="num">${fmt(dmg)}</b>`);
   const label = [typeName(j.t.id) + " " + sc.rank, combo > 1 ? `${combo} COMBO` : "", weakHit ? t("calc.weak") : "", hiden ? t("calc.hiden") : "", crit ? t("calc.crit") : ""].filter(Boolean).join(" ・ ");
   popup(crit ? "crit" : sc.rank, fmt(dmg), label);
-  sndSwing(sc.rank, crit);
+  sndSwing(sc.rank, crit, combo);
   slash(m, isS || crit);
   if (isS || crit) hitstop();
 
@@ -1699,7 +1736,7 @@ function finisherSwing(m, j) {
   if (P.finSeq >= seq.length || (iai && j.sp >= 0.8)) {
     f.kind = P.finSeq >= seq.length ? "hiden" : "iai";
     f.cutQ = sc.score / 100;
-    slash(m, true); hitstop(); sndSwing("S", true);
+    slash(m, true); hitstop(); sndSwing("S", true, combo);
     popup("crit", t(f.kind === "hiden" ? "fin.hiden" : "fin.iai"), t("ls.score", { n: sc.score }));
     startZanshin();
   } else note(t("fin.need"));
@@ -1812,7 +1849,7 @@ function startAttack(tt) {
 function attackCue(k) {
   const lbl = `<div class="label">${esc(t(`atk.${k}.cue`))}</div>`;
   if (k === "crouch") return `<div class="half red" style="left:0;right:0;bottom:0;height:50%">${bigArrow([0, 1, 0], "var(--shu)")}</div>${lbl}`;
-  if (k === "guard") return `<div class="full red">${shieldSvg()}</div>${lbl}`;
+  if (k === "guard") return `<div class="full red">${bigArrow([1, 0, 0], "var(--shu)", true)}</div>${lbl}`;
   if (k === "stepL") return `<div class="half red" style="left:0;top:0;bottom:0;width:50%">${bigArrow([-1, 0, 0], "var(--shu)")}</div>${lbl}`;
   return `<div class="half red" style="right:0;top:0;bottom:0;width:50%">${bigArrow([1, 0, 0], "var(--shu)")}</div>${lbl}`;
 }
@@ -1824,7 +1861,7 @@ function resolveAttack(dodged, how) {
     P.counter = true; P.dodges++;
     if (bushi() && st.rares.has("idaten")) P.idaten = true;
     if (bushi() && has4(st, "sword_17_imanotsurugi")) P.imanoLeft = 3;
-    flash("ok"); play("chime");
+    flash("ok"); if (atk.kind === "guard") play("parry"); else play("chime");
     popup("good", t("atk.dodgedBig"), t("atk.dodgedSub", { x: (B.damage.counter + (bushi() ? st.partner.counter || 0 : 0)).toFixed(1) }));
     logLine(`<span class="r" style="color:var(--moe)">○</span><span>${esc(t(`atk.${atk.kind}.move`))}</span><span class="muted">${esc(t("log.dodged"))}</span><b style="color:var(--moe)">${esc(t("atk.dodgedBig"))}</b>`);
   } else {
@@ -1842,7 +1879,7 @@ function resolveAttack(dodged, how) {
     P.hp -= dmg;
     if (bushi() && P.hp <= 0 && has4(st, "sword_18_yagentoushirou") && !P.yagenUsed) { P.hp = 1; P.yagenUsed = true; note(t("calc.set4")); }
     if (bushi() && has4(st, "sword_22_kirigakure")) P.invulnUntil = now + 2000;
-    flash("hit"); play("hurt");
+    flash("hit"); shake(); play("hurt");
     popup("hurt", `-${dmg}`, t("atk.hitSub"));
     logLine(`<span class="r" style="color:var(--shu)">✕</span><span>${esc(t(`atk.${atk.kind}.move`))}</span><span class="muted">${esc(how ? t("log.wrong", { how: t("dodge." + how) }) : t("log.hit"))}</span><b class="num" style="color:var(--shu)">-${dmg}</b>`);
     renderHud();
@@ -1879,7 +1916,6 @@ function bigArrow(dir, color, both) {
   const head = both ? `<path d="M30 30 L10 50 L30 70" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>` : "";
   return `<svg viewBox="0 0 100 100" aria-hidden="true"><g transform="rotate(${a.toFixed(1)} 50 50)"><line x1="${both ? 14 : 10}" y1="50" x2="84" y2="50" stroke="${color}" stroke-width="12" stroke-linecap="round"/><path d="M66 28 L90 50 L66 72" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>${head}</g></svg>`;
 }
-const shieldSvg = () => `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L84 20 L80 58 Q 74 80 50 92 Q 26 80 20 58 L16 20 Z" fill="rgba(207,74,51,.35)" stroke="var(--shu)" stroke-width="6"/><line x1="50" y1="18" x2="50" y2="84" stroke="var(--washi)" stroke-width="6" stroke-linecap="round"/></svg>`;
 const ringSvg = (color, full, id) => `<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="${color}" stroke-opacity=".25" stroke-width="8"/><circle ${id ? `id="${id}"` : ""} cx="50" cy="50" r="40" fill="none" stroke="${color}" stroke-width="8" pathLength="100" stroke-dasharray="${full ? 100 : 0} 100" transform="rotate(-90 50 50)" stroke-linecap="round"/></svg>`;
 function showCue(html) { $("cue").innerHTML = html; }
 function clearCue() { $("cue").innerHTML = ""; }
@@ -1952,7 +1988,8 @@ function hitstop() {
 // See docs/効果音の入れ方.md for the list of ids.
 const SOUND_IDS = ["swing_katana", "swing_tanto", "crit_katana", "crit_tanto", "cue_crouch", "cue_guard", "cue_step", "taiko", "chime", "hurt",
   "breath", "draw", "ring", "lvup", "fanfare", "gong", "whistle", "beep", "ambience_night",
-  "voice_fuseyo", "voice_ukeyo", "voice_tobe", "voice_todome", "voice_zanshin", "suzu"];
+  "voice_fuseyo", "voice_ukeyo", "voice_tobe", "voice_todome", "voice_zanshin", "suzu",
+  "hit_katana", "hit_tanto", "slay", "parry"];
 let ac = null, amb = null, soundsLoaded = false;
 const SFX = {};
 function audio() {
@@ -2007,6 +2044,8 @@ const SYNTH = {
   breath: () => noise({ sec: 0.28, f0: 1100, f1: 500, q: 0.7, vol: 0.18, delay: 0.02 }),
   draw: () => { noise({ sec: 0.35, f0: 3000, f1: 7000, q: 2, vol: 0.2 }); tone({ f: 2600, sec: 0.6, vol: 0.06, delay: 0.3 }); },
   suzu: () => [0, 0.16, 0.32, 0.5].forEach((d, i) => [2637, 3520].forEach((f) => tone({ f: f * (1 + i * 0.02), sec: 0.5, vol: 0.07, delay: d, type: "triangle" }))),
+  slay: () => { noise({ sec: 0.3, f0: 6000, f1: 900, q: 0.9, vol: 0.4 }); tone({ f: 70, f1: 40, sec: 0.6, vol: 0.5, delay: 0.05 }); noise({ sec: 0.9, f0: 900, f1: 300, q: 0.5, vol: 0.12, type: "lowpass", delay: 0.2 }); },
+  parry: () => { noise({ sec: 0.08, f0: 3000, f1: 2000, q: 2, vol: 0.4 }); [1250, 1870, 2650].forEach((f) => tone({ f, sec: 0.6, vol: 0.09, type: "triangle" })); },
   ring: () => [1046, 1568, 2093].forEach((f, i) => tone({ f, sec: 1.4, vol: 0.08, delay: i * 0.09, type: "triangle" })),
   lvup: () => [523, 659, 784, 1046].forEach((f, i) => tone({ f, sec: 0.35, vol: 0.12, delay: i * 0.08, type: "triangle" })),
   fanfare: () => [392, 523, 659, 784, 1047].forEach((f, i) => tone({ f, sec: 0.5, vol: 0.14, delay: i * 0.11, type: "triangle" })),
@@ -2016,16 +2055,29 @@ const SYNTH = {
 };
 // plays a sound id: the recorded file if there is one, else its synthesized stand-in (voices have no stand-in)
 function play(id, opts) { if (playFile(id, opts)) return true; if (SYNTH[id]) { SYNTH[id](); return true; } return false; }
-function sndSwing(rank, crit) {
+// rising notes for the combo (pentatonic), so a long chain climbs like a song
+const COMBO_NOTES = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093, 2349];
+// c = the combo count of a hit (0 = a swing that hits nothing, e.g. form registration)
+function sndSwing(rank, crit, c = 0) {
   const p = pitch(), tanto = kind() === "tanto";
+  const step = Math.min(Math.max(0, c - 1), B.sound.comboPitchSteps), cp = 1 + step * B.sound.comboPitchStep;
   if (!playFile(tanto ? "swing_tanto" : "swing_katana", { rate: p * 1.4 })) {
     if (tanto) noise({ sec: 0.09, f0: 2600 * p, f1: 4200 * p, q: 1.4, vol: 0.32 });
     else noise({ sec: 0.18, f0: 700 * p, f1: 2600 * p, q: 1.1, vol: 0.38 });
   }
+  if (c > 0 && !playFile(tanto ? "hit_tanto" : "hit_katana", { rate: p * cp })) {
+    // the blow landing, then a note that climbs with the combo
+    tone({ f: 190 * p, f1: 80 * p, sec: 0.16, vol: 0.34, type: "triangle" });
+    noise({ sec: 0.07, f0: 1800 * p, f1: 700, vol: 0.28, type: "bandpass" });
+    if (c > 1) tone({ f: COMBO_NOTES[Math.min(step, COMBO_NOTES.length - 1)], sec: 0.22, vol: 0.09, type: "square", delay: 0.03 });
+  }
   if (rank === "S" || crit) {
-    if (!playFile(tanto ? "crit_tanto" : "crit_katana", { rate: p * 1.4 })) {
-      if (tanto) { tone({ f: 3300 * p, sec: 0.35, vol: 0.12, delay: 0.05 }); tone({ f: 3500 * p, sec: 0.45, vol: 0.12, delay: 0.13 }); }
-      else [1850, 2780, 4120].forEach((f, i) => tone({ f: f * p, sec: 1.6 - i * 0.3, vol: 0.09, delay: 0.06 }));
+    if (!playFile(tanto ? "crit_tanto" : "crit_katana", { rate: p })) {
+      // its own sound: a heavy thump under the hit-stop, then the blade ringing out
+      tone({ f: 90, f1: 38, sec: 0.55, vol: 0.6 });
+      noise({ sec: 0.25, f0: 5000, f1: 9000, q: 0.7, vol: 0.22, type: "highpass" });
+      if (tanto) [3300, 3950, 4700].forEach((f, i) => tone({ f: f * p, sec: 0.5, vol: 0.1, delay: 0.1 + i * 0.07 }));
+      else [1568, 2349, 3136, 4186].forEach((f, i) => tone({ f: f * p, sec: 1.8 - i * 0.3, vol: 0.1, delay: 0.12 + i * 0.015, type: i ? "sine" : "triangle" }));
     }
     if (Math.random() < 0.5) play("breath");
   }
@@ -2038,6 +2090,26 @@ function sndCue(k) {
   else if (!playFile("cue_step", { pan: k === "stepL" ? -0.8 : 0.8 })) noise({ sec: 0.6, f0: 500, f1: 1800, q: 0.8, vol: 0.4, pan: k === "stepL" ? [1, -1] : [-1, 1] });
 }
 // a low night wind under the fight
+// background music: only from files (assets/sounds/bgm_*.mp3); without a file there is none
+let bgmNow = null, bgmSrc = null, bgmGain = null;
+async function bgm(id) {
+  if (bgmNow === id) return;
+  bgmNow = id;
+  const a = ac; if (!a) return;          // no music before the first tap
+  if (bgmSrc) { const g = bgmGain, src = bgmSrc; g.gain.setTargetAtTime(0, a.currentTime, 0.3); setTimeout(() => { try { src.stop(); } catch {} }, 1500); bgmSrc = null; }
+  if (!id) return;
+  if (!(id in SFX)) {
+    SFX[id] = null;
+    try { const r = await fetch(`assets/sounds/${id}.mp3`); if (r.ok) SFX[id] = await a.decodeAudioData(await r.arrayBuffer()); } catch {}
+  }
+  if (bgmNow !== id || !SFX[id]) return;
+  const src = a.createBufferSource(), g = a.createGain();
+  src.buffer = SFX[id]; src.loop = true; g.gain.value = B.sound.bgmVol;
+  src.connect(g).connect(a.destination); src.start();
+  bgmSrc = src; bgmGain = g;
+}
+const fightBgm = () => (mode === "climb" ? "bgm_climb" : mode === "tabata" ? "bgm_tabata" : "bgm_run");
+document.addEventListener("pointerdown", () => { if (!bgmNow && $("scr-battle").hidden) { audio(); bgm("bgm_title"); } }, { once: true });
 function ambience(on) {
   const a = on ? audio() : ac; if (!a) return;
   if (on && !amb) {
@@ -2263,11 +2335,12 @@ function onPose(lm, wl, tt) {
   if (atk && !atk.done) {
     setChip(true, t("chip.dodging"));
     dodge.update({ t: gnow(), T: torsoPx, sm, hand: hand2, nose, wristGap: Math.hypot(lw.x - rw.x, lw.y - rw.y), speed: detector.speed });
-    if (hand3) detector.reset(hand3, tt);
-  } else {
-    dodge.baseline(sm);
+  } else dodge.baseline(sm);
+  // cuts are measured during enemy attacks too: they still land, and a sideways cut parries a guard attack.
+  // World landmarks are centred on the hips, so stepping or crouching barely moves the hands here.
+  if (hand3) detector.update(hand3, tt);
+  if (!atk || atk.done) {
     if (!commanding) setChip(true, t(phase === "zanshin" ? "chip.zanshin" : detector.state === "idle" ? "chip.kamae" : "chip.cutting"));
-    if (hand3) detector.update(hand3, tt);
     // stillness, for 居合 (a cut from stillness) and 残心
     if (detector.state === "idle") { if (detector.speed < B.bout.iaiStillSpeed) stillSince = stillSince || tt; else stillSince = 0; }
     zanshinFrame(detector.speed);

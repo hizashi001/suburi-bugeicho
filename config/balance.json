@@ -79,19 +79,18 @@
   "weight": {
     "refKg": 0.6,
     "damageExp": 0.3,
-    "comboBaseSec": 1.0,
+    "comboBaseSec": 1.4,
     "comboPerKg": 0.45,
-    "comboMaxSec": 2.4
+    "comboMaxSec": 3.0
   },
   "damage": {
-    "base": 60,
+    "base": 70,
     "speedExp": 2,
     "speedCap": 1.3,
-    "formMin": 0.4,
     "comboStep": 1.1,
     "comboCap": 6,
     "sRank": 1.2,
-    "crit": 1.5,
+    "crit": 2.0,
     "weak": 1.5,
     "levelPerLv": 0.06,
     "counter": 1.5
@@ -371,5 +370,63 @@
     "shofukuMult": 2,
     "healOnKill": 0.15,
     "hpPerFloor": 0.04
+  },
+  "judge": {
+    "_note": "判定の段階。上から入門・初段・二段・三段・免許皆伝。速さと振り幅は手本（登録した型、無ければ標準）に対する割合。null はその段階では見ない。軌道のきれいさは判定ではなく与ダメージの軌道係数（lineFloor〜1.0）に効く",
+    "levels": [
+      {
+        "speed": 0.3,
+        "amp": 0.25,
+        "ang": null,
+        "wob": null,
+        "dip": null,
+        "lineFloor": 0.7,
+        "bonus": 1.0
+      },
+      {
+        "speed": 0.4,
+        "amp": 0.35,
+        "ang": 70,
+        "wob": null,
+        "dip": null,
+        "lineFloor": 0.6,
+        "bonus": 1.1
+      },
+      {
+        "speed": 0.55,
+        "amp": 0.45,
+        "ang": 55,
+        "wob": 0.45,
+        "dip": 0.6,
+        "lineFloor": 0.5,
+        "bonus": 1.25
+      },
+      {
+        "speed": 0.7,
+        "amp": 0.55,
+        "ang": 40,
+        "wob": 0.3,
+        "dip": 0.4,
+        "lineFloor": 0.4,
+        "bonus": 1.5
+      },
+      {
+        "speed": 0.85,
+        "amp": 0.65,
+        "ang": 30,
+        "wob": 0.2,
+        "dip": 0.25,
+        "lineFloor": 0.3,
+        "bonus": 2.0
+      }
+    ],
+    "comboBreakForm": 15,
+    "parryLateral": 0.75
+  },
+  "sound": {
+    "_note": "COMBOごとに打撃音の高さを comboPitchStep ずつ上げ、comboPitchSteps 段で頭打ち。BGMの音量は0〜1",
+    "comboPitchStep": 0.05,
+    "comboPitchSteps": 11,
+    "bgmVol": 0.35
   }
 }
