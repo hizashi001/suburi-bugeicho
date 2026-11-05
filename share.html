@@ -111,7 +111,7 @@ async function startCamera() {
   requestAnimationFrame(loop);
 }
 // the picture is mirrored like a selfie; the fitter keeps the mask on through spins (js/maskfit.js)
-const fit = createMaskFit({ smooth: S.smooth, holdMs: S.holdMs || 1500 });
+const fit = createMaskFit({ smooth: S.smooth, holdMs: S.holdMs || 1500, tiltGain: S.tiltGain ?? 0.7, sizeHold: S.sizeHold ?? 0.9 });
 function readEyes(now) {
   if (!landmarker || now - lastDetect < 1000 / S.fps) return;
   lastDetect = now;
@@ -120,16 +120,51 @@ function readEyes(now) {
   eyes = fit.update(res.landmarks && res.landmarks[0], now, (p) => [W - (p.x * VW - cropX), p.y * H]);
   if (eyes) lastSeen = now;
 }
+
+// ---------- blending the mask into the room: its light and colour, measured from the picture twice a second ----------
+const probe = document.createElement("canvas"); probe.width = probe.height = 16;
+const pctx = probe.getContext("2d", { willReadFrequently: true });
+const tinted = document.createElement("canvas"), tctx = tinted.getContext("2d");
+let scene = null, sceneAt = 0, tintKey = "";
+function measureScene(now) {
+  if (now - sceneAt < 500) return;
+  sceneAt = now;
+  pctx.drawImage(video, 0, 0, 16, 16);
+  const d = pctx.getImageData(0, 0, 16, 16).data; let r = 0, g = 0, b = 0;
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; }
+  const n = d.length / 4; r /= n; g /= n; b /= n;
+  scene = { r, g, b, lum: (0.299 * r + 0.587 * g + 0.114 * b) / 255 };
+}
+// the mask, coloured a little by the room and darkened in a dim room (redone only when the light changes)
+function blendedMask(im) {
+  const B = S.blend || { tint: 0.18, shade: 0.7, bright: 0.25 };
+  if (!scene || !B.tint) return im;
+  const key = `${maskName}|${Math.round(scene.r / 8)}|${Math.round(scene.g / 8)}|${Math.round(scene.b / 8)}`;
+  if (key === tintKey) return tinted;
+  tintKey = key;
+  tinted.width = im.naturalWidth; tinted.height = im.naturalHeight;
+  tctx.globalCompositeOperation = "source-over"; tctx.globalAlpha = 1; tctx.clearRect(0, 0, tinted.width, tinted.height);
+  tctx.drawImage(im, 0, 0);
+  tctx.globalCompositeOperation = "source-atop";
+  tctx.globalAlpha = B.tint; tctx.fillStyle = `rgb(${scene.r | 0},${scene.g | 0},${scene.b | 0})`; tctx.fillRect(0, 0, tinted.width, tinted.height);
+  const dark = Math.max(0, 0.5 - scene.lum) * B.shade, light = Math.max(0, scene.lum - 0.6) * B.bright;
+  if (dark) { tctx.globalAlpha = dark; tctx.fillStyle = "#000"; tctx.fillRect(0, 0, tinted.width, tinted.height); }
+  if (light) { tctx.globalAlpha = light; tctx.fillStyle = "#fff"; tctx.fillRect(0, 0, tinted.width, tinted.height); }
+  tctx.globalAlpha = 1; tctx.globalCompositeOperation = "source-over";
+  return tinted;
+}
+
 function draw(now) {
   const W = cv.width, H = cv.height;
   ctx.setTransform(-1, 0, 0, 1, W, 0); ctx.drawImage(video, cropX, 0, W, H, 0, 0, W, H); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const im = maskImg(maskName);
+  measureScene(now);
+  const im = maskImg(maskName), info = (MASKS.masks || {})[maskName] || {};
   if (im && eyes) {
-    // similarity transform: the mask's two eye points onto the player's two eyes
-    const [l, r] = eyes, dx = r[0] - l[0], dy = r[1] - l[1];
-    const s = Math.hypot(dx, dy) / (EYE_R[0] - EYE_L[0]), a = Math.atan2(dy, dx);
-    ctx.setTransform(s * Math.cos(a), s * Math.sin(a), -s * Math.sin(a), s * Math.cos(a), l[0], l[1]);
-    ctx.drawImage(im, -EYE_L[0], -EYE_L[1]);
+    // the mask's own anchor onto the face: half masks by the nose tip (their nose over the nose), the rest by the eyes
+    const s = eyes.ipd / (EYE_R[0] - EYE_L[0]), a = eyes.ang;
+    const anchor = info.nose || [(EYE_L[0] + EYE_R[0]) / 2, EYE_L[1]], at = info.nose ? eyes.nose : eyes.mid;
+    ctx.setTransform(s * Math.cos(a), s * Math.sin(a), -s * Math.sin(a), s * Math.cos(a), at[0], at[1]);
+    ctx.drawImage(blendedMask(im), -anchor[0], -anchor[1]);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
   }
   // the mark of the brand, small at the bottom

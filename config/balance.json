@@ -489,13 +489,30 @@
     "ngHoldMs": 3000
   },
   "share": {
-    "_note": "シェア動画の試験。seconds=録る長さ、fps=録画と顔の追いかけのコマ数、bitrate=画質（bps）、smooth=鬼面の揺れを抑える強さ（0〜1、大きいほどなめらかで遅れる）、width/height=カメラに頼む大きさ（縦）。holdMs=体も見えなくなったとき、最後の位置に面を残す長さ（ミリ秒）",
+    "_note": "シェア動画の試験。seconds=録る長さ、fps=録画と顔の追いかけのコマ数、bitrate=画質（bps）、smooth=鬼面の揺れを抑える強さ（0〜1、大きいほどなめらかで遅れる）、width/height=カメラに頼む大きさ（縦）。holdMs=体も見えなくなったとき、最後の位置に面を残す長さ（ミリ秒）。tiltGain=頭の傾きにどれだけ付いていくか（0〜1、目の揺れで面が傾くのを抑える）、sizeHold=急に小さくなったとき直前の大きさを何割残すか、blend=面を部屋になじませる強さ（tint 色味、shade 暗い部屋での暗さ、bright 明るい部屋での明るさ）",
     "seconds": 10,
     "fps": 30,
     "bitrate": 4000000,
     "smooth": 0.5,
     "width": 720,
     "height": 1280,
-    "holdMs": 1500
+    "holdMs": 1500,
+    "tiltGain": 0.7,
+    "sizeHold": 0.9,
+    "blend": {
+      "tint": 0.18,
+      "shade": 0.7,
+      "bright": 0.25
+    }
+  },
+  "ghost": {
+    "_note": "影（骨格の記録）。keep=自動で残す戦いの影の数（多い分は古い順に消す。星を付けた影・師範の影・型の見本は消さない）、fps=1秒に記録するコマ数、kataSeconds=影を録る長さの選択肢（秒）",
+    "keep": 50,
+    "fps": 15,
+    "kataSeconds": [
+      10,
+      30,
+      60
+    ]
   }
 }

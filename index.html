@@ -378,6 +378,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
       <button class="tile-btn" id="go-swords"><b data-i18n="menu.swords"></b><span id="t-swords"></span></button>
       <button class="tile-btn" id="go-book"><b data-i18n="menu.book"></b><span id="t-book"></span></button>
       <button class="tile-btn" id="go-setup"><b data-i18n="menu.setup"></b><span data-i18n="menu.setup.desc"></span></button>
+      <button class="tile-btn" id="go-ghost" onclick="location.href='ghost.html'"><b data-i18n="menu.ghost"></b><span data-i18n="menu.ghost.desc"></span></button>
       <button class="tile-btn" id="go-share" onclick="location.href='share.html'"><b data-i18n="menu.share"></b><span data-i18n="menu.share.desc"></span></button>
     </div>
     <span class="label" data-i18n="soon.label"></span>
@@ -616,6 +617,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 </script>
 <script type="module">
 import { rollDrops, newSeed, makeRng, SWORD_PARTS, SLOTS } from "./js/loot.js";
+import { createGhostRecorder, ghostStore } from "./js/ghost.js";
 
 // ---------- language files and data ----------
 // Every on-screen string lives in lang/<code>.json. Names of forms, yokai, grades and swords stay in romaji in other languages, with a small gloss.
@@ -1282,7 +1284,10 @@ function newPlayer() {
   return { st, hp: hpMax, hpMax, swings: 0, maxCombo: 0, best: 0, bestRank: "－", dodges: 0, hits: 0, lastSwingAt: gnow(), lastRegen: gnow(),
     sStreak: 0, guaranteedCrit: false, chain: 0, chainAt: 0, formSeq: [], chainHits: [], chainLines: [], counter: false, counterAt: 0, counterX: 0, barrage: null, idaten: false, imanoLeft: 0, invulnUntil: 0, stag: null };
 }
+// 影: every fight against a yokai is recorded as skeleton data; a win is kept for ghost races (js/ghost.js)
+const ghostRec = createGhostRecorder({ fps: 15 });
 function stopPlay() {
+  ghostRec.cancel();
   phase = "idle"; clearCue(); endAttack(); setFrame(0);
   clearTimeout(verdictTimer); $("verdict").hidden = true;
   if (mode !== "reg") reg = null;
@@ -1347,14 +1352,18 @@ function nextYokai() {
 function beginFight() {
   if (phase !== "encounter") return;
   phase = "fight";
-  P.fightStart = gnow(); P.lastSwingAt = gnow();
+  P.fightStart = gnow(); P.lastSwingAt = gnow(); P.fightSwings = P.swings;
   scheduleAttack(gnow() + 3500);
+  ghostRec.start({ mode, division: S.division, diff: S.diff, weapon: { ...wp(), kind: kind() }, lv: lvNow(),
+    yokai: { id: foe.m.id, asset: foe.m.asset, variant: foe.variant, boss: !!foe.m.boss, maxHp: foe.max }, wave: foe.wave });
 }
 // a yokai falls: points, EXP, drops and maybe a shikigami, then straight on to the next one
 function killYokai(finMult = 1, finKind = null, stillness = 0) {
   const m = foe.m, st = P.st;
   phase = "kill"; endAttack(); clearCue(); setFrame(0); P.stag = null;
   const points = Math.round(foe.dmg * finMult);
+  const ghost = ghostRec.stop({ result: { killed: true, timeMs: Math.round(gnow() - P.fightStart), points, swings: P.swings - (P.fightSwings || 0), maxCombo: P.maxCombo, finisher: finKind } });
+  if (ghost) ghostStore.save(ghost).then(() => ghostStore.trim(B.ghost ? B.ghost.keep : 50)).catch(() => {});
   R.score += points; R.kills++;
   S.kills[m.id] = (S.kills[m.id] || 0) + 1;
   S.bestScore[m.id] = Math.max(S.bestScore[m.id] || 0, points);
@@ -1394,6 +1403,7 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
 // the run ends: by retreating, resting (no swing for a minute) or falling. The yokai being fought scores 0.
 function endRun(reason) {
   if (!R) return;
+  ghostRec.cancel(); // resting mid-fight: that fight is not kept as a ghost
   const run = R, p = P, climb = !!run.climb, c = run.c;
   phase = "idle"; endAttack(); clearCue(); setFrame(0); clearTimeout(verdictTimer); $("verdict").hidden = true;
   const record = climb ? c.reached > run.startReached : run.score > S.bestRun.score;
@@ -1780,6 +1790,7 @@ function onSwing(m, j) {
   dmg = Math.max(1, Math.round(dmg));
 
   P.swings++; P.maxCombo = Math.max(P.maxCombo, combo);
+  ghostRec.event("swing", j.t.id, dmg, combo);
   if (sc.score > P.best) { P.best = sc.score; P.bestRank = sc.rank; }
 
   $("ls-rank").textContent = sc.rank; $("ls-rank").className = "rank " + sc.rank;
@@ -2519,6 +2530,7 @@ let torsoPx = 0, kScale = 0, hand3 = null;
 const trail = [];
 function onPose(lm, wl, tt) {
   const W = cv.width, H = cv.height;
+  if (ghostRec.active && phase === "fight") ghostRec.frame(lm, performance.now(), video.videoWidth / (video.videoHeight || 1));
   const Pt = (i) => ({ x: lm[i].x * W, y: lm[i].y * H, v: lm[i].visibility ?? 1 });
   const nose = Pt(0), ls = Pt(11), rs = Pt(12), lh = Pt(23), rh = Pt(24), lw = Pt(15), rw = Pt(16), le = Pt(13), re = Pt(14);
   const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
