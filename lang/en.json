@@ -648,5 +648,20 @@
   "forms.add.rec": "Record with the camera",
   "forms.add.need": "Enter a name for the form",
   "forms.customTag": "Added",
-  "reg.customHint": "the same motion you registered"
+  "reg.customHint": "the same motion you registered",
+  "share.title": "Share video test",
+  "share.lead": "Records 10 seconds of the camera with a mask over your face, and checks that it can go to the iPhone share sheet. Nothing leaves the phone unless you tap Share.",
+  "share.cam": "Start camera",
+  "share.rec": "Record 10 s",
+  "share.share": "Share",
+  "share.save": "Save",
+  "share.again": "Again",
+  "share.pick": "Choose a mask",
+  "share.diag": "What this phone can do (please send this back after testing)",
+  "share.recording": "Recording, {s}s left",
+  "share.result": "Recorded: {kb} KB ({type})",
+  "share.noRecord": "This browser cannot record the screen",
+  "share.text": "#NINJASAMURAIWORKOUT #GHOST",
+  "menu.share": "Share video (test)",
+  "menu.share.desc": "Record with a mask and share"
 }

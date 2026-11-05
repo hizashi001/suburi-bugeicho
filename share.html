@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GHOST share test</title>
+<style>
+:root { --ai: #0f1626; --ai-2: #1b2438; --line: #2c3a58; --washi: #ece6d6; --muted: #97a0b4; --kin: #d6ab4c; --shu: #cf4a33; --moe: #6fbf8e; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ai); color: var(--washi); font: 15px/1.5 system-ui, -apple-system, "Hiragino Sans", sans-serif; }
+main { max-width: 520px; margin: 0 auto; padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 1.2rem; margin: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+button, .btn { background: var(--ai-2); color: var(--washi); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; font: inherit; text-decoration: none; cursor: pointer; }
+button.primary { background: var(--kin); color: #1b1407; border-color: var(--kin); font-weight: 700; }
+button.rec { background: var(--shu); border-color: var(--shu); font-weight: 700; }
+button:disabled { opacity: .45; }
+.small { font-size: .8rem; } .muted { color: var(--muted); }
+.stage { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #000; border-radius: 10px; overflow: hidden; }
+.stage canvas, .stage video.preview { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.stage .badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.55); padding: 2px 10px; border-radius: 99px; font-size: .85rem; }
+.stage .count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 6rem; font-weight: 800; color: var(--kin); text-shadow: 0 4px 12px #000; pointer-events: none; }
+.masks { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.masks button { padding: 2px; aspect-ratio: 1; background: #283149; min-width: 0; }
+.masks button[aria-pressed="true"] { outline: 3px solid var(--kin); }
+.masks img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.panel { background: var(--ai-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+#diag { white-space: pre-wrap; font: 12px/1.45 ui-monospace, monospace; color: var(--muted); }
+#errbox { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 9; background: #5c1414; color: #fff; border: 1px solid var(--shu); border-radius: 8px; padding: 8px 10px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="errbox" hidden></div>
+<script>
+// any error is shown on screen, so it can be read off the phone during testing
+(function () {
+  const show = (m) => { const b = document.getElementById("errbox"); if (!b) return; b.hidden = false; b.textContent = ("⚠ " + m + "\n" + b.textContent).slice(0, 1200); };
+  window.addEventListener("error", (e) => show(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno || ""})`));
+  window.addEventListener("unhandledrejection", (e) => show(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+})();
+</script>
+<main>
+  <div class="row spread"><h1 data-i18n="share.title"></h1><a class="btn small" href="index.html" data-i18n="common.back"></a></div>
+  <p class="small muted" data-i18n="share.lead"></p>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <video class="preview" id="preview" playsinline controls hidden></video>
+    <span class="badge" id="badge" hidden></span>
+    <div class="count" id="count" hidden></div>
+  </div>
+  <div class="row">
+    <button class="primary" id="btn-cam" data-i18n="share.cam"></button>
+    <button class="rec" id="btn-rec" data-i18n="share.rec" disabled></button>
+    <button id="btn-share" data-i18n="share.share" hidden></button>
+    <a class="btn" id="btn-save" data-i18n="share.save" hidden></a>
+    <button id="btn-again" data-i18n="share.again" hidden></button>
+  </div>
+  <div class="panel">
+    <span class="small muted" data-i18n="share.pick"></span>
+    <div class="masks" id="masks"></div>
+  </div>
+  <div class="panel"><span class="small muted" data-i18n="share.diag"></span><div id="diag"></div></div>
+</main>
+<script type="module">
+// Share-video test: the front camera, a 鬼面 fitted to the eyes, recorded for a few seconds and handed to the share sheet.
+// Nothing leaves the phone unless the player taps Share.
+const KEY = "suburi-bugeicho.v1";
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
+document.documentElement.lang = LANG;
+const getJSON = (u, fb) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : fb)).catch(() => fb);
+const [DICT, FALLBACK, MASKS, CFG] = await Promise.all([getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("data/masks.json", { masks: {} }), getJSON("config/balance.json", {})]);
+const S = CFG.share || { seconds: 10, fps: 30, bitrate: 4000000, smooth: 0.5, width: 720, height: 1280 };
+const t = (k, v = {}) => String(DICT[k] ?? FALLBACK[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? "");
+document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+const $ = (id) => document.getElementById(id);
+
+// ---------- masks: every file is aligned so the wearer's eyes sit on eyeL / eyeR of the canvas ----------
+const EYE_L = MASKS.eyeL || [310.5, 343], EYE_R = MASKS.eyeR || [457.5, 343];
+const maskImgs = {};
+let maskName = saved.shareMask || "mask_free_oni.png";
+function renderMasks() {
+  $("masks").innerHTML = Object.keys(MASKS.masks || {}).map((f) => `<button data-m="${f}" aria-pressed="${f === maskName}"><img src="assets/images/mask/${f}" alt="" onerror="this.parentNode&&this.parentNode.remove()"></button>`).join("");
+  $("masks").querySelectorAll("[data-m]").forEach((b) => (b.onclick = () => { maskName = b.dataset.m; try { localStorage.setItem(KEY, JSON.stringify({ ...JSON.parse(localStorage.getItem(KEY) || "{}"), shareMask: maskName })); } catch {} renderMasks(); }));
+}
+function maskImg(f) {
+  if (!maskImgs[f]) { const im = new Image(); im.src = `assets/images/mask/${f}`; maskImgs[f] = im; }
+  return maskImgs[f].complete && maskImgs[f].naturalWidth ? maskImgs[f] : null;
+}
+renderMasks();
+
+// ---------- camera + pose (eyes) ----------
+const video = document.createElement("video"); video.playsInline = true; video.muted = true;
+const cv = $("cv"), ctx = cv.getContext("2d");
+let stream = null, landmarker = null, eyes = null, lastSeen = 0, frames = 0, fps = 0, lastDetect = 0;
+let cropX = 0; // a landscape camera picture is cut to the 9:16 middle, which is what social apps show
+async function startCamera() {
+  $("btn-cam").disabled = true;
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: S.height }, height: { ideal: S.width } }, audio: false });
+  video.srcObject = stream; await video.play();
+  const vw = video.videoWidth, vh = video.videoHeight, w = Math.min(vw, Math.round(vh * 9 / 16));
+  cropX = Math.round((vw - w) / 2); cv.width = w; cv.height = vh;
+  const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+  const files = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts = (delegate) => ({ baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate }, runningMode: "VIDEO", numPoses: 1 });
+  try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("GPU")); } catch { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("CPU")); }
+  $("btn-cam").hidden = true; $("btn-rec").disabled = false;
+  requestAnimationFrame(loop);
+}
+// the picture is mirrored like a selfie; eye points are turned into canvas coordinates of the mirrored picture
+function readEyes(now) {
+  if (!landmarker || now - lastDetect < 1000 / S.fps) return;
+  lastDetect = now;
+  const res = landmarker.detectForVideo(video, now); frames++;
+  const lm = res.landmarks && res.landmarks[0];
+  if (!lm || lm[2].visibility < 0.5 || lm[5].visibility < 0.5) return;
+  const W = cv.width, H = cv.height, VW = video.videoWidth;
+  const pts = [lm[2], lm[5]].map((p) => [W - (p.x * VW - cropX), p.y * H]).sort((a, b) => a[0] - b[0]);
+  const k = S.smooth;
+  eyes = eyes && now - lastSeen < 400 ? eyes.map((e, i) => [e[0] * k + pts[i][0] * (1 - k), e[1] * k + pts[i][1] * (1 - k)]) : pts;
+  lastSeen = now;
+}
+function draw(now) {
+  const W = cv.width, H = cv.height;
+  ctx.setTransform(-1, 0, 0, 1, W, 0); ctx.drawImage(video, cropX, 0, W, H, 0, 0, W, H); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  const im = maskImg(maskName);
+  if (im && eyes && now - lastSeen < 500) {
+    // similarity transform: the mask's two eye points onto the player's two eyes
+    const [l, r] = eyes, dx = r[0] - l[0], dy = r[1] - l[1];
+    const s = Math.hypot(dx, dy) / (EYE_R[0] - EYE_L[0]), a = Math.atan2(dy, dx);
+    ctx.setTransform(s * Math.cos(a), s * Math.sin(a), -s * Math.sin(a), s * Math.cos(a), l[0], l[1]);
+    ctx.drawImage(im, -EYE_L[0], -EYE_L[1]);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  // the mark of the brand, small at the bottom
+  const fs = Math.round(W / 26);
+  ctx.font = `700 ${fs}px system-ui, sans-serif`; ctx.textAlign = "center"; ctx.fillStyle = "rgba(236,230,214,.85)";
+  ctx.shadowColor = "rgba(0,0,0,.7)"; ctx.shadowBlur = 6; ctx.fillText(t("app.name"), W / 2, H - fs * 1.2); ctx.shadowBlur = 0;
+}
+function loop(now) {
+  if (!stream) return;
+  readEyes(now); draw(now);
+  requestAnimationFrame(loop);
+}
+setInterval(() => { fps = frames; frames = 0; renderDiag(); }, 1000);
+
+// ---------- recording ----------
+const MIMES = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"];
+const pickMime = () => (window.MediaRecorder ? MIMES.find((m) => MediaRecorder.isTypeSupported(m)) || "" : "");
+let file = null, url = null;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function record() {
+  if (!cv.captureStream || !window.MediaRecorder) { alert(t("share.noRecord")); return; }
+  $("btn-rec").disabled = true;
+  for (const n of [3, 2, 1]) { $("count").hidden = false; $("count").textContent = n; await wait(1000); }
+  $("count").hidden = true;
+  const mime = pickMime(), chunks = [];
+  const rec = new MediaRecorder(cv.captureStream(S.fps), mime ? { mimeType: mime, videoBitsPerSecond: S.bitrate } : { videoBitsPerSecond: S.bitrate });
+  rec.ondataavailable = (e) => e.data && e.data.size && chunks.push(e.data);
+  const done = new Promise((r) => (rec.onstop = r));
+  rec.start(500);
+  const t0 = performance.now();
+  $("badge").hidden = false;
+  const tick = setInterval(() => ($("badge").textContent = t("share.recording", { s: Math.max(0, S.seconds - Math.floor((performance.now() - t0) / 1000)) })), 200);
+  await wait(S.seconds * 1000);
+  rec.stop(); await done; clearInterval(tick); $("badge").hidden = true;
+  const type = rec.mimeType || mime || "video/webm";
+  const ext = type.includes("mp4") ? "mp4" : "webm";
+  const blob = new Blob(chunks, { type });
+  file = new File([blob], `ghost_${Date.now()}.${ext}`, { type: type.split(";")[0] });
+  if (url) URL.revokeObjectURL(url);
+  url = URL.createObjectURL(blob);
+  $("preview").src = url; $("preview").hidden = false; $("cv").hidden = true;
+  $("btn-save").href = url; $("btn-save").download = file.name; $("btn-save").hidden = false;
+  $("btn-share").hidden = !(navigator.canShare && navigator.canShare({ files: [file] }));
+  $("btn-again").hidden = false; $("btn-rec").hidden = true;
+  renderDiag(`${t("share.result", { kb: Math.round(blob.size / 1024), type })}`);
+}
+async function share() {
+  try { await navigator.share({ files: [file], title: t("app.name"), text: t("share.text") }); }
+  catch (e) { if (e.name !== "AbortError") throw e; }
+}
+function again() {
+  $("preview").pause(); $("preview").hidden = true; $("cv").hidden = false;
+  ["btn-share", "btn-save", "btn-again"].forEach((id) => ($(id).hidden = true));
+  $("btn-rec").hidden = false; $("btn-rec").disabled = false;
+}
+$("btn-cam").onclick = () => startCamera().catch((e) => { $("btn-cam").disabled = false; throw e; });
+$("btn-rec").onclick = record;
+$("btn-share").onclick = share;
+$("btn-again").onclick = again;
+
+// ---------- what this phone can do (to report back after testing) ----------
+let note = "";
+function renderDiag(extra) {
+  if (extra) note = extra;
+  const testFile = new File([new Blob(["x"], { type: "video/mp4" })], "t.mp4", { type: "video/mp4" });
+  $("diag").textContent = [
+    `camera: ${video.videoWidth || "-"}x${video.videoHeight || "-"}  pose: ${fps}fps  eyes: ${eyes && performance.now() - lastSeen < 500 ? "OK" : "-"}`,
+    `captureStream: ${!!HTMLCanvasElement.prototype.captureStream}  MediaRecorder: ${!!window.MediaRecorder}  format: ${pickMime() || "-"}`,
+    `share files: ${!!(navigator.canShare && navigator.canShare({ files: [testFile] }))}`,
+    note,
+    navigator.userAgent,
+  ].join("\n");
+}
+renderDiag();
+</script>
+</body>
+</html>

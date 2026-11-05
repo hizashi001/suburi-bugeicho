@@ -479,5 +479,20 @@
   "forms.add.rec": "カメラで登録する",
   "forms.add.need": "型の名前を入れてください",
   "forms.customTag": "追加",
-  "reg.customHint": "登録したときと同じ動き"
+  "reg.customHint": "登録したときと同じ動き",
+  "share.title": "シェア動画の試験",
+  "share.lead": "カメラの映像に鬼面を重ねて10秒録り、iPhoneの共有に渡せるかを試す。映像は「共有」を押したときだけ外に出る。",
+  "share.cam": "カメラを始める",
+  "share.rec": "10秒録る",
+  "share.share": "共有",
+  "share.save": "保存",
+  "share.again": "もう一度",
+  "share.pick": "鬼面を選ぶ",
+  "share.diag": "この端末でできること（試験の結果を教えてください）",
+  "share.recording": "録画中 あと{s}秒",
+  "share.result": "録れた動画：{kb}KB（{type}）",
+  "share.noRecord": "この端末のブラウザでは画面の録画ができません",
+  "share.text": "#NINJASAMURAIWORKOUT #GHOST",
+  "menu.share": "シェア動画（試験）",
+  "menu.share.desc": "鬼面を重ねて録り、共有する"
 }
