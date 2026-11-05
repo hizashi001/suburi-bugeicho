@@ -66,6 +66,7 @@ button:disabled { opacity: .45; }
 <script type="module">
 // Share-video test: the front camera, a 鬼面 fitted to the eyes, recorded for a few seconds and handed to the share sheet.
 // Nothing leaves the phone unless the player taps Share.
+import { createMaskFit } from "./js/maskfit.js";
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
 const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
@@ -109,24 +110,21 @@ async function startCamera() {
   $("btn-cam").hidden = true; $("btn-rec").disabled = false;
   requestAnimationFrame(loop);
 }
-// the picture is mirrored like a selfie; eye points are turned into canvas coordinates of the mirrored picture
+// the picture is mirrored like a selfie; the fitter keeps the mask on through spins (js/maskfit.js)
+const fit = createMaskFit({ smooth: S.smooth, holdMs: S.holdMs || 1500 });
 function readEyes(now) {
   if (!landmarker || now - lastDetect < 1000 / S.fps) return;
   lastDetect = now;
   const res = landmarker.detectForVideo(video, now); frames++;
-  const lm = res.landmarks && res.landmarks[0];
-  if (!lm || lm[2].visibility < 0.5 || lm[5].visibility < 0.5) return;
   const W = cv.width, H = cv.height, VW = video.videoWidth;
-  const pts = [lm[2], lm[5]].map((p) => [W - (p.x * VW - cropX), p.y * H]).sort((a, b) => a[0] - b[0]);
-  const k = S.smooth;
-  eyes = eyes && now - lastSeen < 400 ? eyes.map((e, i) => [e[0] * k + pts[i][0] * (1 - k), e[1] * k + pts[i][1] * (1 - k)]) : pts;
-  lastSeen = now;
+  eyes = fit.update(res.landmarks && res.landmarks[0], now, (p) => [W - (p.x * VW - cropX), p.y * H]);
+  if (eyes) lastSeen = now;
 }
 function draw(now) {
   const W = cv.width, H = cv.height;
   ctx.setTransform(-1, 0, 0, 1, W, 0); ctx.drawImage(video, cropX, 0, W, H, 0, 0, W, H); ctx.setTransform(1, 0, 0, 1, 0, 0);
   const im = maskImg(maskName);
-  if (im && eyes && now - lastSeen < 500) {
+  if (im && eyes) {
     // similarity transform: the mask's two eye points onto the player's two eyes
     const [l, r] = eyes, dx = r[0] - l[0], dy = r[1] - l[1];
     const s = Math.hypot(dx, dy) / (EYE_R[0] - EYE_L[0]), a = Math.atan2(dy, dx);
@@ -198,7 +196,7 @@ function renderDiag(extra) {
   if (extra) note = extra;
   const testFile = new File([new Blob(["x"], { type: "video/mp4" })], "t.mp4", { type: "video/mp4" });
   $("diag").textContent = [
-    `camera: ${video.videoWidth || "-"}x${video.videoHeight || "-"}  pose: ${fps}fps  eyes: ${eyes && performance.now() - lastSeen < 500 ? "OK" : "-"}`,
+    `camera: ${video.videoWidth || "-"}x${video.videoHeight || "-"}  pose: ${fps}fps  mask: ${fit.source}${fit.learned ? "" : " (learning)"}`,
     `captureStream: ${!!HTMLCanvasElement.prototype.captureStream}  MediaRecorder: ${!!window.MediaRecorder}  format: ${pickMime() || "-"}`,
     `share files: ${!!(navigator.canShare && navigator.canShare({ files: [testFile] }))}`,
     note,

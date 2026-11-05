@@ -489,12 +489,13 @@
     "ngHoldMs": 3000
   },
   "share": {
-    "_note": "シェア動画の試験。seconds=録る長さ、fps=録画と顔の追いかけのコマ数、bitrate=画質（bps）、smooth=鬼面の揺れを抑える強さ（0〜1、大きいほどなめらかで遅れる）、width/height=カメラに頼む大きさ（縦）",
+    "_note": "シェア動画の試験。seconds=録る長さ、fps=録画と顔の追いかけのコマ数、bitrate=画質（bps）、smooth=鬼面の揺れを抑える強さ（0〜1、大きいほどなめらかで遅れる）、width/height=カメラに頼む大きさ（縦）。holdMs=体も見えなくなったとき、最後の位置に面を残す長さ（ミリ秒）",
     "seconds": 10,
     "fps": 30,
     "bitrate": 4000000,
     "smooth": 0.5,
     "width": 720,
-    "height": 1280
+    "height": 1280,
+    "holdMs": 1500
   }
 }

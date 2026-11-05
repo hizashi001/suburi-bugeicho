@@ -185,6 +185,33 @@
     "assets/images/yokai/yokai_039_isonade_base.png"
    ],
    "note": "鬼面は背景を抜き、両目の位置をそろえた（data/masks.json）。mask_award_gold_oni.png4.jpg は mask_award_gold_oni.png に直した。妖怪は600×800に縮めて圧縮。ボスは元の方が軽かったのでそのまま"
+  },
+  {
+   "date": "2026-11-05",
+   "via": "実機テストを受けて作り直し",
+   "files": [
+    "assets/images/mask/mask_drop_boss_01_shuten_doji.png",
+    "assets/images/mask/mask_drop_boss_02_ibaraki_doji.png",
+    "assets/images/mask/mask_drop_boss_03_tamamo_no_mae.png",
+    "assets/images/mask/mask_drop_boss_04_otakemaru.png",
+    "assets/images/mask/mask_drop_boss_05_yamata_no_orochi.png",
+    "assets/images/mask/mask_shop_ao_oni.png",
+    "assets/images/mask/mask_shop_hannya.png",
+    "assets/images/mask/mask_shop_hyottoko.png",
+    "assets/images/mask/mask_shop_karasu_tengu.png",
+    "assets/images/mask/mask_shop_kitsune.png",
+    "assets/images/mask/mask_shop_koomote.png",
+    "assets/images/mask/mask_shop_okame.png",
+    "assets/images/mask/mask_shop_tengu.png",
+    "assets/images/mask/mask_shop_menpo.png",
+    "assets/images/mask/mask_shop_shinobi_fukumen.png",
+    "assets/images/mask/mask_award_gold_oni.png",
+    "assets/images/mask/mask_award_itadaki.png",
+    "assets/images/mask/mask_award_kage.png",
+    "assets/images/mask/mask_free_oni.png",
+    "assets/images/mask/mask_shop_aka_oni.png"
+   ],
+   "note": "全面の目と口の白い穴を透過に。半面は1割小さく、目の間隔の0.2倍上へ"
   }
  ]
 }
