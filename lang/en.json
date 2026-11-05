@@ -780,5 +780,6 @@
   "lab.confirmDelete": "Delete this recording?",
   "lab.nothing": "No fully labelled frames yet",
   "menu.swordlab": "Sword data lab",
-  "menu.swordlab.desc": "Data for the sword-finding AI"
+  "menu.swordlab.desc": "Data for the sword-finding AI",
+  "lab.broken": "This frame's picture was not saved. Delete this recording and record again"
 }

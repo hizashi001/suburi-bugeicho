@@ -611,5 +611,6 @@
   "lab.confirmDelete": "この撮影を消しますか？",
   "lab.nothing": "印を付け終えたコマがまだない",
   "menu.swordlab": "刀の学習データ作り",
-  "menu.swordlab.desc": "刀を見つけるAIのためのデータ"
+  "menu.swordlab.desc": "刀を見つけるAIのためのデータ",
+  "lab.broken": "このコマの写真が保存できていません。この撮影を消して、撮り直してください"
 }

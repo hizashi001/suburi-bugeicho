@@ -110,6 +110,9 @@ function db() {
   }));
 }
 const req = (r) => new Promise((ok, ng) => { r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error); });
+// iPhone browsers (WebKit) sometimes fail to keep a Blob in IndexedDB ("Error preparing Blob/File data"), so the
+// JPEG is kept as plain bytes (ArrayBuffer) and turned back into a Blob when shown or exported
+const frameBlob = (f) => (f.jpg ? new Blob([f.jpg], { type: "image/jpeg" }) : f.blob);
 const store = {
   async put(name, v) { const d = await db(); return req(d.transaction(name, "readwrite").objectStore(name).put(v)); },
   async all(name) { const d = await db(); return req(d.transaction(name).objectStore(name).getAll()); },
@@ -157,8 +160,8 @@ async function record() {
     sctx.drawImage(video, 0, 0, snap.width, snap.height); // the camera picture as it is (not mirrored)
     let wrists = null;
     if (landmarker) { try { const lm = landmarker.detectForVideo(video, now).landmarks?.[0]; if (lm) wrists = [15, 16, 13, 14].map((i) => [+lm[i].x.toFixed(4), +lm[i].y.toFixed(4), +(lm[i].visibility ?? 1).toFixed(2)]); } catch {} }
-    const blob = await toBlob(snap, LAB.quality);
-    await store.put("frames", { id: `${session.id}_${String(idx).padStart(4, "0")}`, session: session.id, idx, t: Math.round(now - t0), blob, wrists, label: null, skip: false });
+    const jpg = await (await toBlob(snap, LAB.quality)).arrayBuffer();
+    await store.put("frames", { id: `${session.id}_${String(idx).padStart(4, "0")}`, session: session.id, idx, t: Math.round(now - t0), jpg, wrists, label: null, skip: false });
     idx++;
     $("rec-badge").textContent = t("lab.recording", { s: Math.max(0, sec - Math.floor((now - t0) / 1000)), n: idx });
     await wait(Math.max(0, 1000 / LAB.fps - (performance.now() - now)));
@@ -189,8 +192,9 @@ async function openLabel(sessionId) {
 async function showFrame() {
   const f = L.frames[L.i];
   if (L.url) URL.revokeObjectURL(L.url);
-  L.url = URL.createObjectURL(f.blob);
-  L.img = await new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.src = L.url; });
+  L.url = URL.createObjectURL(frameBlob(f));
+  L.img = await new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = L.url; });
+  if (!L.img) { $("lab-badge").textContent = t("lab.broken"); return; }
   if (!f.label) f.label = { tip: null, guard: null, hilt: null };
   L.which = POINTS.find((p) => !f.label[p]) || "tip";
   paintWhich(); draw();
@@ -283,7 +287,7 @@ async function buildDataset() {
   for (const s of sessions) for (const f of await store.frames(s.id)) {
     if (!isDone(f)) continue;
     const id = ++imageId, name = `images/${f.id}.jpg`;
-    files.push({ name, data: new Uint8Array(await f.blob.arrayBuffer()) });
+    files.push({ name, data: new Uint8Array(f.jpg || (await f.blob.arrayBuffer())) });
     images.push({ id, file_name: name, width: s.width, height: s.height, session: s.id, t_ms: f.t, meta: s.meta, wrists: f.wrists });
     const kp = POINTS.flatMap((p) => { const q = f.label[p]; return q[2] > 0 ? [+(q[0] * s.width).toFixed(1), +(q[1] * s.height).toFixed(1), 2] : [0, 0, 0]; });
     const vis = POINTS.map((p, i) => [kp[i * 3], kp[i * 3 + 1], kp[i * 3 + 2]]).filter((q) => q[2] > 0);
