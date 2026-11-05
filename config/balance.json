@@ -521,5 +521,14 @@
   "ready": {
     "_note": "出陣・登頂・TABATA・型の登録・シェアの録画・影を録る、の前に、所定の位置につくための数え（秒）",
     "sec": 10
+  },
+  "ghost3d": {
+    "_note": "3Dの影の試験（ghost3d.html）。recordSec=録る長さ、fps=録るコマ数、smooth=動きのなめらかさ（0〜1）、bloom=光のにじみの強さ、pixelRatio=描く細かさの上限（iPhoneが重ければ下げる）。bloomThreshold=どのくらい明るい所からにじませるか（0〜1、低いほど全体が光る）",
+    "recordSec": 10,
+    "fps": 20,
+    "smooth": 0.45,
+    "bloom": 0.8,
+    "pixelRatio": 1.5,
+    "bloomThreshold": 0.4
   }
 }

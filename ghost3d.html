@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GHOST 3D test</title>
+<style>
+:root { --ai: #0f1626; --ai-2: #1b2438; --line: #2c3a58; --washi: #ece6d6; --muted: #97a0b4; --kin: #d6ab4c; --shu: #cf4a33; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ai); color: var(--washi); font: 15px/1.5 system-ui, -apple-system, "Hiragino Sans", sans-serif; }
+main { max-width: 520px; margin: 0 auto; padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 1.2rem; margin: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .spread { justify-content: space-between; }
+button, .btn { background: var(--ai-2); color: var(--washi); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; text-decoration: none; }
+button.primary { background: var(--kin); color: #1b1407; border-color: var(--kin); font-weight: 700; }
+button.rec { background: var(--shu); border-color: var(--shu); font-weight: 700; }
+button[aria-pressed="true"] { outline: 2px solid var(--kin); }
+button:disabled { opacity: .45; }
+.small { font-size: .8rem; } .muted { color: var(--muted); }
+.stage { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #03050a; border-radius: 10px; overflow: hidden; touch-action: none; }
+.stage canvas.gl { position: absolute; inset: 0; width: 100%; height: 100%; }
+.stage video { position: absolute; right: 8px; bottom: 8px; width: 26%; border-radius: 6px; transform: scaleX(-1); opacity: .75; border: 1px solid var(--line); }
+.stage .badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.55); padding: 2px 10px; border-radius: 99px; font-size: .85rem; }
+.stage .count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 6rem; font-weight: 800; color: var(--kin); text-shadow: 0 4px 12px #000; pointer-events: none; }
+.panel { background: var(--ai-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+#diag { white-space: pre-wrap; font: 12px/1.45 ui-monospace, monospace; color: var(--muted); }
+#errbox { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 9; background: #5c1414; color: #fff; border: 1px solid var(--shu); border-radius: 8px; padding: 8px 10px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+[hidden] { display: none !important; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="errbox" hidden></div>
+<script>
+(function () {
+  const show = (m) => { const b = document.getElementById("errbox"); if (!b) return; b.hidden = false; b.textContent = ("⚠ " + m + "\n" + b.textContent).slice(0, 1200); };
+  window.addEventListener("error", (e) => show(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno || ""})`));
+  window.addEventListener("unhandledrejection", (e) => show(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+})();
+</script>
+<main>
+  <div class="row spread"><h1 data-i18n="g3d.title"></h1><a class="btn small" href="index.html" data-i18n="common.back"></a></div>
+  <p class="small muted" data-i18n="g3d.lead"></p>
+  <div class="stage" id="stage">
+    <video id="video" playsinline muted hidden></video>
+    <span class="badge" id="badge" hidden></span>
+    <div class="count" id="count" hidden></div>
+  </div>
+  <div class="row">
+    <button class="primary" id="btn-cam" data-i18n="g3d.cam"></button>
+    <button class="rec" id="btn-rec" data-i18n="g3d.rec" disabled></button>
+    <button id="btn-play" data-i18n="g3d.play" disabled></button>
+  </div>
+  <div class="panel">
+    <span class="small muted" data-i18n="g3d.view"></span>
+    <div class="row" id="views"></div>
+    <span class="small muted" data-i18n="g3d.color"></span>
+    <div class="row" id="colors"></div>
+  </div>
+  <div class="panel"><span class="small muted" data-i18n="g3d.diag"></span><div id="diag"></div></div>
+</main>
+<script type="module">
+// 3D GHOST test: the camera's 3D skeleton (MediaPipe world landmarks, metres, centred on the hips) drives a 3D shadow-samurai
+// made of simple shapes, drawn ink-black with a glowing rim, bloom, rising sparks and a trail behind the sword.
+// Live: it moves as you move. It can record a few seconds and play them back, and be seen from any side.
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+const KEY = "suburi-bugeicho.v1";
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
+const getJSON = (u, fb) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : fb)).catch(() => fb);
+const [DICT, FALLBACK, CFG] = await Promise.all([getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("config/balance.json", {})]);
+const C3 = CFG.ghost3d || { recordSec: 10, fps: 20, smooth: 0.45, bloom: 1.1, pixelRatio: 1.5 };
+const t = (k, v = {}) => String(DICT[k] ?? FALLBACK[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? "");
+document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+const $ = (id) => document.getElementById(id);
+
+// ---------- the scene ----------
+const stage = $("stage");
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.domElement.className = "gl";
+renderer.setPixelRatio(Math.min(C3.pixelRatio, devicePixelRatio || 1));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x03050a);
+scene.fog = new THREE.Fog(0x03050a, 4, 9);
+const camera = new THREE.PerspectiveCamera(38, 9 / 16, 0.1, 50);
+camera.position.set(0, 1.05, 4.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.95, 0); controls.enablePan = false; controls.minDistance = 2; controls.maxDistance = 7; controls.update();
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(256, 456), C3.bloom, 0.4, C3.bloomThreshold ?? 0.4); // only the bright rim and blade glow
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+function resize() {
+  const r = stage.getBoundingClientRect();
+  renderer.setSize(r.width, r.height, false); composer.setSize(r.width, r.height);
+  camera.aspect = r.width / r.height; camera.updateProjectionMatrix();
+}
+resize(); addEventListener("resize", resize);
+
+// the floor: a faint ring of light where the ghost stands
+const ring = new THREE.Mesh(new THREE.RingGeometry(0.25, 0.9, 64), new THREE.MeshBasicMaterial({ color: 0x3a5a9a, transparent: true, opacity: 0.12, side: THREE.DoubleSide }));
+ring.rotation.x = -Math.PI / 2; scene.add(ring);
+
+// ---------- the ghost body: ink-black with a rim of light (fresnel) ----------
+let aura = new THREE.Color(0x78afff);
+const ghostMat = new THREE.ShaderMaterial({
+  uniforms: { aura: { value: aura }, core: { value: new THREE.Color(0x020306) }, power: { value: 3.2 }, time: { value: 0 } },
+  vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); vN = normalize(normalMatrix * normal); vV = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+  fragmentShader: `uniform vec3 aura; uniform vec3 core; uniform float power; uniform float time; varying vec3 vN; varying vec3 vV;
+    void main(){ float f = pow(1.0 - max(dot(normalize(vN), normalize(vV)), 0.0), power); float breathe = 0.85 + 0.15 * sin(time * 3.0);
+      gl_FragColor = vec4(core + aura * f * 1.4 * breathe, 1.0); }`,
+});
+const blade = new THREE.MeshBasicMaterial({ color: 0xdfe8ff });
+const parts = new THREE.Group(); scene.add(parts);
+const sph = new THREE.SphereGeometry(1, 20, 14);
+function limb(r, top = r) { const m = new THREE.Mesh(new THREE.CylinderGeometry(top, r, 1, 16, 1), ghostMat); parts.add(m); return m; }
+function ball(r) { const m = new THREE.Mesh(sph, ghostMat); m.scale.setScalar(r); parts.add(m); return m; }
+// segments between landmarks (MediaPipe indices), with thickness in metres
+const SEG = [[11, 13, 0.055], [13, 15, 0.045], [12, 14, 0.055], [14, 16, 0.045], [23, 25, 0.075], [25, 27, 0.055], [24, 26, 0.075], [26, 28, 0.055], [27, 31, 0.035], [28, 32, 0.035]];
+const segs = SEG.map(([a, b, r]) => ({ a, b, m: limb(r * 0.85, r) }));
+const joints = [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].map((i) => ({ i, m: ball(i >= 25 ? 0.05 : 0.06) }));
+const torso = limb(0.13, 0.17);   // a wider chest than waist, like a kimono
+const head = ball(0.11), topknot = ball(0.035);
+const hakama = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.34, 1, 24, 1), ghostMat); parts.add(hakama);
+const sword = new THREE.Mesh(new THREE.BoxGeometry(0.012, 1, 0.03), blade); parts.add(sword);
+const tsuba = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 20), ghostMat); parts.add(tsuba);
+
+const up = new THREE.Vector3(0, 1, 0), tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpD = new THREE.Vector3();
+function placeBetween(m, a, b, scaleXZ = 1) {
+  tmpD.subVectors(b, a); const L = tmpD.length(); if (L < 1e-4) return;
+  m.position.copy(a).addScaledVector(tmpD, 0.5);
+  m.quaternion.setFromUnitVectors(up, tmpD.divideScalar(L));
+  m.scale.set(scaleXZ, L, scaleXZ);
+}
+
+// ---------- sparks and the blade's trail ----------
+const MAXP = 400, pPos = new Float32Array(MAXP * 3), pLife = new Float32Array(MAXP), pVel = new Float32Array(MAXP * 3);
+const pGeo = new THREE.BufferGeometry(); pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({ color: aura, size: 0.025, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+scene.add(new THREE.Points(pGeo, pMat));
+let pNext = 0;
+const TRAIL = 7, trailGeo = new THREE.BufferGeometry(), trailPos = new Float32Array(TRAIL * 2 * 3);
+trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+const tIdx = []; for (let i = 0; i < TRAIL - 1; i++) { const a = i * 2; tIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } trailGeo.setIndex(tIdx);
+const trailMat = new THREE.MeshBasicMaterial({ color: aura, transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+scene.add(new THREE.Mesh(trailGeo, trailMat));
+const trail = [];
+
+// ---------- pose → ghost ----------
+// world landmarks: metres, hips at the origin, y down, z toward the camera negative. Shown mirrored like a selfie.
+let P = null, floorY = 0;
+const toV = (p) => new THREE.Vector3(-p.x, -p.y, -p.z);
+function setPose(lm) {
+  if (!lm) return;
+  const k = P ? C3.smooth : 0, next = {};
+  for (let i = 0; i < lm.length; i++) {
+    const v = toV(lm[i]);
+    next[i] = P && P[i] ? P[i].lerp(v, 1 - k) : v;
+  }
+  P = next;
+}
+const mid = (a, b) => tmpA.copy(P[a]).add(P[b]).multiplyScalar(0.5).clone();
+function updateGhost(dt, time) {
+  if (!P) { parts.visible = false; return; }
+  parts.visible = true;
+  // stand the ghost on the floor: the lowest foot point is the ground
+  const low = Math.min(P[27].y, P[28].y, P[31] ? P[31].y : 9, P[32] ? P[32].y : 9);
+  floorY = floorY * 0.9 + low * 0.1;
+  parts.position.set(0, -floorY, 0); ring.position.y = 0.002;
+  segs.forEach((s) => placeBetween(s.m, P[s.a], P[s.b]));
+  joints.forEach((j) => j.m.position.copy(P[j.i]));
+  const sh = mid(11, 12), hip = mid(23, 24);
+  placeBetween(torso, hip, sh, 1);
+  torso.scale.x = Math.max(0.5, P[11].distanceTo(P[12]) / 0.34);
+  // head above the shoulders, toward the nose; a topknot on top
+  const nose = P[0], headC = sh.clone().lerp(nose, 0.75); headC.y += 0.06;
+  head.position.copy(headC); topknot.position.copy(headC).add(new THREE.Vector3(0, 0.13, 0.02));
+  // hakama: from the hips to between the knees and ankles, flaring
+  const knee = mid(25, 26), ank = mid(27, 28), hem = knee.clone().lerp(ank, 0.6);
+  placeBetween(hakama, hip, hem, 1);
+  // the sword: from between the hands along the forearms, about a metre
+  const w = mid(15, 16), e = mid(13, 14), dir = tmpD.subVectors(w, e).normalize().clone();
+  const tip = w.clone().addScaledVector(dir, 1.0);
+  placeBetween(sword, w, tip); sword.scale.x = sword.scale.z = 1;
+  tsuba.position.copy(w).addScaledVector(dir, 0.04); tsuba.quaternion.setFromUnitVectors(up, dir);
+  // trail: keep the last positions of hilt and tip
+  trail.unshift([w.clone().add(parts.position), tip.clone().add(parts.position)]); if (trail.length > TRAIL) trail.pop();
+  for (let i = 0; i < TRAIL; i++) { const tr = trail[Math.min(i, trail.length - 1)]; trailPos.set([...tr[0].toArray(), ...tr[1].toArray()], i * 6); }
+  trailGeo.attributes.position.needsUpdate = true; trailGeo.computeBoundingSphere();
+  // sparks rising off the body like heat
+  const src = [11, 12, 13, 14, 23, 24, 25, 26, 0];
+  for (let n = 0; n < 6; n++) {
+    const j = P[src[(Math.random() * src.length) | 0]], i = pNext; pNext = (pNext + 1) % MAXP;
+    pPos.set([j.x + (Math.random() - 0.5) * 0.15, j.y - floorY + (Math.random() - 0.5) * 0.1, j.z + (Math.random() - 0.5) * 0.15], i * 3);
+    pVel.set([(Math.random() - 0.5) * 0.15, 0.4 + Math.random() * 0.7, (Math.random() - 0.5) * 0.15], i * 3); pLife[i] = 0.6 + Math.random() * 0.8;
+  }
+  for (let i = 0; i < MAXP; i++) {
+    if (pLife[i] <= 0) { pPos[i * 3 + 1] = -99; continue; }
+    pLife[i] -= dt; for (let c = 0; c < 3; c++) pPos[i * 3 + c] += pVel[i * 3 + c] * dt;
+  }
+  pGeo.attributes.position.needsUpdate = true;
+  ghostMat.uniforms.time.value = time;
+}
+
+// ---------- camera + pose ----------
+const video = $("video");
+let landmarker = null, stream = null, frames = 0, fps = 0, lastDetect = 0, mode = "idle", rec = null, take = null, playT0 = 0;
+async function startCamera() {
+  $("btn-cam").disabled = true;
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  video.srcObject = stream; await video.play(); video.hidden = false;
+  const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+  const files = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+  const opts = (delegate) => ({ baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate }, runningMode: "VIDEO", numPoses: 1 });
+  try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("GPU")); } catch { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("CPU")); }
+  $("btn-cam").hidden = true; $("btn-rec").disabled = false; mode = "live";
+}
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function record() {
+  $("btn-rec").disabled = true; $("btn-play").disabled = true;
+  for (let n = (CFG.ready && CFG.ready.sec) || 10; n > 0; n--) { $("count").hidden = false; $("count").textContent = n; await wait(1000); }
+  $("count").hidden = true;
+  rec = { t0: performance.now(), frames: [] }; $("badge").hidden = false;
+  const tick = setInterval(() => ($("badge").textContent = t("g3d.recording", { s: Math.max(0, C3.recordSec - Math.floor((performance.now() - rec.t0) / 1000)) })), 200);
+  await wait(C3.recordSec * 1000);
+  clearInterval(tick); $("badge").hidden = true;
+  take = rec; rec = null;
+  $("btn-rec").disabled = false; $("btn-play").disabled = take.frames.length < 2;
+}
+function play() { if (!take) return; mode = "play"; playT0 = performance.now(); $("badge").hidden = false; }
+function poseAt(tt) {
+  const F = take.frames; let i = 0; while (i < F.length - 1 && F[i + 1].t <= tt) i++;
+  const a = F[i], b = F[Math.min(i + 1, F.length - 1)], k = b.t > a.t ? Math.min(1, Math.max(0, (tt - a.t) / (b.t - a.t))) : 0;
+  return a.lm.map((p, j) => ({ x: p[0] + (b.lm[j][0] - p[0]) * k, y: p[1] + (b.lm[j][1] - p[1]) * k, z: p[2] + (b.lm[j][2] - p[2]) * k }));
+}
+$("btn-cam").onclick = () => startCamera().catch((e) => { $("btn-cam").disabled = false; throw e; });
+$("btn-rec").onclick = record;
+$("btn-play").onclick = play;
+
+// ---------- views and colours ----------
+const VIEWS = { front: [0, 1.05, 4.2], diag: [2.6, 1.3, 3.3], side: [4.2, 1.05, 0.01], high: [0, 3.2, 3.0] };
+$("views").innerHTML = Object.keys(VIEWS).map((v) => `<button data-v="${v}">${t("g3d.view." + v)}</button>`).join("") + `<button data-v="spin">${t("g3d.view.spin")}</button>`;
+$("views").querySelectorAll("[data-v]").forEach((b) => (b.onclick = () => {
+  const v = b.dataset.v; controls.autoRotate = v === "spin"; controls.autoRotateSpeed = 2.5;
+  if (VIEWS[v]) camera.position.set(...VIEWS[v]); controls.update();
+  $("views").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+}));
+const COLORS = { blue: 0x78afff, gold: 0xffbe5a, red: 0xff4a3a, white: 0xdfe8ff };
+$("colors").innerHTML = Object.keys(COLORS).map((c) => `<button data-c="${c}">${t("g3d.color." + c)}</button>`).join("");
+$("colors").querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => {
+  aura.setHex(COLORS[b.dataset.c]); pMat.color.copy(aura); trailMat.color.copy(aura); ring.material.color.copy(aura).multiplyScalar(0.5);
+  $("colors").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+}));
+
+// ---------- loop ----------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (mode === "live" && landmarker && now - lastDetect >= 1000 / 30) {
+    lastDetect = now;
+    const res = landmarker.detectForVideo(video, now), wl = res.worldLandmarks && res.worldLandmarks[0];
+    if (wl) { frames++; setPose(wl); if (rec && (!rec.frames.length || now - rec.t0 - rec.frames[rec.frames.length - 1].t >= 1000 / C3.fps)) rec.frames.push({ t: now - rec.t0, lm: wl.map((p) => [+p.x.toFixed(3), +p.y.toFixed(3), +p.z.toFixed(3)]) }); }
+  }
+  if (mode === "play" && take) {
+    const tt = now - playT0, end = take.frames[take.frames.length - 1].t;
+    setPose(poseAt(tt)); $("badge").textContent = t("g3d.playing", { s: (tt / 1000).toFixed(1) });
+    if (tt > end + 500) { mode = stream ? "live" : "idle"; $("badge").hidden = true; }
+  }
+  updateGhost(dt, now / 1000);
+  controls.update();
+  composer.render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+let renders = 0; const _render = composer.render.bind(composer); composer.render = (...a) => { renders++; return _render(...a); };
+setInterval(() => {
+  fps = frames; frames = 0;
+  $("diag").textContent = `pose: ${fps}fps  draw: ${renders}fps  ${take ? `take: ${take.frames.length} frames (${Math.round(JSON.stringify(take.frames).length / 1024)}KB)` : ""}\n${navigator.userAgent}`;
+  renders = 0;
+}, 1000);
+</script>
+</body>
+</html>
