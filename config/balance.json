@@ -530,5 +530,16 @@
     "bloom": 0.8,
     "pixelRatio": 1.5,
     "bloomThreshold": 0.4
+  },
+  "swordlab": {
+    "_note": "刀の学習データ作り（swordlab.html）。fps=1秒に残すコマ数、seconds=撮る長さの選択肢、maxSide=保存する画像の長い辺（px）、quality=JPEGの画質",
+    "fps": 3,
+    "seconds": [
+      10,
+      20,
+      30
+    ],
+    "maxSide": 960,
+    "quality": 0.85
   }
 }

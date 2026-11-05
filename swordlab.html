@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sword lab</title>
+<style>
+:root { --ai: #0f1626; --ai-2: #1b2438; --line: #2c3a58; --washi: #ece6d6; --muted: #97a0b4; --kin: #d6ab4c; --shu: #cf4a33; --moe: #6fbf8e; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ai); color: var(--washi); font: 15px/1.5 system-ui, -apple-system, "Hiragino Sans", sans-serif; }
+main { max-width: 560px; margin: 0 auto; padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 1.2rem; margin: 0; } h2 { font-size: 1rem; margin: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .spread { justify-content: space-between; }
+button, .btn, select, input[type=text] { background: var(--ai-2); color: var(--washi); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; text-decoration: none; }
+button.primary { background: var(--kin); color: #1b1407; border-color: var(--kin); font-weight: 700; }
+button.rec { background: var(--shu); border-color: var(--shu); font-weight: 700; }
+button.mini { padding: 5px 10px; font-size: .85rem; }
+button[aria-pressed="true"] { outline: 2px solid var(--kin); }
+button:disabled { opacity: .45; }
+.small { font-size: .8rem; } .muted { color: var(--muted); }
+.panel { background: var(--ai-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.stage { position: relative; width: 100%; aspect-ratio: 9 / 16; background: #000; border-radius: 10px; overflow: hidden; touch-action: none; }
+.stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.stage video { transform: scaleX(-1); }
+.badge { position: absolute; left: 10px; top: 10px; background: rgba(0,0,0,.6); padding: 2px 10px; border-radius: 99px; font-size: .85rem; }
+.count { position: absolute; inset: 0; display: grid; place-items: center; font-size: 6rem; font-weight: 800; color: var(--kin); text-shadow: 0 4px 12px #000; pointer-events: none; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grid2 label { display: flex; flex-direction: column; gap: 2px; font-size: .8rem; color: var(--muted); }
+.grid2 select, .grid2 input { width: 100%; }
+.which { display: flex; gap: 6px; }
+.which button { flex: 1; }
+.dot-tip { color: #ff5a5a; } .dot-guard { color: #ffd84a; } .dot-hilt { color: #5ad2ff; }
+.sess { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+.sess:first-child { border-top: 0; padding-top: 0; }
+#errbox { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 9; background: #5c1414; color: #fff; border: 1px solid var(--shu); border-radius: 8px; padding: 8px 10px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="errbox" hidden></div>
+<script>
+(function () {
+  const show = (m) => { const b = document.getElementById("errbox"); if (!b) return; b.hidden = false; b.textContent = ("⚠ " + m + "\n" + b.textContent).slice(0, 1200); };
+  window.addEventListener("error", (e) => show(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno || ""})`));
+  window.addEventListener("unhandledrejection", (e) => show(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+})();
+</script>
+<main>
+  <div class="row spread"><h1 data-i18n="lab.title"></h1><a class="btn small" href="index.html" data-i18n="common.back"></a></div>
+  <p class="small muted" data-i18n="lab.lead"></p>
+
+  <!-- ===== 1. record ===== -->
+  <section id="sec-rec" class="panel">
+    <h2 data-i18n="lab.rec.title"></h2>
+    <div class="grid2" id="meta"></div>
+    <div class="row"><span class="small muted" data-i18n="lab.rec.length"></span><select id="rec-sec"></select></div>
+    <div class="stage" id="rec-stage">
+      <video id="video" playsinline muted></video>
+      <span class="badge" id="rec-badge" hidden></span>
+      <div class="count" id="rec-count" hidden></div>
+    </div>
+    <div class="row"><button class="primary" id="btn-cam" data-i18n="lab.rec.cam"></button><button class="rec" id="btn-rec" data-i18n="lab.rec.go" disabled></button></div>
+  </section>
+
+  <!-- ===== 2. label ===== -->
+  <section id="sec-label" class="panel" hidden>
+    <div class="row spread"><h2 id="lab-head"></h2><button class="mini" id="btn-close" data-i18n="lab.close"></button></div>
+    <p class="small muted" data-i18n="lab.label.lead"></p>
+    <div class="which" id="which"></div>
+    <div class="stage" id="lab-stage"><canvas id="lab-cv"></canvas><span class="badge" id="lab-badge"></span></div>
+    <div class="row">
+      <button id="btn-hidden" data-i18n="lab.hidden"></button>
+      <button id="btn-skip" data-i18n="lab.skip"></button>
+      <button id="btn-copy" data-i18n="lab.copy"></button>
+    </div>
+    <div class="row spread"><button id="btn-prev" data-i18n="lab.prev"></button><button class="primary" id="btn-next" data-i18n="lab.next"></button></div>
+  </section>
+
+  <!-- ===== 3. sessions ===== -->
+  <section class="panel">
+    <div class="row spread"><h2 data-i18n="lab.list.title"></h2><button class="mini" id="btn-export" data-i18n="lab.export"></button></div>
+    <p class="small muted" id="totals"></p>
+    <div id="sessions"></div>
+  </section>
+</main>
+<script type="module">
+// 刀の学習データ作り: record frames the same way the game sees the player, tap the sword's tip, guard and hilt end on each,
+// and export everything as a COCO keypoint dataset (images + labels in one zip) for training a sword-finding model.
+// Everything stays on this phone (IndexedDB) until the player chooses to export. Coordinates are in the camera picture,
+// not mirrored, like MediaPipe's landmarks (docs/引継ぎ_刀検出AI.md).
+const KEY = "suburi-bugeicho.v1";
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
+document.documentElement.lang = LANG;
+const getJSON = (u, fb) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : fb)).catch(() => fb);
+const [DICT, FALLBACK, CFG] = await Promise.all([getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("config/balance.json", {})]);
+const LAB = CFG.swordlab || { fps: 3, seconds: [10, 20, 30], maxSide: 960, quality: 0.85 };
+const t = (k, v = {}) => String(DICT[k] ?? FALLBACK[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v[x] ?? "");
+document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const POINTS = ["tip", "guard", "hilt"];
+
+// ---------- store ----------
+function db() {
+  return (db.p ||= new Promise((ok, ng) => {
+    const r = indexedDB.open("swordlab", 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore("sessions", { keyPath: "id" }); const f = r.result.createObjectStore("frames", { keyPath: "id" }); f.createIndex("session", "session"); };
+    r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error);
+  }));
+}
+const req = (r) => new Promise((ok, ng) => { r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error); });
+const store = {
+  async put(name, v) { const d = await db(); return req(d.transaction(name, "readwrite").objectStore(name).put(v)); },
+  async all(name) { const d = await db(); return req(d.transaction(name).objectStore(name).getAll()); },
+  async frames(session) { const d = await db(); return (await req(d.transaction("frames").objectStore("frames").index("session").getAll(session))).sort((a, b) => a.idx - b.idx); },
+  async del(name, id) { const d = await db(); return req(d.transaction(name, "readwrite").objectStore(name).delete(id)); },
+};
+
+// ---------- 1. record ----------
+// the conditions of each recording, so the data's spread can be seen and filled in later
+const META = { room: ["dark", "bright", "white", "busy", "outdoor"], light: ["ceiling", "window", "back", "dim"], weapon: ["bokuto", "iaito_al", "iaito_alloy", "broom", "stick", "tanto", "other"], clothes: ["black", "white", "pattern", "bright", "skin"] };
+$("meta").innerHTML = Object.entries(META).map(([k, vals]) => `<label>${esc(t("lab.meta." + k))}<select data-meta="${k}">${vals.map((v) => `<option value="${v}">${esc(t(`lab.meta.${k}.${v}`))}</option>`).join("")}</select></label>`).join("")
+  + `<label>${esc(t("lab.meta.person"))}<input type="text" data-meta="person" maxlength="20"></label><label>${esc(t("lab.meta.note"))}<input type="text" data-meta="note" maxlength="40"></label>`;
+$("rec-sec").innerHTML = LAB.seconds.map((s) => `<option value="${s}">${esc(t("lab.sec", { n: s }))}</option>`).join("");
+const video = $("video");
+let stream = null, landmarker = null;
+async function startCamera() {
+  $("btn-cam").disabled = true;
+  stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  video.srcObject = stream; await video.play();
+  $("btn-cam").hidden = true; $("btn-rec").disabled = false;
+  // the pose model only gives hints (where the hands are) while labelling; recording works without it
+  try {
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+    const files = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+    const opts = (delegate) => ({ baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate }, runningMode: "VIDEO", numPoses: 1 });
+    try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("GPU")); } catch { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("CPU")); }
+  } catch { landmarker = null; }
+}
+const snap = document.createElement("canvas"), sctx = snap.getContext("2d");
+const toBlob = (c, q) => new Promise((ok) => c.toBlob(ok, "image/jpeg", q));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+async function record() {
+  $("btn-rec").disabled = true;
+  for (let n = (CFG.ready && CFG.ready.sec) || 10; n > 0; n--) { $("rec-count").hidden = false; $("rec-count").textContent = n; await wait(1000); }
+  $("rec-count").hidden = true;
+  const sec = +$("rec-sec").value, meta = {};
+  document.querySelectorAll("[data-meta]").forEach((el) => (meta[el.dataset.meta] = el.value.trim()));
+  const vw = video.videoWidth, vh = video.videoHeight, s = Math.min(1, LAB.maxSide / Math.max(vw, vh));
+  snap.width = Math.round(vw * s); snap.height = Math.round(vh * s);
+  const session = { id: "s_" + Date.now().toString(36), created: new Date().toISOString(), meta, width: snap.width, height: snap.height, frames: 0 };
+  await store.put("sessions", session);
+  const t0 = performance.now(); let idx = 0; $("rec-badge").hidden = false;
+  while (performance.now() - t0 < sec * 1000) {
+    const now = performance.now();
+    sctx.drawImage(video, 0, 0, snap.width, snap.height); // the camera picture as it is (not mirrored)
+    let wrists = null;
+    if (landmarker) { try { const lm = landmarker.detectForVideo(video, now).landmarks?.[0]; if (lm) wrists = [15, 16, 13, 14].map((i) => [+lm[i].x.toFixed(4), +lm[i].y.toFixed(4), +(lm[i].visibility ?? 1).toFixed(2)]); } catch {} }
+    const blob = await toBlob(snap, LAB.quality);
+    await store.put("frames", { id: `${session.id}_${String(idx).padStart(4, "0")}`, session: session.id, idx, t: Math.round(now - t0), blob, wrists, label: null, skip: false });
+    idx++;
+    $("rec-badge").textContent = t("lab.recording", { s: Math.max(0, sec - Math.floor((now - t0) / 1000)), n: idx });
+    await wait(Math.max(0, 1000 / LAB.fps - (performance.now() - now)));
+  }
+  session.frames = idx; await store.put("sessions", session);
+  $("rec-badge").hidden = true; $("btn-rec").disabled = false;
+  await renderSessions();
+  openLabel(session.id);
+}
+$("btn-cam").onclick = () => startCamera().catch((e) => { $("btn-cam").disabled = false; throw e; });
+$("btn-rec").onclick = record;
+
+// ---------- 2. label ----------
+const cv = $("lab-cv"), ctx = cv.getContext("2d");
+let L = null; // { session, frames, i, which, img }
+const COLORS = { tip: "#ff5a5a", guard: "#ffd84a", hilt: "#5ad2ff" };
+$("which").innerHTML = POINTS.map((p) => `<button data-w="${p}"><span class="dot-${p}">●</span> ${esc(t("lab.pt." + p))}</button>`).join("");
+$("which").querySelectorAll("[data-w]").forEach((b) => (b.onclick = () => { L.which = b.dataset.w; paintWhich(); }));
+function paintWhich() { $("which").querySelectorAll("[data-w]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.w === L.which)); }
+async function openLabel(sessionId) {
+  const frames = await store.frames(sessionId);
+  if (!frames.length) return;
+  const sessions = await store.all("sessions");
+  L = { session: sessions.find((s) => s.id === sessionId), frames, i: Math.max(0, frames.findIndex((f) => !f.label && !f.skip)), which: "tip", img: null };
+  $("sec-label").hidden = false; $("sec-label").scrollIntoView({ behavior: "smooth" });
+  await showFrame();
+}
+async function showFrame() {
+  const f = L.frames[L.i];
+  if (L.url) URL.revokeObjectURL(L.url);
+  L.url = URL.createObjectURL(f.blob);
+  L.img = await new Promise((ok) => { const im = new Image(); im.onload = () => ok(im); im.src = L.url; });
+  if (!f.label) f.label = { tip: null, guard: null, hilt: null };
+  L.which = POINTS.find((p) => !f.label[p]) || "tip";
+  paintWhich(); draw();
+}
+// the frame fitted inside the canvas; f.label points are 0–1 of the picture
+function fit() {
+  const r = cv.getBoundingClientRect(), d = Math.min(2, devicePixelRatio || 1);
+  cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+  const s = Math.min(cv.width / L.img.width, cv.height / L.img.height);
+  return { s, ox: (cv.width - L.img.width * s) / 2, oy: (cv.height - L.img.height * s) / 2, w: L.img.width * s, h: L.img.height * s };
+}
+function draw(zoomAt) {
+  const f = L.frames[L.i], g = fit();
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.drawImage(L.img, g.ox, g.oy, g.w, g.h);
+  const P = (p) => [g.ox + p[0] * g.w, g.oy + p[1] * g.h];
+  // hints: where the pose model saw the hands (grey)
+  (f.wrists || []).slice(0, 2).forEach((w) => { if (w[2] > 0.3) { const [x, y] = P(w); ctx.strokeStyle = "rgba(220,220,220,.6)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.stroke(); } });
+  const pts = POINTS.map((p) => f.label[p] && f.label[p][2] > 0 && P(f.label[p]));
+  if (pts[0] && pts[1]) { ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(...pts[0]); ctx.lineTo(...pts[1]); if (pts[2]) ctx.lineTo(...pts[2]); ctx.stroke(); }
+  POINTS.forEach((p, i) => { if (!pts[i]) return; ctx.strokeStyle = COLORS[p]; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(...pts[i], 9, 0, 7); ctx.stroke(); });
+  // a magnifier near the finger, for placing the point exactly
+  if (zoomAt) {
+    const [zx, zy] = zoomAt, R = cv.width * 0.16, k = 3, sx = (zx - g.ox) / g.s, sy = (zy - g.oy) / g.s, src = R / (g.s * k);
+    const cx = zx < cv.width / 2 ? cv.width - R - 10 : R + 10, cy = R + 10;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.clip();
+    ctx.drawImage(L.img, sx - src, sy - src, src * 2, src * 2, cx - R, cy - R, R * 2, R * 2);
+    ctx.restore(); ctx.strokeStyle = COLORS[L.which]; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - 8, cy); ctx.lineTo(cx + 8, cy); ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy + 8); ctx.stroke();
+  }
+  const done = L.frames.filter((x) => x.skip || (x.label && POINTS.every((p) => x.label[p]))).length;
+  $("lab-badge").textContent = `${L.i + 1} / ${L.frames.length}${f.skip ? " ・ " + t("lab.skipped") : ""}`;
+  $("lab-head").textContent = t("lab.label.head", { done, n: L.frames.length });
+}
+// touch: show the magnifier while the finger is down, place the point where it is lifted
+const canvasXY = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * (cv.width / r.width), (e.clientY - r.top) * (cv.height / r.height)]; };
+cv.addEventListener("pointerdown", (e) => { if (!L) return; cv.setPointerCapture(e.pointerId); L.down = canvasXY(e); draw(L.down); });
+cv.addEventListener("pointermove", (e) => { if (L && L.down) { L.down = canvasXY(e); draw(L.down); } });
+cv.addEventListener("pointerup", async (e) => {
+  if (!L || !L.down) return;
+  const [x, y] = canvasXY(e), g = fit(); L.down = null;
+  const u = (x - g.ox) / g.w, v = (y - g.oy) / g.h;
+  if (u < 0 || u > 1 || v < 0 || v > 1) { draw(); return; }
+  await setPoint([+u.toFixed(4), +v.toFixed(4), 2]);
+});
+async function setPoint(p) {
+  const f = L.frames[L.i]; f.label[L.which] = p; f.skip = false;
+  await store.put("frames", f);
+  const next = POINTS.find((q) => !f.label[q]); if (next) L.which = next;
+  paintWhich(); draw();
+}
+$("btn-hidden").onclick = () => setPoint([0, 0, 0]);             // not visible in this frame
+$("btn-skip").onclick = async () => { const f = L.frames[L.i]; f.skip = !f.skip; await store.put("frames", f); draw(); };
+$("btn-copy").onclick = async () => {                               // take the previous frame's points, then adjust
+  const prev = L.frames[L.i - 1]; if (!prev || !prev.label) return;
+  L.frames[L.i].label = JSON.parse(JSON.stringify(prev.label)); await store.put("frames", L.frames[L.i]); draw();
+};
+$("btn-prev").onclick = async () => { if (L.i > 0) { L.i--; await showFrame(); } };
+$("btn-next").onclick = async () => { if (L.i < L.frames.length - 1) { L.i++; await showFrame(); } else { closeLabel(); } };
+function closeLabel() { $("sec-label").hidden = true; L = null; renderSessions(); }
+$("btn-close").onclick = closeLabel;
+
+// ---------- 3. sessions and export ----------
+const isDone = (f) => !f.skip && f.label && POINTS.every((p) => f.label[p]);
+async function renderSessions() {
+  const sessions = (await store.all("sessions")).sort((a, b) => (a.created < b.created ? 1 : -1));
+  let all = 0, done = 0;
+  const rows = [];
+  for (const s of sessions) {
+    const fr = await store.frames(s.id), d = fr.filter(isDone).length; all += fr.length; done += d;
+    const m = s.meta || {};
+    rows.push(`<div class="sess"><div class="row spread"><b>${esc(new Date(s.created).toLocaleString(LANG === "ja" ? "ja-JP" : "en-US"))}</b><span class="small">${esc(t("lab.progress", { done: d, n: fr.length }))}</span></div>
+      <span class="small muted">${["room", "light", "weapon", "clothes"].map((k) => esc(t(`lab.meta.${k}.${m[k]}`))).join(" ・ ")}${m.person ? " ・ " + esc(m.person) : ""}${m.note ? " ・ " + esc(m.note) : ""}</span>
+      <div class="row"><button class="mini" data-open="${s.id}">${esc(t("lab.open"))}</button><button class="mini" data-del="${s.id}">${esc(t("lab.delete"))}</button></div></div>`);
+  }
+  $("sessions").innerHTML = rows.join("") || `<p class="small muted">${esc(t("lab.none"))}</p>`;
+  $("totals").textContent = t("lab.totals", { done, n: all, sessions: sessions.length });
+  $("sessions").querySelectorAll("[data-open]").forEach((b) => (b.onclick = () => openLabel(b.dataset.open)));
+  $("sessions").querySelectorAll("[data-del]").forEach((b) => (b.onclick = async () => {
+    if (!confirm(t("lab.confirmDelete"))) return;
+    for (const f of await store.frames(b.dataset.del)) await store.del("frames", f.id);
+    await store.del("sessions", b.dataset.del); renderSessions();
+  }));
+}
+
+// COCO keypoints: one category "katana" with tip, guard, hilt. v: 2 seen, 0 not visible. Pixel coordinates of each image.
+async function buildDataset() {
+  const sessions = await store.all("sessions"), files = [], images = [], annotations = [];
+  let imageId = 0;
+  for (const s of sessions) for (const f of await store.frames(s.id)) {
+    if (!isDone(f)) continue;
+    const id = ++imageId, name = `images/${f.id}.jpg`;
+    files.push({ name, data: new Uint8Array(await f.blob.arrayBuffer()) });
+    images.push({ id, file_name: name, width: s.width, height: s.height, session: s.id, t_ms: f.t, meta: s.meta, wrists: f.wrists });
+    const kp = POINTS.flatMap((p) => { const q = f.label[p]; return q[2] > 0 ? [+(q[0] * s.width).toFixed(1), +(q[1] * s.height).toFixed(1), 2] : [0, 0, 0]; });
+    const vis = POINTS.map((p, i) => [kp[i * 3], kp[i * 3 + 1], kp[i * 3 + 2]]).filter((q) => q[2] > 0);
+    const pad = 0.04 * Math.max(s.width, s.height), xs = vis.map((q) => q[0]), ys = vis.map((q) => q[1]);
+    const bbox = vis.length ? [Math.max(0, Math.min(...xs) - pad), Math.max(0, Math.min(...ys) - pad), 0, 0] : [0, 0, 0, 0];
+    if (vis.length) { bbox[2] = Math.min(s.width, Math.max(...xs) + pad) - bbox[0]; bbox[3] = Math.min(s.height, Math.max(...ys) + pad) - bbox[1]; }
+    annotations.push({ id, image_id: id, category_id: 1, keypoints: kp, num_keypoints: vis.length, bbox: bbox.map((v) => +v.toFixed(1)), area: +(bbox[2] * bbox[3]).toFixed(1), iscrowd: 0 });
+  }
+  const coco = { info: { description: "NINJA SAMURAI WORKOUT: GHOST sword keypoints", date_created: new Date().toISOString(), note: "coordinates are in the camera picture, not mirrored" },
+    images, annotations, categories: [{ id: 1, name: "katana", keypoints: POINTS, skeleton: [[1, 2], [2, 3]] }] };
+  files.push({ name: "annotations.json", data: new TextEncoder().encode(JSON.stringify(coco)) });
+  return { files, count: images.length };
+}
+// a plain zip (stored, no compression): the JPEG files are already compressed
+const CRC = (() => { const tb = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; tb[n] = c >>> 0; } return tb; })();
+const crc32 = (d) => { let c = 0xffffffff; for (let i = 0; i < d.length; i++) c = CRC[(c ^ d[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+function zip(files) {
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name), crc = crc32(f.data), h = new DataView(new ArrayBuffer(30));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, crc, true); h.setUint32(18, f.data.length, true); h.setUint32(22, f.data.length, true); h.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(h.buffer), name, f.data);
+    const c = new DataView(new ArrayBuffer(46));
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint32(16, crc, true); c.setUint32(20, f.data.length, true); c.setUint32(24, f.data.length, true); c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+    central.push(new Uint8Array(c.buffer), name);
+    offset += 30 + name.length + f.data.length;
+  }
+  const size = central.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(e.buffer)], { type: "application/zip" });
+}
+$("btn-export").onclick = async () => {
+  const { files, count } = await buildDataset();
+  if (!count) { alert(t("lab.nothing")); return; }
+  const file = new File([zip(files)], `sword_dataset_${new Date().toISOString().slice(0, 10)}.zip`, { type: "application/zip" });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: t("lab.title") }); } catch (e) { if (e.name !== "AbortError") throw e; }
+    return;
+  }
+  const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+};
+addEventListener("resize", () => L && L.img && draw());
+renderSessions();
+</script>
+</body>
+</html>
