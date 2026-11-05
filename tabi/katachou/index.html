@@ -1,0 +1,325 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GHOST 新キャラ型帳</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* Layout: a working sheet for making a new playable character. Top: the character's details (fill once, every prompt updates).
+   Then the order of work, the key poses (Nano Banana) and the motions (PixelLab), each with a looping sample of the current samurai.
+   One night look, the same palette as the game, by choice. */
+:root{
+  --night:#0b0e26; --ai:#131a45; --ai-hi:#1b2358; --line:#2c3577;
+  --kin:#e6bb55; --kin-dim:#8a7338; --shu:#d8452c; --washi:#ece6d4; --mute:#9ea6d2; --ok:#5fd08a;
+  --f-disp:"Yuji Syuku","Yu Mincho","Hiragino Mincho ProN",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --f-dot:"DotGothic16","Hiragino Kaku Gothic ProN","Yu Gothic",monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--night);color:var(--washi)}
+body{font-family:var(--f-body);font-size:14px;line-height:1.65}
+*,*::before,*::after{box-sizing:border-box}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{margin:0;font-family:var(--f-disp);font-weight:400;font-size:clamp(26px,5vw,36px);letter-spacing:.06em;color:var(--washi);text-wrap:balance}
+h1 small{display:block;font-family:var(--f-dot);font-size:12px;letter-spacing:.14em;color:var(--kin);margin-bottom:4px}
+.lede{margin:6px 0 0;color:var(--mute);max-width:65ch}
+h2{margin:0 0 12px;font-family:var(--f-disp);font-weight:400;font-size:22px;letter-spacing:.06em;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+h2 .tag{font-family:var(--f-dot);font-size:12px;color:var(--kin);letter-spacing:.1em}
+h2::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+p{margin:0}
+.note{color:var(--mute);font-size:13px;max-width:70ch}
+.note b{color:var(--washi)}
+
+/* character details */
+.setup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;padding:16px;background:var(--ai);border:1px solid var(--kin-dim)}
+.setup label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute);min-width:0}
+.setup label.wide{grid-column:1 / -1}
+.setup input{font:inherit;font-size:14px;color:var(--washi);background:var(--night);border:1px solid var(--line);padding:8px 10px;min-width:0}
+.setup input:focus-visible{outline:2px solid var(--kin);outline-offset:-1px}
+.setup .row{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:560px){.setup{grid-template-columns:minmax(0,1fr)}}
+
+/* the order of work */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;counter-reset:step;padding:0;margin:0;list-style:none}
+.flow li{counter-increment:step;padding:10px 12px;background:var(--ai);border-top:2px solid var(--kin-dim);font-size:13px;min-width:0}
+.flow li::before{content:counter(step);display:block;font-family:var(--f-dot);color:var(--kin);font-size:18px}
+.flow li b{display:block;font-weight:700;margin-bottom:2px}
+.flow li span{color:var(--mute);font-size:12px}
+@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rules div{padding:12px 14px;border:1px solid var(--line);font-size:13px;min-width:0}
+.rules h3{margin:0 0 6px;font-family:var(--f-dot);font-weight:400;font-size:13px;color:var(--kin);letter-spacing:.08em}
+.rules ul{margin:0;padding-left:1.2em;color:var(--mute)}
+.rules li b{color:var(--washi)}
+@media (max-width:640px){.rules{grid-template-columns:minmax(0,1fr)}}
+
+/* filter */
+.filter{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.filter span{font-size:12px;color:var(--mute);margin-right:4px}
+.chip{font-family:var(--f-dot);font-size:12.5px;color:var(--mute);background:transparent;border:1px solid var(--line);padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{color:var(--night);background:var(--kin);border-color:var(--kin)}
+.chip:focus-visible,.btn:focus-visible{outline:2px solid var(--kin);outline-offset:2px}
+
+/* summary table */
+.tbl{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:var(--f-dot);font-weight:400;font-size:12px;color:var(--kin);background:var(--ai);letter-spacing:.06em}
+td.id,td.n{font-family:var(--f-dot);white-space:nowrap;font-variant-numeric:tabular-nums}
+td a{color:var(--washi);text-decoration:none;border-bottom:1px dotted var(--mute)}
+.pri{display:inline-block;font-family:var(--f-dot);font-size:11px;padding:0 6px;border:1px solid currentColor;white-space:nowrap}
+.pri[data-p="必須"]{color:var(--shu)}
+.pri[data-p="標準"]{color:var(--kin)}
+.pri[data-p="所作"],.pri[data-p="任意"]{color:var(--mute)}
+
+/* prompt cards */
+.cards{display:flex;flex-direction:column;gap:14px}
+.card{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px;background:var(--ai);border:1px solid var(--line);scroll-margin-top:12px}
+.card[hidden]{display:none}
+.card .pic{display:flex;flex-direction:column;gap:6px;align-items:center}
+.card canvas{width:150px;height:150px;image-rendering:pixelated;background:#141a46;border:1px solid var(--line)}
+.card .pic span{font-size:11px;color:var(--mute);text-align:center}
+.card .body{display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;font-family:var(--f-disp);font-weight:400;font-size:19px}
+.card h3 .id{font-family:var(--f-dot);font-size:13px;color:var(--kin)}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.meta span{font-family:var(--f-dot);font-size:12px;padding:2px 8px;background:var(--night);border:1px solid var(--line);color:var(--washi)}
+.meta span i{font-style:normal;color:var(--mute);margin-right:4px}
+.att{font-size:12.5px;color:var(--mute)}
+.att b{color:var(--washi)}
+textarea{width:100%;min-height:150px;resize:vertical;font:inherit;font-size:13px;line-height:1.7;color:var(--washi);background:var(--night);border:1px solid var(--line);padding:10px}
+textarea[data-dirty="1"]{border-color:var(--kin-dim)}
+textarea:focus-visible{outline:2px solid var(--kin);outline-offset:-1px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font-family:var(--f-dot);font-size:12.5px;color:var(--washi);background:var(--ai-hi);border:1px solid var(--kin-dim);padding:6px 14px;cursor:pointer}
+.btn.copy{background:var(--kin);color:var(--night);border-color:var(--kin)}
+.btn:disabled{opacity:.4;cursor:default}
+.done{font-size:12px;color:var(--ok)}
+@media (max-width:560px){.card{grid-template-columns:minmax(0,1fr)}.card .pic{flex-direction:row;align-items:center}.card canvas{width:110px;height:110px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>NINJA SAMURAI WORKOUT: GHOST ／ 侍の旅</small>新キャラ型帳</h1>
+    <p class="lede">今の侍と同じ技をすべて出せるキャラを作るための、構え16枚と動き31本のプロンプト一覧です。キャラの名前・見た目・武器を一度入れると、すべてのプロンプトに反映されます。プロンプトは枠の中で直接書き換えられます。</p>
+  </header>
+
+  <section aria-labelledby="h-setup">
+    <h2 id="h-setup">キャラの設定 <span class="tag">ここを書き換える</span></h2>
+    <div class="setup">
+      <label>呼び名<input id="fName" value="侍"></label>
+      <label>武器<input id="fWeapon" value="刀"></label>
+      <label class="wide">見た目の特徴（色・服・髪など。毎回同じ見た目を保つために入れる）<input id="fLook" value="鉢巻と髷、橙と黒の鎧の羽織、濃い紺の袴、白い帯"></label>
+      <label>武器の持ち方<input id="fHold" value="両手で柄を握り"></label>
+      <label>武器のしまい方（〜た／〜たまま に続く形）<input id="fSheath" value="左腰の鞘に納め"></label>
+      <div class="row"><button type="button" class="btn" id="resetFields">今の侍の値に戻す</button><span class="note">入れた値はこの端末に残ります。</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-flow">
+    <h2 id="h-flow">作る順番</h2>
+    <ol class="flow">
+      <li><b>立ち絵（K00）</b><span>キャラ絵と侍の立ち絵を添付し、Nano Bananaで基本のドット絵を作る</span></li>
+      <li><b>構え（K01〜K15）</b><span>K00の画像を添付して、残りの構えを作る</span></li>
+      <li><b>Claudeへ送る</b><span>構えの画像を送る。足の位置をそろえ、透過の開始・終了画像にして返す</span></li>
+      <li><b>動き（M01〜M31）</b><span>PixelLabで、開始と終了の画像の間を補間する</span></li>
+      <li><b>GIFを送る</b><span>Claudeがアトラスにまとめ、ゲームに入れる</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="h-rules">
+    <h2 id="h-rules">共通の決まり</h2>
+    <div class="rules">
+      <div>
+        <h3>Nano Banana（構え）</h3>
+        <ul>
+          <li><b>K00</b>だけ、キャラ絵（イラストでもよい）と、画風の見本として今の侍の立ち絵（kage_chudan_250.png）を添付する。</li>
+          <li><b>K01以降</b>は、できあがった<b>K00の画像</b>を添付する。服や武器がぶれたら、K01も一緒に添付する。</li>
+          <li>背景は薄い灰色（#B0B0B0）。マゼンタは出力を汚したので使わない。</li>
+          <li>1回に1ポーズ。右向き。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>PixelLab（動き）</h3>
+        <ul>
+          <li>開始と終了の画像は、Claudeが位置をそろえた<b>透過の250×250</b>を使う。</li>
+          <li>フレーム数は<b>偶数で4〜12</b>。最初のコマは数に入らない。</li>
+          <li>背景は<b>なし</b>。</li>
+          <li><b>ループ</b>する動きは、開始と終了に同じ画像を入れる。</li>
+          <li>刀以外の武器のときは、「居合」は「しまった武器を一気に構えて振る」、「血振り」は「武器を払う」と読み替える。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-sum">
+    <h2 id="h-sum">動きの一覧 <span class="tag">31本</span></h2>
+    <p class="note" style="margin-bottom:10px"><b>必須</b>の11本（構えはK00・K01・K02・K03・K12・K13の6枚）がそろえば、旅を歩いて戦えます。<b>標準</b>までそろえると、今の侍と同じ技（昇龍閃・燕返し・鷹落とし・山崩し・雷切・風刃・旋風・五月雨突き・鬼神斬・駆け抜け一閃）がすべて出せます。<b>所作</b>は戦いのあとの見栄えです。</p>
+    <div class="filter" role="group" aria-label="優先で絞る"><span>絞る</span>
+      <button type="button" class="chip" data-f="all" aria-pressed="true">すべて</button>
+      <button type="button" class="chip" data-f="必須" aria-pressed="false">必須</button>
+      <button type="button" class="chip" data-f="標準" aria-pressed="false">標準</button>
+      <button type="button" class="chip" data-f="所作" aria-pressed="false">所作・任意</button>
+    </div>
+    <div class="tbl" style="margin-top:10px"><table><thead><tr><th>番号</th><th>動き</th><th>優先</th><th>始まり → 終わり</th><th>コマ</th><th>使う場面</th></tr></thead><tbody id="sumBody"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-k">
+    <h2 id="h-k">構え <span class="tag">Nano Banana・16枚</span></h2>
+    <p class="note" style="margin-bottom:12px">左の絵は今の侍の同じ構えです（見本）。新しいキャラでも、この形をそろえると動きどうしがつながります。</p>
+    <div class="cards" id="kCards"></div>
+  </section>
+
+  <section aria-labelledby="h-m">
+    <h2 id="h-m">動き <span class="tag">PixelLab・31本</span></h2>
+    <p class="note" style="margin-bottom:12px">左の絵は今の侍の同じ動きをくり返し再生しています。開始・終了の画像は、上の構えの番号のものを使います。</p>
+    <div class="cards" id="mCards"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const ATLAS = {"walk":[{"x":1375,"y":1257,"w":64,"h":124,"ox":-29,"oy":-124},{"x":1440,"y":1257,"w":63,"h":126,"ox":-25,"oy":-126},{"x":1504,"y":1257,"w":61,"h":128,"ox":-21,"oy":-128},{"x":1566,"y":1257,"w":62,"h":127,"ox":-20,"oy":-127},{"x":1629,"y":1257,"w":64,"h":126,"ox":-21,"oy":-124},{"x":1694,"y":1257,"w":65,"h":127,"ox":-23,"oy":-125},{"x":1760,"y":1257,"w":63,"h":130,"ox":-24,"oy":-128}],"r01":[{"x":1950,"y":1525,"w":90,"h":119,"ox":-42,"oy":-120},{"x":0,"y":1678,"w":98,"h":121,"ox":-44,"oy":-119},{"x":99,"y":1678,"w":92,"h":122,"ox":-44,"oy":-120},{"x":192,"y":1678,"w":84,"h":121,"ox":-42,"oy":-120}],"b01":[{"x":0,"y":1525,"w":134,"h":117,"ox":-46,"oy":-121},{"x":135,"y":1525,"w":136,"h":115,"ox":-48,"oy":-119},{"x":272,"y":1525,"w":135,"h":117,"ox":-48,"oy":-121},{"x":408,"y":1525,"w":137,"h":118,"ox":-46,"oy":-122}],"b02":[{"x":546,"y":1525,"w":139,"h":118,"ox":-54,"oy":-122},{"x":686,"y":1525,"w":156,"h":119,"ox":-76,"oy":-123},{"x":843,"y":1525,"w":139,"h":121,"ox":-54,"oy":-124},{"x":983,"y":1525,"w":137,"h":118,"ox":-46,"oy":-122}],"d02":[{"x":880,"y":551,"w":142,"h":122,"ox":-52,"oy":-122},{"x":1023,"y":551,"w":129,"h":118,"ox":-46,"oy":-122},{"x":1153,"y":551,"w":90,"h":119,"ox":-46,"oy":-122},{"x":1244,"y":551,"w":90,"h":122,"ox":-46,"oy":-125},{"x":1335,"y":551,"w":111,"h":122,"ox":-68,"oy":-125},{"x":1447,"y":551,"w":106,"h":122,"ox":-62,"oy":-125},{"x":1554,"y":551,"w":100,"h":122,"ox":-56,"oy":-125}],"c9":[{"x":1095,"y":283,"w":72,"h":121,"ox":-32,"oy":-122},{"x":1168,"y":283,"w":72,"h":121,"ox":-32,"oy":-122},{"x":1241,"y":283,"w":73,"h":122,"ox":-32,"oy":-121},{"x":1315,"y":283,"w":79,"h":119,"ox":-36,"oy":-118},{"x":1395,"y":283,"w":84,"h":121,"ox":-42,"oy":-120}],"c10":[{"x":1480,"y":283,"w":84,"h":121,"ox":-42,"oy":-120},{"x":1565,"y":283,"w":89,"h":121,"ox":-48,"oy":-120},{"x":1655,"y":283,"w":100,"h":119,"ox":-58,"oy":-118},{"x":1756,"y":283,"w":115,"h":120,"ox":-68,"oy":-119},{"x":1872,"y":283,"w":166,"h":123,"ox":-68,"oy":-122}],"atk":[{"x":0,"y":1257,"w":140,"h":121,"ox":-48,"oy":-121},{"x":141,"y":1257,"w":147,"h":121,"ox":-52,"oy":-121},{"x":289,"y":1257,"w":182,"h":131,"ox":-96,"oy":-131},{"x":472,"y":1257,"w":149,"h":134,"ox":-86,"oy":-134},{"x":622,"y":1257,"w":155,"h":120,"ox":-48,"oy":-120},{"x":778,"y":1257,"w":155,"h":120,"ox":-48,"oy":-120},{"x":934,"y":1257,"w":155,"h":120,"ox":-48,"oy":-120},{"x":1090,"y":1257,"w":143,"h":121,"ox":-48,"oy":-121},{"x":1234,"y":1257,"w":140,"h":121,"ox":-48,"oy":-121}],"d10":[{"x":0,"y":952,"w":142,"h":122,"ox":-52,"oy":-122},{"x":143,"y":952,"w":126,"h":117,"ox":-48,"oy":-121},{"x":270,"y":952,"w":112,"h":127,"ox":-68,"oy":-131},{"x":383,"y":952,"w":150,"h":120,"ox":-80,"oy":-122},{"x":534,"y":952,"w":123,"h":116,"ox":-50,"oy":-115}],"d11":[{"x":658,"y":952,"w":125,"h":116,"ox":-50,"oy":-115},{"x":784,"y":952,"w":118,"h":124,"ox":-56,"oy":-126},{"x":903,"y":952,"w":123,"h":133,"ox":-68,"oy":-139},{"x":1027,"y":952,"w":132,"h":57,"ox":-66,"oy":-77},{"x":1160,"y":952,"w":141,"h":58,"ox":-68,"oy":-75}],"c2":[{"x":795,"y":0,"w":142,"h":122,"ox":-52,"oy":-122},{"x":938,"y":0,"w":106,"h":117,"ox":-46,"oy":-121},{"x":1045,"y":0,"w":129,"h":118,"ox":-80,"oy":-119},{"x":1175,"y":0,"w":127,"h":119,"ox":-80,"oy":-119},{"x":1303,"y":0,"w":131,"h":144,"ox":-40,"oy":-144}],"c3":[{"x":1435,"y":0,"w":131,"h":144,"ox":-40,"oy":-144},{"x":1567,"y":0,"w":117,"h":145,"ox":-38,"oy":-145},{"x":1685,"y":0,"w":129,"h":125,"ox":-40,"oy":-130},{"x":1815,"y":0,"w":144,"h":121,"ox":-46,"oy":-126},{"x":0,"y":146,"w":137,"h":118,"ox":-46,"oy":-122}],"c1":[{"x":0,"y":0,"w":131,"h":144,"ox":-40,"oy":-144},{"x":132,"y":0,"w":146,"h":126,"ox":-56,"oy":-125},{"x":279,"y":0,"w":174,"h":121,"ox":-78,"oy":-120},{"x":454,"y":0,"w":173,"h":119,"ox":-76,"oy":-118},{"x":628,"y":0,"w":166,"h":123,"ox":-68,"oy":-122}],"d14":[{"x":389,"y":1100,"w":142,"h":122,"ox":-52,"oy":-122},{"x":532,"y":1100,"w":142,"h":118,"ox":-46,"oy":-122},{"x":675,"y":1100,"w":101,"h":131,"ox":-48,"oy":-133},{"x":777,"y":1100,"w":94,"h":127,"ox":-48,"oy":-129},{"x":872,"y":1100,"w":81,"h":124,"ox":-36,"oy":-123}],"d15":[{"x":954,"y":1100,"w":81,"h":124,"ox":-36,"oy":-123},{"x":1036,"y":1100,"w":99,"h":121,"ox":-52,"oy":-120},{"x":1136,"y":1100,"w":126,"h":117,"ox":-76,"oy":-118},{"x":1263,"y":1100,"w":91,"h":111,"ox":-48,"oy":-113},{"x":1355,"y":1100,"w":120,"h":108,"ox":-48,"oy":-113}],"c11":[{"x":0,"y":408,"w":142,"h":122,"ox":-52,"oy":-122},{"x":143,"y":408,"w":143,"h":120,"ox":-50,"oy":-120},{"x":287,"y":408,"w":136,"h":117,"ox":-44,"oy":-121},{"x":424,"y":408,"w":76,"h":142,"ox":-36,"oy":-143},{"x":501,"y":408,"w":73,"h":135,"ox":-32,"oy":-134}],"c4":[{"x":138,"y":146,"w":73,"h":135,"ox":-32,"oy":-134},{"x":212,"y":146,"w":94,"h":130,"ox":-32,"oy":-129},{"x":307,"y":146,"w":78,"h":120,"ox":-32,"oy":-119},{"x":386,"y":146,"w":94,"h":123,"ox":-32,"oy":-122},{"x":481,"y":146,"w":73,"h":135,"ox":-32,"oy":-134}],"c6":[{"x":1241,"y":146,"w":73,"h":135,"ox":-32,"oy":-134},{"x":1315,"y":146,"w":77,"h":134,"ox":-36,"oy":-133},{"x":1393,"y":146,"w":100,"h":136,"ox":-44,"oy":-135},{"x":1494,"y":146,"w":145,"h":119,"ox":-56,"oy":-118},{"x":1640,"y":146,"w":143,"h":116,"ox":-54,"oy":-116}],"c7":[{"x":1784,"y":146,"w":143,"h":116,"ox":-54,"oy":-116},{"x":0,"y":283,"w":140,"h":118,"ox":-52,"oy":-119},{"x":141,"y":283,"w":134,"h":121,"ox":-48,"oy":-122},{"x":276,"y":283,"w":135,"h":124,"ox":-50,"oy":-125},{"x":412,"y":283,"w":137,"h":118,"ox":-46,"oy":-122}],"c12":[{"x":575,"y":408,"w":142,"h":122,"ox":-52,"oy":-122},{"x":718,"y":408,"w":123,"h":119,"ox":-62,"oy":-121},{"x":842,"y":408,"w":131,"h":121,"ox":-80,"oy":-121},{"x":974,"y":408,"w":121,"h":119,"ox":-78,"oy":-120},{"x":1096,"y":408,"w":166,"h":123,"ox":-68,"oy":-122}],"c5":[{"x":555,"y":146,"w":142,"h":122,"ox":-52,"oy":-122},{"x":698,"y":146,"w":112,"h":118,"ox":-48,"oy":-122},{"x":811,"y":146,"w":159,"h":122,"ox":-92,"oy":-122},{"x":971,"y":146,"w":131,"h":119,"ox":-84,"oy":-122},{"x":1103,"y":146,"w":137,"h":118,"ox":-46,"oy":-122}],"d03":[{"x":1655,"y":551,"w":120,"h":108,"ox":-48,"oy":-113},{"x":1776,"y":551,"w":120,"h":102,"ox":-46,"oy":-107},{"x":1897,"y":551,"w":120,"h":96,"ox":-46,"oy":-101},{"x":0,"y":677,"w":106,"h":98,"ox":-48,"oy":-103},{"x":107,"y":677,"w":82,"h":116,"ox":-44,"oy":-110},{"x":190,"y":677,"w":136,"h":129,"ox":-62,"oy":-134},{"x":327,"y":677,"w":117,"h":146,"ox":-58,"oy":-140}],"d04":[{"x":445,"y":677,"w":68,"h":142,"ox":-30,"oy":-152},{"x":514,"y":677,"w":75,"h":136,"ox":-36,"oy":-149},{"x":590,"y":677,"w":101,"h":118,"ox":-40,"oy":-131},{"x":692,"y":677,"w":96,"h":123,"ox":-42,"oy":-106},{"x":789,"y":677,"w":104,"h":118,"ox":-42,"oy":-97},{"x":894,"y":677,"w":122,"h":122,"ox":-42,"oy":-97},{"x":1017,"y":677,"w":83,"h":114,"ox":-42,"oy":-97}],"d05":[{"x":1101,"y":677,"w":120,"h":108,"ox":-48,"oy":-113},{"x":1222,"y":677,"w":121,"h":105,"ox":-48,"oy":-110},{"x":1344,"y":677,"w":124,"h":108,"ox":-48,"oy":-113},{"x":1469,"y":677,"w":112,"h":113,"ox":-48,"oy":-117},{"x":1582,"y":677,"w":116,"h":113,"ox":-48,"oy":-117},{"x":1699,"y":677,"w":122,"h":113,"ox":-48,"oy":-117},{"x":1822,"y":677,"w":122,"h":113,"ox":-48,"oy":-117}],"d12":[{"x":1302,"y":952,"w":120,"h":108,"ox":-48,"oy":-113},{"x":1423,"y":952,"w":87,"h":109,"ox":-46,"oy":-104},{"x":1511,"y":952,"w":91,"h":113,"ox":-48,"oy":-117},{"x":1603,"y":952,"w":126,"h":126,"ox":-44,"oy":-130},{"x":1730,"y":952,"w":129,"h":147,"ox":-40,"oy":-146}],"d13":[{"x":1860,"y":952,"w":129,"h":147,"ox":-40,"oy":-146},{"x":0,"y":1100,"w":121,"h":155,"ox":-50,"oy":-140},{"x":122,"y":1100,"w":125,"h":135,"ox":-58,"oy":-117},{"x":248,"y":1100,"w":73,"h":135,"ox":-32,"oy":-125},{"x":322,"y":1100,"w":66,"h":156,"ox":-26,"oy":-155}],"b03":[{"x":1121,"y":1525,"w":73,"h":152,"ox":-34,"oy":-138},{"x":1195,"y":1525,"w":135,"h":116,"ox":-46,"oy":-108},{"x":1331,"y":1525,"w":157,"h":111,"ox":-60,"oy":-110},{"x":1489,"y":1525,"w":152,"h":113,"ox":-58,"oy":-108},{"x":1642,"y":1525,"w":153,"h":112,"ox":-58,"oy":-107},{"x":1796,"y":1525,"w":153,"h":111,"ox":-58,"oy":-105}],"d09":[{"x":1292,"y":824,"w":142,"h":122,"ox":-52,"oy":-122},{"x":1435,"y":824,"w":123,"h":121,"ox":-48,"oy":-124},{"x":1559,"y":824,"w":137,"h":124,"ox":-76,"oy":-125},{"x":1697,"y":824,"w":117,"h":122,"ox":-70,"oy":-124},{"x":1815,"y":824,"w":110,"h":121,"ox":-54,"oy":-122}],"d08":[{"x":801,"y":824,"w":110,"h":121,"ox":-54,"oy":-122},{"x":912,"y":824,"w":111,"h":123,"ox":-50,"oy":-124},{"x":1024,"y":824,"w":106,"h":126,"ox":-40,"oy":-127},{"x":1131,"y":824,"w":87,"h":127,"ox":-28,"oy":-127},{"x":1219,"y":824,"w":72,"h":121,"ox":-32,"oy":-122}],"d07":[{"x":443,"y":824,"w":72,"h":121,"ox":-32,"oy":-122},{"x":516,"y":824,"w":73,"h":121,"ox":-30,"oy":-122},{"x":590,"y":824,"w":71,"h":122,"ox":-32,"oy":-122},{"x":662,"y":824,"w":69,"h":122,"ox":-30,"oy":-122},{"x":732,"y":824,"w":68,"h":122,"ox":-32,"oy":-121}]};
+const K = [["K00", "立ち（基本の絵）", ["d07", 0], false, "背すじを伸ばして自然に立つ。{武器}は{しまい}た状態。両腕は体の横に下ろす。足は肩幅に開き、両足とも地面につく。"], ["K01", "中段の構え", ["b01", 0], false, "腰を落とし、左足を前・右足を後ろに大きく開いて低く構える。{武器}を{持ち方}、体の前で先端を右前の下に向けて構える。今にも斬りかかれる戦いの基本姿勢。"], ["K02", "居合腰", ["c9", 4], false, "{武器}は{しまい}たまま、右手を持ち手にかけ、腰を深く落として前かがみになる。一気に抜き放つ直前の姿勢。"], ["K03", "振り抜き", ["c10", 4], false, "右足を前へ大きく踏み込み、後ろ足を伸ばした低い姿勢。{武器}を右へ水平に振り抜いた直後で、{武器}を胸の高さで前（右）へまっすぐ伸ばしている。"], ["K04", "切り上げの後", ["c2", 4], false, "{武器}を下から右上へ斬り上げきった姿勢。前の膝を高く上げて伸び上がり、{武器}を右斜め上へ伸ばしている。"], ["K05", "上段", ["c11", 4], false, "背すじを伸ばして立ち、{武器}を頭上に振りかぶって構える。"], ["K06", "袈裟の後", ["c6", 4], false, "{武器}を頭上から前の下へ斜めに振り下ろした直後。上半身は前へ倒れ、{武器}の先は右前の下を向く。"], ["K07", "脇に立てる", ["d14", 4], false, "突いた{武器}を引き戻し、体の左側（後ろ側）で縦に立てて持つ。足は前後に開く。"], ["K08", "屈み", ["d15", 4], false, "深くしゃがみ込んだ低い姿勢。{武器}は先端を前の下に向けて構える。次の跳躍や斬り上げに移る直前。"], ["K09", "空中の振りかぶり", ["d04", 0], true, "跳び上がった空中で膝をたたみ、{武器}を頭上に振りかぶっている。足は地面から離れている。"], ["K10", "昇竜の頂点", ["d12", 4], true, "跳び上がった空中で、{武器}を右斜め上へまっすぐ突き上げ、体も伸びきっている。片膝を上げ、足は地面から離れている。"], ["K11", "空中の横一閃", ["b03", 5], true, "跳び上がった頂点の空中で、{武器}を右へ水平に振り抜いた直後。{武器}は胸の高さで前へまっすぐ伸び、上半身は前傾し、膝は体の下にたたむ。髪と服は勢いで後ろへなびく。"], ["K12", "被弾", ["d10", 4], false, "正面から打たれて、上半身が後ろへ大きくのけぞる。{武器}は手に持ったまま。苦しげな顔。"], ["K13", "ダウン", ["d11", 4], false, "仰向けに地面へ倒れて横たわる。頭が左、足が右。{武器}はそばに落ちている。"], ["K14", "血振りの後", ["d09", 4], false, "{武器}を右下へ払った直後。背すじを伸ばして立ち、{武器}を体の右側で先端を真下に向けて持つ。"], ["K15", "一礼", ["d07", 4], false, "直立したまま、右（相手）に向かって頭と上半身を軽く下げて礼をする。{武器}は{しまい}た状態。"]], M = [["M01", "歩き", "必須", "K00", "K00", 6, true, ["walk", 0, 6], "旅の途中", "{武器}を{しまい}たまま、落ち着いた足取りで右へ歩く。左右の足を交互に出し、腕は自然に振る。最初と最後のコマは同じ姿勢でつながる。"], ["M02", "走り", "必須", "K00", "K00", 4, true, ["r01", 0, 3], "妖怪を見つけて駆け寄る", "{武器}を{しまい}たまま、前かがみで右へ素早く走る。足を大きく踏み出し、髪や服の裾が後ろへなびく。最初と最後のコマは同じ姿勢でつながる。"], ["M03", "中段の呼吸", "必須", "K01", "K01", 4, true, ["b01", 0, 3], "技と技の間の待ち", "中段に構えたまま、ゆっくり深く呼吸する。肩と胸がわずかに上下し、構えは崩さない。最初と最後のコマは同じ姿勢。"], ["M04", "摺り足", "必須", "K01", "K01", 4, true, ["b02", 0, 3], "間合いを詰める", "中段に構えたまま、すり足で前（右）へ小さく進む。前の足を滑らせて出し、後ろの足を引き寄せる。上半身と{武器}の高さは変えない。最初と最後のコマは同じ姿勢。"], ["M05", "納刀", "必須", "K01", "K00", 6, false, ["d02", 0, 6], "戦いの終わり。逆再生で抜刀", "中段の構えから{武器}を{しまい}、背すじを伸ばして直立する。"], ["M06", "居合腰", "必須", "K00", "K02", 4, false, ["c9", 0, 4], "大将・ボスに気づく。逆再生で残心", "直立から腰を深く落として前かがみになり、右手をしまった{武器}の持ち手にかける。抜き放つ直前で止まる。"], ["M07", "居合斬り", "必須", "K02", "K03", 4, false, ["c10", 0, 4], "初撃・雷切・駆け抜け一閃", "居合腰から一気に{武器}を抜き放ち、右へ水平に斬り払う。前足を大きく踏み込み、最後は{武器}を胸の高さで前へまっすぐ伸ばして止まる。"], ["M08", "横一文字", "必須", "K01", "K03", 4, false, ["atk", 0, 4], "基本技・風刃・鬼神斬", "中段の構えから{武器}を右へ水平に素早く振り抜き、前足を踏み込む。最後は{武器}を胸の高さで前へまっすぐ伸ばして止まる。"], ["M09", "振りの戻り", "必須", "K03", "K01", 4, false, ["atk", 4, 8], "振り抜きから構えに戻る", "前へ振り抜いた姿勢から、踏み込んだ足を戻しながら{武器}を引き、中段の構えに戻る。"], ["M10", "被弾", "必須", "K01", "K12", 4, false, ["d10", 0, 4], "攻撃を受ける。逆再生で立ち直り", "中段の構えから、正面から打たれて上半身が後ろへのけぞる。{武器}は手放さない。"], ["M11", "ダウン", "必須", "K12", "K13", 4, false, ["d11", 0, 4], "やられて鳥居へ戻る", "のけぞった姿勢から後ろへよろけ、膝が崩れて仰向けに倒れる。最後は地面に横たわる。"], ["M12", "切り上げ", "標準", "K01", "K04", 4, false, ["c2", 0, 4], "基本技・対空", "中段の構えから{武器}を下から右上へ鋭く斬り上げ、前の膝を高く上げて伸び上がる。最後は{武器}を右斜め上へ振り上げきって止まる。"], ["M13", "切り上げの戻り", "標準", "K04", "K01", 4, false, ["c3", 0, 4], "切り上げから構えに戻る", "{武器}を右斜め上へ振り上げきった姿勢から、膝を下ろして{武器}を下げ、中段の構えに戻る。"], ["M14", "返し斬り", "標準", "K04", "K03", 4, false, ["c1", 0, 4], "基本技・鬼神斬", "{武器}を振り上げた姿勢から、手首を返して前へ斬り下ろし、前足を踏み込む。最後は{武器}を胸の高さで前へ伸ばして止まる。"], ["M15", "突き", "標準", "K01", "K07", 4, false, ["d14", 0, 4], "基本技・五月雨突き", "中段の構えから前足を踏み込み、{武器}をまっすぐ前へ鋭く突き出す。突いたあと{武器}を引き、体の左側で縦に立てて止まる。"], ["M16", "斬り下ろし", "標準", "K07", "K08", 4, false, ["d15", 0, 4], "突きの続き・鬼神斬", "{武器}を体の横で縦に立てた姿勢から、前へ大きく斬り下ろし、深くしゃがみ込む。最後は{武器}の先端を前の下に向けて止まる。"], ["M17", "振りかぶり", "標準", "K01", "K05", 4, false, ["c11", 0, 4], "山崩しの溜め", "中段の構えから、{武器}を頭上へ大きく振りかぶり、背すじを伸ばす。最後は{武器}を頭の上で構えて止まる。"], ["M18", "上段一周", "任意", "K05", "K05", 4, true, ["c4", 0, 4], "上段からの小さな振り（なくても動く）", "頭上に構えた{武器}を、前へ小さく振り下ろしてから、また頭上に構え直す。最初と最後は同じ姿勢。"], ["M19", "袈裟斬り", "標準", "K05", "K06", 4, false, ["c6", 0, 4], "山崩し・鬼神斬", "頭上に構えた{武器}を、前の下へ斜めに渾身の力で振り下ろす。上半身は前へ倒れ込み、最後は{武器}を前の下へ振り切って止まる。"], ["M20", "袈裟の戻り", "標準", "K06", "K01", 4, false, ["c7", 0, 4], "袈裟斬りから構えに戻る", "前の下へ振り切った姿勢から、上半身を起こして{武器}を引き上げ、中段の構えに戻る。"], ["M21", "回転斬り", "標準", "K01", "K03", 4, false, ["c12", 0, 4], "旋風・鬼神斬", "中段の構えから、{武器}を水平に構えたまま体ごと一回転して周りを斬り払う。途中で正面と背中が見え、最後は右を向いて{武器}を胸の高さで前へ伸ばして止まる。"], ["M22", "中段一周", "標準", "K01", "K01", 4, false, ["c5", 0, 4], "旋風・鬼神斬", "中段の構えから、{武器}を体の周りで水平に大きく一周させ、また中段の構えに戻る。足の位置は変えない。"], ["M23", "飛燕", "標準", "K08", "K09", 6, false, ["d03", 0, 6], "燕返し・鷹落とし（跳躍）", "深くしゃがんだ姿勢から高く跳び上がり、膝をたたんで空中へ。上昇しながら{武器}を頭上へ振りかぶる。最後は空中で{武器}を頭上に構えて止まる。"], ["M24", "兜割り", "標準", "K09", "K08", 6, false, ["d04", 0, 6], "燕返し・鷹落とし（急降下）", "空中で頭上に構えた{武器}を、落下しながら真下へ叩きつけるように振り下ろし、深くしゃがんで着地する。最後は{武器}の先端を前の下に向けて止まる。"], ["M25", "斬り上げ突き", "標準", "K08", "K01", 6, false, ["d05", 0, 6], "屈みからの立ち上がり", "深くしゃがんだ姿勢から、伸び上がりながら{武器}を斬り上げ、そのまま前へ突き出す。最後は中段の構えで止まる。"], ["M26", "昇竜", "標準", "K08", "K10", 4, false, ["d12", 0, 4], "昇龍閃・燕返し", "深くしゃがんだ姿勢から、{武器}を右斜め上へ突き上げながら高く跳び上がる。最後は空中で{武器}を斜め上へ伸ばしきって止まる。"], ["M27", "昇竜の着地", "標準", "K10", "K05", 4, false, ["d13", 0, 4], "空中から地上へ戻る", "空中で{武器}を斜め上へ伸ばした姿勢から落ちてきて着地し、{武器}を頭上に構えて立つ。"], ["M28", "空中横一閃", "標準", "K09", "K11", 6, false, ["b03", 0, 5], "昇龍閃・燕返し（空中の連撃）", "空中で頭上に構えた{武器}を、右へ一気に水平に振り抜く。体は斬る方向へひねって前傾し、膝はたたんだまま、最初から最後まで空中にいる。"], ["M29", "血振り", "所作", "K01", "K14", 4, false, ["d09", 0, 4], "戦いの終わりの所作", "中段の構えから、{武器}を右下へ鋭く払い、血を振り落とす。最後は{武器}を体の右側で先端を真下に向けて止まる。"], ["M30", "血振りからの納刀", "所作", "K14", "K00", 4, false, ["d08", 0, 4], "戦いの終わりの所作", "{武器}の先端を下に向けた姿勢から、ゆっくり{武器}を{しまい}、背すじを伸ばして直立する。"], ["M31", "一礼", "所作", "K00", "K15", 4, false, ["d07", 0, 4], "大将・ボスを倒したあと。逆再生で頭を上げる", "直立から、相手に向かって静かに頭を下げて一礼する。最後は頭を下げたまま止まる。"]];
+const $ = id => document.getElementById(id);
+const FIELDS = { 名: 'fName', 武器: 'fWeapon', 特徴: 'fLook', 持ち方: 'fHold', しまい: 'fSheath' };
+const DEF = { fName: '侍', fWeapon: '刀', fLook: '鉢巻と髷、橙と黒の鎧の羽織、濃い紺の袴、白い帯', fHold: '両手で柄を握り', fSheath: '左腰の鞘に納め' };
+try { for (const id in DEF){ const v = localStorage.getItem('katachou-' + id); if (v != null) $(id).value = v; } } catch (e) {}
+const val = k => ($(FIELDS[k]).value || '').trim() || DEF[FIELDS[k]];
+const fill = s => s.replace(/\{(名|武器|特徴|持ち方|しまい)\}/g, (_, k) => val(k));
+const KN = Object.fromEntries(K.map(k => [k[0], k[1]]));
+
+/* ---- the prompts ---- */
+function poseText(k){
+  const air = k[3], id = k[0];
+  if (id === 'K00') return [
+    '1枚目の添付画像のキャラクター（{名}）を、2Dの横スクロールアクションゲーム用のドット絵キャラクターとして描き直す。顔・髪型・服装・色・{武器}は1枚目の画像のとおりにする。',
+    '画風・ドットの大きさ・頭身・輪郭線・陰影の付け方は、2枚目の添付画像（侍）とそろえる。ただし、キャラクターは1枚目のとおりにする。',
+    '見た目：{特徴}',
+    '武器：{武器}',
+    'ポーズは1つだけ：' + k[4],
+    '真横から見た図で、体は右を向く（右が前）。',
+    '正方形の画像で、頭のてっぺんから足の裏までが画像の高さの約6割、足の裏は画像の下から約2割の高さ。全身が入り、左右に余白を残す。',
+    'ドット絵。ドットの縁はくっきり、アンチエイリアスなし、ぼかしなし、濃い輪郭線。',
+    'エフェクト、地面の影、文字は描かない。',
+    '背景は平らな薄い灰色（#B0B0B0）だけ。'
+  ].join('\n');
+  const ground = id === 'K13' ? '体は、添付画像の足の裏と同じ高さの地面に横たわる。' : air ? '足は地面から離れ、体は添付画像より高い位置にある（跳んでいる）。' : '足の裏の高さは添付画像と同じにそろえる。';
+  return [
+    '添付画像の{名}と完全に同じキャラクターとして描くこと。顔・髪型・体つき・服装・色・{武器}・ドットの大きさ・輪郭線の描き方を、すべてそのまま保つ。',
+    '見た目：{特徴}',
+    '武器：{武器}',
+    'ポーズは1つだけ：' + k[4],
+    '真横から見た図で、体は右を向く（右が前）。2Dの横スクロールアクションゲームのキャラクター。',
+    '大きさは添付画像と同じにし、全身が入るように上下左右に余白を残す。' + ground,
+    'ドット絵。ドットの縁はくっきり、アンチエイリアスなし、ぼかしなし、色数は添付画像と同じ。',
+    '斬撃や光のエフェクト、動きの線、地面の影、文字は描かない。',
+    '背景は平らな薄い灰色（#B0B0B0）だけ。'
+  ].join('\n');
+}
+function moveText(m){
+  return '{名}が、' + m[9] + '\n真横から見た右向きのまま。{武器}の軌跡・斬撃・光などのエフェクトは描かない。';
+}
+
+/* ---- sample drawing: the current samurai, from the game's sheet ---- */
+const hero = new Image(); hero.src = 'hero.png';
+function drawPose(c, clip, i){
+  const f = ATLAS[clip] && ATLAS[clip][i]; c.clearRect(0, 0, 150, 150);
+  c.fillStyle = '#231d44'; c.fillRect(0, 140, 150, 10);
+  if (!f || !hero.complete || !hero.naturalWidth) return;
+  const s = 0.82, x = 66, y = clip === 'd11' && i > 0 ? 140 - (f.oy + f.h) * s : 140;
+  c.imageSmoothingEnabled = false;
+  c.drawImage(hero, f.x, f.y, f.w, f.h, Math.round(x + f.ox * s), Math.round(y + f.oy * s), Math.round(f.w * s), Math.round(f.h * s));
+}
+const ANIM = [];
+
+/* ---- cards ---- */
+function card(kind, data){
+  const isK = kind === 'K', id = data[0];
+  const el = document.createElement('article'); el.className = 'card'; el.id = id;
+  if (!isK) el.dataset.p = data[2];
+  const pic = document.createElement('div'); pic.className = 'pic';
+  const cv = document.createElement('canvas'); cv.width = 150; cv.height = 150; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', '今の侍の' + data[1] + 'の見本');
+  const cap = document.createElement('span'); cap.textContent = '見本：今の侍';
+  pic.append(cv, cap);
+  const body = document.createElement('div'); body.className = 'body';
+  const h = document.createElement('h3'); h.innerHTML = `<span class="id">${id}</span>${data[1]}` + (isK ? '' : ` <span class="pri" data-p="${data[2]}">${data[2]}</span>`);
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const att = document.createElement('p'); att.className = 'att';
+  if (isK){
+    const uses = M.filter(m => m[3] === id || m[4] === id).map(m => m[0]);
+    meta.innerHTML = `<span><i>使う動き</i>${uses.join(' ')}</span>` + (data[3] ? '<span>空中</span>' : '');
+    att.innerHTML = id === 'K00' ? '添付：<b>1枚目＝キャラ絵</b>、<b>2枚目＝今の侍の立ち絵</b>（kage_chudan_250.png）' : '添付：<b>K00の画像</b>（ぶれるときはK01も）';
+  } else {
+    meta.innerHTML = `<span><i>開始</i>${data[3]} ${KN[data[3]]}</span><span><i>終了</i>${data[4]} ${KN[data[4]]}</span><span><i>フレーム数</i>${data[5]}</span><span><i>ループ</i>${data[6] ? 'する' : 'しない'}</span><span><i>背景</i>なし</span>`;
+    att.innerHTML = `使う場面：${data[8]}`;
+  }
+  const ta = document.createElement('textarea'); ta.id = 'p-' + id; ta.spellcheck = false; ta.setAttribute('aria-label', id + ' ' + data[1] + 'のプロンプト');
+  const acts = document.createElement('div'); acts.className = 'acts';
+  const cp = document.createElement('button'); cp.type = 'button'; cp.className = 'btn copy'; cp.textContent = 'コピー';
+  const rs = document.createElement('button'); rs.type = 'button'; rs.className = 'btn'; rs.textContent = '書き換えを戻す'; rs.disabled = true;
+  const msg = document.createElement('span'); msg.className = 'done'; msg.setAttribute('aria-live', 'polite');
+  acts.append(cp, rs, msg);
+  body.append(h, meta, att, ta, acts);
+  el.append(pic, body);
+  const gen = () => isK ? poseText(data) : moveText(data);
+  const refresh = () => { if (ta.dataset.dirty !== '1') ta.value = fill(gen()); fit(); };
+  const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.max(150, ta.scrollHeight + 4) + 'px'; };
+  ta.addEventListener('input', () => { ta.dataset.dirty = '1'; rs.disabled = false; fit(); });
+  rs.addEventListener('click', () => { ta.dataset.dirty = '0'; rs.disabled = true; refresh(); });
+  cp.addEventListener('click', () => {
+    const done = () => { msg.textContent = 'コピーしました'; setTimeout(() => { msg.textContent = ''; }, 1600); };
+    try { navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); msg.textContent = '選択しました。長押しでコピー'; }); }
+    catch (e) { ta.focus(); ta.select(); msg.textContent = '選択しました。長押しでコピー'; }
+  });
+  ANIM.push(isK ? { cv, c: cv.getContext('2d'), clip: data[2][0], a: data[2][1], b: data[2][1], i: data[2][1], t: 0, still: true }
+                : { cv, c: cv.getContext('2d'), clip: data[7][0], a: data[7][1], b: data[7][2], i: data[7][1], t: 0 });
+  return { el, refresh };
+}
+const all = [];
+for (const k of K){ const r = card('K', k); $('kCards').append(r.el); all.push(r); }
+for (const m of M){ const r = card('M', m); $('mCards').append(r.el); all.push(r); }
+const refreshAll = () => all.forEach(r => r.refresh());
+refreshAll();
+for (const id in DEF) $(id).addEventListener('input', () => { try { localStorage.setItem('katachou-' + id, $(id).value); } catch (e) {} refreshAll(); });
+$('resetFields').addEventListener('click', () => { for (const id in DEF){ $(id).value = DEF[id]; try { localStorage.removeItem('katachou-' + id); } catch (e) {} } refreshAll(); });
+
+/* ---- summary table and filter ---- */
+const sb = $('sumBody');
+for (const m of M){
+  const tr = document.createElement('tr'); tr.dataset.p = m[2];
+  tr.innerHTML = `<td class="id"><a href="#${m[0]}">${m[0]}</a></td><td>${m[1]}</td><td><span class="pri" data-p="${m[2]}">${m[2]}</span></td><td>${m[3]} ${KN[m[3]]} → ${m[4]} ${KN[m[4]]}</td><td class="n">${m[5]}${m[6] ? '・ループ' : ''}</td><td>${m[8]}</td>`;
+  sb.append(tr);
+}
+const chips = [...document.querySelectorAll('.chip')];
+chips.forEach(b => b.addEventListener('click', () => {
+  const f = b.dataset.f; chips.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const show = p => f === 'all' || p === f || (f === '所作' && (p === '所作' || p === '任意'));
+  for (const tr of sb.children) tr.hidden = !show(tr.dataset.p);
+  for (const el of $('mCards').children) el.hidden = !show(el.dataset.p);
+  // key poses: only those the shown motions use
+  const used = new Set(M.filter(m => show(m[2])).flatMap(m => [m[3], m[4]]));
+  for (const el of $('kCards').children) el.hidden = f !== 'all' && !used.has(el.id);
+}));
+
+/* ---- the samples loop ---- */
+const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  for (const s of ANIM){
+    if (s.cv.offsetParent === null) continue;
+    if (s.still || still){ if (!s.drawn && hero.complete){ drawPose(s.c, s.clip, s.i); s.drawn = true; } continue; }
+    s.t += dt; const hold = s.i === s.b ? 0.5 : 0.12;
+    if (s.t >= hold || !s.drawn){ if (s.drawn){ s.t = 0; s.i = s.i >= s.b ? s.a : s.i + 1; } drawPose(s.c, s.clip, s.i); s.drawn = true; }
+  }
+  requestAnimationFrame(loop);
+}
+hero.onload = () => { ANIM.forEach(s => { s.drawn = false; }); };
+requestAnimationFrame(loop);
+})();
+</script>

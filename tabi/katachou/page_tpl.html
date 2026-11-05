@@ -1,0 +1,325 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GHOST 新キャラ型帳</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+<style>
+/* Layout: a working sheet for making a new playable character. Top: the character's details (fill once, every prompt updates).
+   Then the order of work, the key poses (Nano Banana) and the motions (PixelLab), each with a looping sample of the current samurai.
+   One night look, the same palette as the game, by choice. */
+:root{
+  --night:#0b0e26; --ai:#131a45; --ai-hi:#1b2358; --line:#2c3577;
+  --kin:#e6bb55; --kin-dim:#8a7338; --shu:#d8452c; --washi:#ece6d4; --mute:#9ea6d2; --ok:#5fd08a;
+  --f-disp:"Yuji Syuku","Yu Mincho","Hiragino Mincho ProN",serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Noto Sans JP",sans-serif;
+  --f-dot:"DotGothic16","Hiragino Kaku Gothic ProN","Yu Gothic",monospace;
+  color-scheme:dark;
+}
+html,body{background:var(--night);color:var(--washi)}
+body{font-family:var(--f-body);font-size:14px;line-height:1.65}
+*,*::before,*::after{box-sizing:border-box}
+.wrap{max-width:980px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{margin:0;font-family:var(--f-disp);font-weight:400;font-size:clamp(26px,5vw,36px);letter-spacing:.06em;color:var(--washi);text-wrap:balance}
+h1 small{display:block;font-family:var(--f-dot);font-size:12px;letter-spacing:.14em;color:var(--kin);margin-bottom:4px}
+.lede{margin:6px 0 0;color:var(--mute);max-width:65ch}
+h2{margin:0 0 12px;font-family:var(--f-disp);font-weight:400;font-size:22px;letter-spacing:.06em;display:flex;align-items:baseline;gap:12px;text-wrap:balance}
+h2 .tag{font-family:var(--f-dot);font-size:12px;color:var(--kin);letter-spacing:.1em}
+h2::after{content:"";flex:1;height:1px;background:var(--line);align-self:center}
+p{margin:0}
+.note{color:var(--mute);font-size:13px;max-width:70ch}
+.note b{color:var(--washi)}
+
+/* character details */
+.setup{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;padding:16px;background:var(--ai);border:1px solid var(--kin-dim)}
+.setup label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute);min-width:0}
+.setup label.wide{grid-column:1 / -1}
+.setup input{font:inherit;font-size:14px;color:var(--washi);background:var(--night);border:1px solid var(--line);padding:8px 10px;min-width:0}
+.setup input:focus-visible{outline:2px solid var(--kin);outline-offset:-1px}
+.setup .row{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+@media (max-width:560px){.setup{grid-template-columns:minmax(0,1fr)}}
+
+/* the order of work */
+.flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;counter-reset:step;padding:0;margin:0;list-style:none}
+.flow li{counter-increment:step;padding:10px 12px;background:var(--ai);border-top:2px solid var(--kin-dim);font-size:13px;min-width:0}
+.flow li::before{content:counter(step);display:block;font-family:var(--f-dot);color:var(--kin);font-size:18px}
+.flow li b{display:block;font-weight:700;margin-bottom:2px}
+.flow li span{color:var(--mute);font-size:12px}
+@media (max-width:760px){.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rules{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.rules div{padding:12px 14px;border:1px solid var(--line);font-size:13px;min-width:0}
+.rules h3{margin:0 0 6px;font-family:var(--f-dot);font-weight:400;font-size:13px;color:var(--kin);letter-spacing:.08em}
+.rules ul{margin:0;padding-left:1.2em;color:var(--mute)}
+.rules li b{color:var(--washi)}
+@media (max-width:640px){.rules{grid-template-columns:minmax(0,1fr)}}
+
+/* filter */
+.filter{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.filter span{font-size:12px;color:var(--mute);margin-right:4px}
+.chip{font-family:var(--f-dot);font-size:12.5px;color:var(--mute);background:transparent;border:1px solid var(--line);padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{color:var(--night);background:var(--kin);border-color:var(--kin)}
+.chip:focus-visible,.btn:focus-visible{outline:2px solid var(--kin);outline-offset:2px}
+
+/* summary table */
+.tbl{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:13px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-family:var(--f-dot);font-weight:400;font-size:12px;color:var(--kin);background:var(--ai);letter-spacing:.06em}
+td.id,td.n{font-family:var(--f-dot);white-space:nowrap;font-variant-numeric:tabular-nums}
+td a{color:var(--washi);text-decoration:none;border-bottom:1px dotted var(--mute)}
+.pri{display:inline-block;font-family:var(--f-dot);font-size:11px;padding:0 6px;border:1px solid currentColor;white-space:nowrap}
+.pri[data-p="必須"]{color:var(--shu)}
+.pri[data-p="標準"]{color:var(--kin)}
+.pri[data-p="所作"],.pri[data-p="任意"]{color:var(--mute)}
+
+/* prompt cards */
+.cards{display:flex;flex-direction:column;gap:14px}
+.card{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;padding:14px;background:var(--ai);border:1px solid var(--line);scroll-margin-top:12px}
+.card[hidden]{display:none}
+.card .pic{display:flex;flex-direction:column;gap:6px;align-items:center}
+.card canvas{width:150px;height:150px;image-rendering:pixelated;background:#141a46;border:1px solid var(--line)}
+.card .pic span{font-size:11px;color:var(--mute);text-align:center}
+.card .body{display:flex;flex-direction:column;gap:8px;min-width:0}
+.card h3{margin:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;font-family:var(--f-disp);font-weight:400;font-size:19px}
+.card h3 .id{font-family:var(--f-dot);font-size:13px;color:var(--kin)}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.meta span{font-family:var(--f-dot);font-size:12px;padding:2px 8px;background:var(--night);border:1px solid var(--line);color:var(--washi)}
+.meta span i{font-style:normal;color:var(--mute);margin-right:4px}
+.att{font-size:12.5px;color:var(--mute)}
+.att b{color:var(--washi)}
+textarea{width:100%;min-height:150px;resize:vertical;font:inherit;font-size:13px;line-height:1.7;color:var(--washi);background:var(--night);border:1px solid var(--line);padding:10px}
+textarea[data-dirty="1"]{border-color:var(--kin-dim)}
+textarea:focus-visible{outline:2px solid var(--kin);outline-offset:-1px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font-family:var(--f-dot);font-size:12.5px;color:var(--washi);background:var(--ai-hi);border:1px solid var(--kin-dim);padding:6px 14px;cursor:pointer}
+.btn.copy{background:var(--kin);color:var(--night);border-color:var(--kin)}
+.btn:disabled{opacity:.4;cursor:default}
+.done{font-size:12px;color:var(--ok)}
+@media (max-width:560px){.card{grid-template-columns:minmax(0,1fr)}.card .pic{flex-direction:row;align-items:center}.card canvas{width:110px;height:110px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1><small>NINJA SAMURAI WORKOUT: GHOST ／ 侍の旅</small>新キャラ型帳</h1>
+    <p class="lede">今の侍と同じ技をすべて出せるキャラを作るための、構え16枚と動き31本のプロンプト一覧です。キャラの名前・見た目・武器を一度入れると、すべてのプロンプトに反映されます。プロンプトは枠の中で直接書き換えられます。</p>
+  </header>
+
+  <section aria-labelledby="h-setup">
+    <h2 id="h-setup">キャラの設定 <span class="tag">ここを書き換える</span></h2>
+    <div class="setup">
+      <label>呼び名<input id="fName" value="侍"></label>
+      <label>武器<input id="fWeapon" value="刀"></label>
+      <label class="wide">見た目の特徴（色・服・髪など。毎回同じ見た目を保つために入れる）<input id="fLook" value="鉢巻と髷、橙と黒の鎧の羽織、濃い紺の袴、白い帯"></label>
+      <label>武器の持ち方<input id="fHold" value="両手で柄を握り"></label>
+      <label>武器のしまい方（〜た／〜たまま に続く形）<input id="fSheath" value="左腰の鞘に納め"></label>
+      <div class="row"><button type="button" class="btn" id="resetFields">今の侍の値に戻す</button><span class="note">入れた値はこの端末に残ります。</span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-flow">
+    <h2 id="h-flow">作る順番</h2>
+    <ol class="flow">
+      <li><b>立ち絵（K00）</b><span>キャラ絵と侍の立ち絵を添付し、Nano Bananaで基本のドット絵を作る</span></li>
+      <li><b>構え（K01〜K15）</b><span>K00の画像を添付して、残りの構えを作る</span></li>
+      <li><b>Claudeへ送る</b><span>構えの画像を送る。足の位置をそろえ、透過の開始・終了画像にして返す</span></li>
+      <li><b>動き（M01〜M31）</b><span>PixelLabで、開始と終了の画像の間を補間する</span></li>
+      <li><b>GIFを送る</b><span>Claudeがアトラスにまとめ、ゲームに入れる</span></li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="h-rules">
+    <h2 id="h-rules">共通の決まり</h2>
+    <div class="rules">
+      <div>
+        <h3>Nano Banana（構え）</h3>
+        <ul>
+          <li><b>K00</b>だけ、キャラ絵（イラストでもよい）と、画風の見本として今の侍の立ち絵（kage_chudan_250.png）を添付する。</li>
+          <li><b>K01以降</b>は、できあがった<b>K00の画像</b>を添付する。服や武器がぶれたら、K01も一緒に添付する。</li>
+          <li>背景は薄い灰色（#B0B0B0）。マゼンタは出力を汚したので使わない。</li>
+          <li>1回に1ポーズ。右向き。</li>
+        </ul>
+      </div>
+      <div>
+        <h3>PixelLab（動き）</h3>
+        <ul>
+          <li>開始と終了の画像は、Claudeが位置をそろえた<b>透過の250×250</b>を使う。</li>
+          <li>フレーム数は<b>偶数で4〜12</b>。最初のコマは数に入らない。</li>
+          <li>背景は<b>なし</b>。</li>
+          <li><b>ループ</b>する動きは、開始と終了に同じ画像を入れる。</li>
+          <li>刀以外の武器のときは、「居合」は「しまった武器を一気に構えて振る」、「血振り」は「武器を払う」と読み替える。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-sum">
+    <h2 id="h-sum">動きの一覧 <span class="tag">31本</span></h2>
+    <p class="note" style="margin-bottom:10px"><b>必須</b>の11本（構えはK00・K01・K02・K03・K12・K13の6枚）がそろえば、旅を歩いて戦えます。<b>標準</b>までそろえると、今の侍と同じ技（昇龍閃・燕返し・鷹落とし・山崩し・雷切・風刃・旋風・五月雨突き・鬼神斬・駆け抜け一閃）がすべて出せます。<b>所作</b>は戦いのあとの見栄えです。</p>
+    <div class="filter" role="group" aria-label="優先で絞る"><span>絞る</span>
+      <button type="button" class="chip" data-f="all" aria-pressed="true">すべて</button>
+      <button type="button" class="chip" data-f="必須" aria-pressed="false">必須</button>
+      <button type="button" class="chip" data-f="標準" aria-pressed="false">標準</button>
+      <button type="button" class="chip" data-f="所作" aria-pressed="false">所作・任意</button>
+    </div>
+    <div class="tbl" style="margin-top:10px"><table><thead><tr><th>番号</th><th>動き</th><th>優先</th><th>始まり → 終わり</th><th>コマ</th><th>使う場面</th></tr></thead><tbody id="sumBody"></tbody></table></div>
+  </section>
+
+  <section aria-labelledby="h-k">
+    <h2 id="h-k">構え <span class="tag">Nano Banana・16枚</span></h2>
+    <p class="note" style="margin-bottom:12px">左の絵は今の侍の同じ構えです（見本）。新しいキャラでも、この形をそろえると動きどうしがつながります。</p>
+    <div class="cards" id="kCards"></div>
+  </section>
+
+  <section aria-labelledby="h-m">
+    <h2 id="h-m">動き <span class="tag">PixelLab・31本</span></h2>
+    <p class="note" style="margin-bottom:12px">左の絵は今の侍の同じ動きをくり返し再生しています。開始・終了の画像は、上の構えの番号のものを使います。</p>
+    <div class="cards" id="mCards"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+'use strict';
+const ATLAS = __ATLAS__;
+const K = __K__, M = __M__;
+const $ = id => document.getElementById(id);
+const FIELDS = { 名: 'fName', 武器: 'fWeapon', 特徴: 'fLook', 持ち方: 'fHold', しまい: 'fSheath' };
+const DEF = { fName: '侍', fWeapon: '刀', fLook: '鉢巻と髷、橙と黒の鎧の羽織、濃い紺の袴、白い帯', fHold: '両手で柄を握り', fSheath: '左腰の鞘に納め' };
+try { for (const id in DEF){ const v = localStorage.getItem('katachou-' + id); if (v != null) $(id).value = v; } } catch (e) {}
+const val = k => ($(FIELDS[k]).value || '').trim() || DEF[FIELDS[k]];
+const fill = s => s.replace(/\{(名|武器|特徴|持ち方|しまい)\}/g, (_, k) => val(k));
+const KN = Object.fromEntries(K.map(k => [k[0], k[1]]));
+
+/* ---- the prompts ---- */
+function poseText(k){
+  const air = k[3], id = k[0];
+  if (id === 'K00') return [
+    '1枚目の添付画像のキャラクター（{名}）を、2Dの横スクロールアクションゲーム用のドット絵キャラクターとして描き直す。顔・髪型・服装・色・{武器}は1枚目の画像のとおりにする。',
+    '画風・ドットの大きさ・頭身・輪郭線・陰影の付け方は、2枚目の添付画像（侍）とそろえる。ただし、キャラクターは1枚目のとおりにする。',
+    '見た目：{特徴}',
+    '武器：{武器}',
+    'ポーズは1つだけ：' + k[4],
+    '真横から見た図で、体は右を向く（右が前）。',
+    '正方形の画像で、頭のてっぺんから足の裏までが画像の高さの約6割、足の裏は画像の下から約2割の高さ。全身が入り、左右に余白を残す。',
+    'ドット絵。ドットの縁はくっきり、アンチエイリアスなし、ぼかしなし、濃い輪郭線。',
+    'エフェクト、地面の影、文字は描かない。',
+    '背景は平らな薄い灰色（#B0B0B0）だけ。'
+  ].join('\n');
+  const ground = id === 'K13' ? '体は、添付画像の足の裏と同じ高さの地面に横たわる。' : air ? '足は地面から離れ、体は添付画像より高い位置にある（跳んでいる）。' : '足の裏の高さは添付画像と同じにそろえる。';
+  return [
+    '添付画像の{名}と完全に同じキャラクターとして描くこと。顔・髪型・体つき・服装・色・{武器}・ドットの大きさ・輪郭線の描き方を、すべてそのまま保つ。',
+    '見た目：{特徴}',
+    '武器：{武器}',
+    'ポーズは1つだけ：' + k[4],
+    '真横から見た図で、体は右を向く（右が前）。2Dの横スクロールアクションゲームのキャラクター。',
+    '大きさは添付画像と同じにし、全身が入るように上下左右に余白を残す。' + ground,
+    'ドット絵。ドットの縁はくっきり、アンチエイリアスなし、ぼかしなし、色数は添付画像と同じ。',
+    '斬撃や光のエフェクト、動きの線、地面の影、文字は描かない。',
+    '背景は平らな薄い灰色（#B0B0B0）だけ。'
+  ].join('\n');
+}
+function moveText(m){
+  return '{名}が、' + m[9] + '\n真横から見た右向きのまま。{武器}の軌跡・斬撃・光などのエフェクトは描かない。';
+}
+
+/* ---- sample drawing: the current samurai, from the game's sheet ---- */
+const hero = new Image(); hero.src = 'hero.png';
+function drawPose(c, clip, i){
+  const f = ATLAS[clip] && ATLAS[clip][i]; c.clearRect(0, 0, 150, 150);
+  c.fillStyle = '#231d44'; c.fillRect(0, 140, 150, 10);
+  if (!f || !hero.complete || !hero.naturalWidth) return;
+  const s = 0.82, x = 66, y = clip === 'd11' && i > 0 ? 140 - (f.oy + f.h) * s : 140;
+  c.imageSmoothingEnabled = false;
+  c.drawImage(hero, f.x, f.y, f.w, f.h, Math.round(x + f.ox * s), Math.round(y + f.oy * s), Math.round(f.w * s), Math.round(f.h * s));
+}
+const ANIM = [];
+
+/* ---- cards ---- */
+function card(kind, data){
+  const isK = kind === 'K', id = data[0];
+  const el = document.createElement('article'); el.className = 'card'; el.id = id;
+  if (!isK) el.dataset.p = data[2];
+  const pic = document.createElement('div'); pic.className = 'pic';
+  const cv = document.createElement('canvas'); cv.width = 150; cv.height = 150; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', '今の侍の' + data[1] + 'の見本');
+  const cap = document.createElement('span'); cap.textContent = '見本：今の侍';
+  pic.append(cv, cap);
+  const body = document.createElement('div'); body.className = 'body';
+  const h = document.createElement('h3'); h.innerHTML = `<span class="id">${id}</span>${data[1]}` + (isK ? '' : ` <span class="pri" data-p="${data[2]}">${data[2]}</span>`);
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const att = document.createElement('p'); att.className = 'att';
+  if (isK){
+    const uses = M.filter(m => m[3] === id || m[4] === id).map(m => m[0]);
+    meta.innerHTML = `<span><i>使う動き</i>${uses.join(' ')}</span>` + (data[3] ? '<span>空中</span>' : '');
+    att.innerHTML = id === 'K00' ? '添付：<b>1枚目＝キャラ絵</b>、<b>2枚目＝今の侍の立ち絵</b>（kage_chudan_250.png）' : '添付：<b>K00の画像</b>（ぶれるときはK01も）';
+  } else {
+    meta.innerHTML = `<span><i>開始</i>${data[3]} ${KN[data[3]]}</span><span><i>終了</i>${data[4]} ${KN[data[4]]}</span><span><i>フレーム数</i>${data[5]}</span><span><i>ループ</i>${data[6] ? 'する' : 'しない'}</span><span><i>背景</i>なし</span>`;
+    att.innerHTML = `使う場面：${data[8]}`;
+  }
+  const ta = document.createElement('textarea'); ta.id = 'p-' + id; ta.spellcheck = false; ta.setAttribute('aria-label', id + ' ' + data[1] + 'のプロンプト');
+  const acts = document.createElement('div'); acts.className = 'acts';
+  const cp = document.createElement('button'); cp.type = 'button'; cp.className = 'btn copy'; cp.textContent = 'コピー';
+  const rs = document.createElement('button'); rs.type = 'button'; rs.className = 'btn'; rs.textContent = '書き換えを戻す'; rs.disabled = true;
+  const msg = document.createElement('span'); msg.className = 'done'; msg.setAttribute('aria-live', 'polite');
+  acts.append(cp, rs, msg);
+  body.append(h, meta, att, ta, acts);
+  el.append(pic, body);
+  const gen = () => isK ? poseText(data) : moveText(data);
+  const refresh = () => { if (ta.dataset.dirty !== '1') ta.value = fill(gen()); fit(); };
+  const fit = () => { ta.style.height = 'auto'; ta.style.height = Math.max(150, ta.scrollHeight + 4) + 'px'; };
+  ta.addEventListener('input', () => { ta.dataset.dirty = '1'; rs.disabled = false; fit(); });
+  rs.addEventListener('click', () => { ta.dataset.dirty = '0'; rs.disabled = true; refresh(); });
+  cp.addEventListener('click', () => {
+    const done = () => { msg.textContent = 'コピーしました'; setTimeout(() => { msg.textContent = ''; }, 1600); };
+    try { navigator.clipboard.writeText(ta.value).then(done, () => { ta.focus(); ta.select(); msg.textContent = '選択しました。長押しでコピー'; }); }
+    catch (e) { ta.focus(); ta.select(); msg.textContent = '選択しました。長押しでコピー'; }
+  });
+  ANIM.push(isK ? { cv, c: cv.getContext('2d'), clip: data[2][0], a: data[2][1], b: data[2][1], i: data[2][1], t: 0, still: true }
+                : { cv, c: cv.getContext('2d'), clip: data[7][0], a: data[7][1], b: data[7][2], i: data[7][1], t: 0 });
+  return { el, refresh };
+}
+const all = [];
+for (const k of K){ const r = card('K', k); $('kCards').append(r.el); all.push(r); }
+for (const m of M){ const r = card('M', m); $('mCards').append(r.el); all.push(r); }
+const refreshAll = () => all.forEach(r => r.refresh());
+refreshAll();
+for (const id in DEF) $(id).addEventListener('input', () => { try { localStorage.setItem('katachou-' + id, $(id).value); } catch (e) {} refreshAll(); });
+$('resetFields').addEventListener('click', () => { for (const id in DEF){ $(id).value = DEF[id]; try { localStorage.removeItem('katachou-' + id); } catch (e) {} } refreshAll(); });
+
+/* ---- summary table and filter ---- */
+const sb = $('sumBody');
+for (const m of M){
+  const tr = document.createElement('tr'); tr.dataset.p = m[2];
+  tr.innerHTML = `<td class="id"><a href="#${m[0]}">${m[0]}</a></td><td>${m[1]}</td><td><span class="pri" data-p="${m[2]}">${m[2]}</span></td><td>${m[3]} ${KN[m[3]]} → ${m[4]} ${KN[m[4]]}</td><td class="n">${m[5]}${m[6] ? '・ループ' : ''}</td><td>${m[8]}</td>`;
+  sb.append(tr);
+}
+const chips = [...document.querySelectorAll('.chip')];
+chips.forEach(b => b.addEventListener('click', () => {
+  const f = b.dataset.f; chips.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const show = p => f === 'all' || p === f || (f === '所作' && (p === '所作' || p === '任意'));
+  for (const tr of sb.children) tr.hidden = !show(tr.dataset.p);
+  for (const el of $('mCards').children) el.hidden = !show(el.dataset.p);
+  // key poses: only those the shown motions use
+  const used = new Set(M.filter(m => show(m[2])).flatMap(m => [m[3], m[4]]));
+  for (const el of $('kCards').children) el.hidden = f !== 'all' && !used.has(el.id);
+}));
+
+/* ---- the samples loop ---- */
+const still = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  for (const s of ANIM){
+    if (s.cv.offsetParent === null) continue;
+    if (s.still || still){ if (!s.drawn && hero.complete){ drawPose(s.c, s.clip, s.i); s.drawn = true; } continue; }
+    s.t += dt; const hold = s.i === s.b ? 0.5 : 0.12;
+    if (s.t >= hold || !s.drawn){ if (s.drawn){ s.t = 0; s.i = s.i >= s.b ? s.a : s.i + 1; } drawPose(s.c, s.clip, s.i); s.drawn = true; }
+  }
+  requestAnimationFrame(loop);
+}
+hero.onload = () => { ANIM.forEach(s => { s.drawn = false; }); };
+requestAnimationFrame(loop);
+})();
+</script>
