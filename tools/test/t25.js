@@ -1,0 +1,22 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+const SP = process.argv[2];
+(async () => {
+  const b = await chromium.launch({ args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] });
+  const c = await b.newContext({ viewport: { width: 390, height: 844 }, locale: 'ja-JP' });
+  await c.grantPermissions(['camera'], { origin: 'http://localhost:8765' });
+  const p = await c.newPage();
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); p.on('console', m => m.type() === 'error' && errs.push(m.text()));
+  await p.route('https://cdn.jsdelivr.net/**', r => r.fulfill({ contentType: 'application/javascript', body: fs.readFileSync(SP + '/fv_face.js', 'utf8') }));
+  await p.route('**/config/balance.json', r => { const j = JSON.parse(fs.readFileSync('config/balance.json', 'utf8')); j.share.seconds = 3; r.fulfill({ contentType: 'application/json', body: JSON.stringify(j) }); });
+  await p.goto('http://localhost:8765/index.html'); await p.waitForSelector('#t-wp:not(:empty)');
+  await p.click('#go-share'); await p.waitForSelector('#btn-cam');
+  await p.click('#masks [data-m="mask_shop_hannya.png"]');
+  await p.click('#btn-cam'); await p.waitForTimeout(2500);
+  await p.locator('.stage').screenshot({ path: SP + '/share_live.png' }); await p.screenshot({ path: SP + '/share_page.png', fullPage: true });
+  await p.click('#btn-rec'); await p.waitForSelector('#btn-again:not([hidden])', { timeout: 20000 });
+  console.log('diag:\n' + await p.textContent('#diag'));
+  const dur = await p.evaluate(async () => { const v = document.getElementById('preview'); if (!isFinite(v.duration)) { v.currentTime = 1e9; await new Promise(r => setTimeout(r, 500)); } return [v.duration, v.videoWidth, v.videoHeight]; });
+  console.log('preview duration/size', dur, '| share button shown:', await p.isVisible('#btn-share'), '| save:', await p.getAttribute('#btn-save', 'download'));
+  console.log('errors', errs); await b.close();
+})();

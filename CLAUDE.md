@@ -12,6 +12,8 @@
 | `assets/ghost_asset_manifest.json` | 画像538枚のファイル名・区分・縦横比の一覧（刀を加えた新しい版） |
 | `assets/images/` | 生成済みの画像（まだ一部だけ） |
 | `docs/設計_シェアと影.md` | シェア動画・鬼面・影の登録と対戦の設計と、作る順番（2026-11-05 決定）。試験ページは `share.html`、影の書庫は `ghost.html`、影の部品は `js/ghost.js` |
+| `docs/引継ぎ_全体.md` | 新しいセッションで最初に読む引継ぎ（今どこまで・実機待ち・次にやること・注意）。刀を見つけるAIは別のチャットで `docs/引継ぎ_刀検出AI.md` |
+| `tools/test/` | 偽のカメラで動かす試験の台本（`tools/test/README.md`） |
 | `tabi/` | サブゲーム「GHOST 侍の旅」（影が旅するハクスラ）の一式。最初に `tabi/HANDOFF.md` を読む。遊べるページは `tabi/page/index.html`（公開URL：https://hizashi001.github.io/suburi-bugeicho/tabi/page/） |
 
 古い「素振り武芸帳 企画検討資料」は破棄済み。そこにあったクラス、無手（パンチ・キック）、大剣・鈍器などの武器の種類、15分コース、立ち絵・3Dアバターは**作らない**。
