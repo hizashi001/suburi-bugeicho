@@ -219,6 +219,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 #cue .label { position: absolute; left: 0; right: 0; bottom: 120px; text-align: center; font-family: var(--f-display); font-size: 1.4rem; color: var(--washi); text-shadow: 0 2px 10px rgba(0,0,0,.9); letter-spacing: .05em; }
 #frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; }
 .pops { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 6; }
+#cue .ready-n { font-family: var(--f-display); font-size: 7rem; line-height: 1; color: var(--kin); }
 .hud-x { min-height: 0; padding: 2px 10px; font-size: 1rem; line-height: 1.4; pointer-events: auto; }
 /* COMBO tally: each hit, then the total */
 .tally { position: absolute; left: 0; right: 0; top: 15%; z-index: 7; pointer-events: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; padding: 0 16px; text-align: center; }
@@ -1286,7 +1287,22 @@ function newPlayer() {
 }
 // 影: every fight against a yokai is recorded as skeleton data; a win is kept for ghost races (js/ghost.js)
 const ghostRec = createGhostRecorder({ fps: 15 });
+// 構えの時間: pressing start opens the camera (if it is not on) and counts down, so the player can step back into place
+let readyTimer = null;
+function getReady(then) {
+  if (!stream) startCamera();
+  clearInterval(readyTimer);
+  let n = B.ready.sec; phase = "ready";
+  const paint = () => showCue(`<div class="full" style="background:rgba(5,8,15,.45)"></div><div class="label"><span class="ready-n num">${n}</span><br>${esc(t("ready.place"))}</div>`);
+  paint(); play("beep");
+  readyTimer = setInterval(() => {
+    n--;
+    if (n > 0) { paint(); if (n <= 3) play("beep"); return; }
+    clearInterval(readyTimer); readyTimer = null; clearCue(); then();
+  }, 1000);
+}
 function stopPlay() {
+  clearInterval(readyTimer); readyTimer = null;
   ghostRec.cancel();
   phase = "idle"; clearCue(); endAttack(); setFrame(0);
   clearTimeout(verdictTimer); $("verdict").hidden = true;
@@ -1310,8 +1326,8 @@ function launch(m, r) {
   resetBattleUI();
   $("btn-retreat").textContent = t("battle.retreat");
   $("run-chip").hidden = false;
-  play("kettei"); play("draw"); ambience(true); bgm(fightBgm());
-  nextYokai();
+  play("kettei"); ambience(true); bgm(fightBgm());
+  getReady(() => { if (mode === m && R) { play("draw"); nextYokai(); } });
 }
 // mostly the newest few
 const normalFor = (wave, r) => NORMALS[Math.max(0, Math.min(NORMALS.length - 1, Math.floor((wave - 1) / 2)) - Math.floor(r() * 3))];
@@ -1433,8 +1449,8 @@ function endRun(reason) {
     ${run.drops.length ? `<div style="${dl()}" class="drops"><span class="label">${esc(t(climb ? "climb.drops" : "res.drops"))}</span>${[...run.drops].sort((a, b) => b.grade - a.grade).map((it) => `<div class="drop-big g${it.grade}">${itemThumb(it, true)}<div><div class="nm">${esc(itemName(it))}</div><div class="af">${itemLines(it)}</div></div></div>`).join("")}</div>` : ""}
     ${run.tamed.map((m) => `<div class="tame" style="${dl()}"><div class="seal tame">${monArt(m)}</div><div><b>${esc(t("res.tamed", { name: monName(m) }))}</b><div class="small">${esc(t("res.blessing", { text: t("partner." + m.id) }))}</div></div></div>`).join("")}`,
     climb
-      ? { ok: { label: t("climb.again", { n: c.floor }), fn: () => startClimb() }, ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("climb"); } } }
-      : { ok: { label: t("run.again"), fn: () => startRun() }, ng: { label: t("res.toMap"), fn: () => { stopCamera(); show("map"); } } });
+      ? { ok: { label: t("climb.again", { n: c.floor }), fn: () => startClimb() }, ng: { label: t("res.toMap"), fn: () => { show("climb"); } } }
+      : { ok: { label: t("run.again"), fn: () => startRun() }, ng: { label: t("res.toMap"), fn: () => { show("map"); } } });
   countUp($("res-score"), climb ? c.reached : run.score);
   animateExp(run.startLv, run.startExp, run.exp);
 }
@@ -1461,7 +1477,10 @@ async function startTabata() {
   $("b-timer").className = "timer num big";
   play("kettei");
   audio();
-  const tb = TB, track = await bgmBuffer("bgm_tabata");
+  const tb = TB;
+  await new Promise((ok) => getReady(ok));
+  if (TB !== tb) return; // quit during the count
+  const track = await bgmBuffer("bgm_tabata");
   if (TB !== tb) return; // quit while loading
   if (track && (await bgm("bgm_tabata", { loop: false }))) {
     const t0 = ac.currentTime;
@@ -1524,7 +1543,7 @@ function finishTabata() {
       <div><span class="label">${esc(t("res.prev"))}</span><b class="num">${prev ? fmt(prev) : "－"}</b></div>
     </div>
     <div class="panel rounds" style="--d:.54s">${tb.rounds.map((r, i) => `<div><b>${i + 1}</b><span>${esc(typeName(r.form))} ・ ${esc(monName(r.m))}${r.killed ? " ✓" : ""}</span><b class="num">${fmt(r.dmg + r.bonus)}</b></div>`).join("")}</div>`,
-    { ok: { label: t("tabata.again"), fn: () => startTabata() }, ng: { label: t("tabata.toTitle"), fn: () => { stopCamera(); show("title"); } } });
+    { ok: { label: t("tabata.again"), fn: () => startTabata() }, ng: { label: t("tabata.toTitle"), fn: () => { show("title"); } } });
   countUp($("res-score"), tb.score);
 }
 
@@ -1534,9 +1553,10 @@ function startReg(ids) {
   mode = "reg"; P = null; foe = null;
   refreshTypes(); // a new form being recorded has no direction yet, and is listed only here
   reg = { queue: ids, i: 0, got: [] };
-  resetBattleUI(); phase = "fight";
+  resetBattleUI();
   $("btn-retreat").textContent = t("reg.quit");
   renderHud(); renderReg();
+  getReady(() => { if (mode === "reg") phase = "fight"; });
 }
 function renderReg() {
   if (!reg) return;
@@ -1582,7 +1602,7 @@ function finishReg() {
     <div class="stamp kin${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.menkyo"))}</div>
     <div class="score" style="--d:.2s"><h2>${esc(t("reg.doneTitle"))}</h2><span class="muted">${esc(t("reg.doneSub", { n: done.length }))}</span></div>
     <div class="drops" style="--d:.35s">${done.map((x) => { const f = S.forms[x.id]; return `<div class="form-row">${arrowSvg(f.dir)}<div class="info"><b>${typeHtml(x.id)}</b><span class="small muted num">${esc(t("reg.doneRow", { peak: f.peak.toFixed(1), amp: f.amp.toFixed(2), wob: Math.round(f.wob * 100), dip: Math.round(f.dip * 100) }))}</span></div><span></span></div>`; }).join("")}</div>`,
-    { ok: { label: t("reg.toTitle"), fn: () => { stopCamera(); show("title"); } }, ng: { label: t("reg.toForms"), fn: () => { stopCamera(); show("forms"); } } });
+    { ok: { label: t("reg.toTitle"), fn: () => { show("title"); } }, ng: { label: t("reg.toForms"), fn: () => { show("forms"); } } });
   mode = null; refreshTypes();
 }
 
@@ -1592,10 +1612,10 @@ function dropUnfinishedForms() {
   if (S.customForms.length !== before) { save(); refreshTypes(); }
 }
 function retreat() {
-  if (mode === "reg") { stopCamera(); dropUnfinishedForms(); show("forms"); return; }
-  if (mode === "tabata") { stopCamera(); show("title"); return; }
+  if (mode === "reg") { dropUnfinishedForms(); show("forms"); return; }
+  if (mode === "tabata") { show("title"); return; }
   if (fighting()) { endRun("retreat"); return; }
-  stopCamera(); show("title");
+  show("title");
 }
 $("btn-retreat").onclick = retreat;
 $("btn-x").onclick = retreat;
@@ -1697,6 +1717,7 @@ let lastDetect = null; // for the diagnostics line
 const parryHist = [];
 function onMeasure(m) {
   lastDetect = m;
+  if (phase === "ready") return; // still taking up position
   if ($("scr-battle").hidden || resultActions || !$("verdict").hidden) return;
   if (!m.demo && isRecovery(m)) return;
   if (mode === "reg") return regSwing(m);
@@ -1928,7 +1949,7 @@ function finisherSwing(m, j) {
   // 居合: a cut from stillness. 秘伝: the week's sequence.
   const seq = B.hiden.seq;
   if (j.t.id === seq[P.finSeq]) P.finSeq++; else P.finSeq = j.t.id === seq[0] ? 1 : 0;
-  const iai = m.demo ? Math.random() < 0.7 : stillBefore(m.tStart);
+  const iai = m.demo ? Math.random() < 0.7 : isIai(m);
   const any = diff().finisherAny && j.sp >= B.bout.finisherAnySpeed;
   if (P.finSeq >= seq.length || (iai && j.sp >= B.bout.iaiMinSpeed) || any) {
     f.kind = P.finSeq >= seq.length ? "hiden" : iai && j.sp >= B.bout.iaiMinSpeed ? "iai" : "cut";
@@ -1968,6 +1989,11 @@ function finisherMult(cutQ, stillness) {
 function zanshinFrame(speed) { if (phase === "zanshin") { P.zan.frames++; if (speed < B.bout.zanshinMaxSpeed) P.zan.still++; } }
 let stillSince = 0;
 const stillBefore = (tt) => stillSince && tt - stillSince >= B.bout.iaiStillSec * 1000;
+// 居合: drawn from the hip. The camera sees the hands, not the sword, so "from the hip" means the hands start at hip height
+// (hand3 is centred on the hips, y down). A cut from stillness also counts, as before.
+const fromHip = (m) => !!m.from && m.from[1] > B.bout.iaiHipY;
+const isIai = (m) => fromHip(m) || stillBefore(m.tStart);
+let iaiStance = false; // hands resting at the hip: shown on screen so the player knows the stance is seen
 
 // the score counts up like a slot; the EXP bar fills and wraps on a level up
 function countUp(el, score) {
@@ -2590,7 +2616,8 @@ function onPose(lm, wl, tt) {
   // World landmarks are centred on the hips, so stepping or crouching barely moves the hands here.
   if (hand3) detector.update(hand3, tt);
   if (!atk || atk.done) {
-    if (!commanding) setChip(true, t(phase === "zanshin" ? "chip.zanshin" : detector.state === "idle" ? "chip.kamae" : "chip.cutting"));
+    iaiStance = !!hand3 && hand3[1] > B.bout.iaiHipY && detector.state === "idle";
+    if (!commanding) setChip(true, t(phase === "zanshin" ? "chip.zanshin" : iaiStance ? "chip.iai" : detector.state === "idle" ? "chip.kamae" : "chip.cutting"));
     // stillness, for 居合 (a cut from stillness) and 残心
     if (detector.state === "idle") { if (detector.speed < B.bout.iaiStillSpeed) stillSince = stillSince || tt; else stillSince = 0; }
     zanshinFrame(detector.speed);

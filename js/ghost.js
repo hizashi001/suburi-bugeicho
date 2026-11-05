@@ -128,3 +128,108 @@ export function drawGhost(ctx, pose, box, { color = "rgba(200,205,215,0.55)", wi
   }
   ctx.restore();
 }
+
+// ---------- the GHOST as it should look: an ink-black samurai silhouette with a rising aura ----------
+// Drawn from the same 13 points: thick limbs, a torso, wide hakama, a head with a topknot and a curved sword.
+// Around it a glow that breathes, sparks that rise off the body like heat, and a fading trail behind the blade.
+// Keeps its own particles, so make one renderer per ghost on screen.
+export function createGhostRenderer({ aura = [120, 175, 255], core = "rgba(6,8,14,0.94)" } = {}) {
+  const off = document.createElement("canvas"), o = off.getContext("2d");
+  const tint = document.createElement("canvas"), tc = tint.getContext("2d");
+  let sparks = [], trail = [], lastT = 0;
+  const A = (a) => `rgba(${aura[0]},${aura[1]},${aura[2]},${a})`;
+  return {
+    // pose: from poseAt(); box: where to draw; t: ms clock for the flicker and sparks
+    draw(ctx, pose, box, { aspect = 0.75, t = performance.now(), power = 1 } = {}) {
+      const dt = Math.min(0.05, Math.max(0, (t - lastT) / 1000)); lastT = t;
+      if (!pose) { sparks = []; trail = []; return; }
+      const bw = Math.min(box.w, box.h * aspect), bh = bw / aspect, ox = box.x + (box.w - bw) / 2, oy = box.y + (box.h - bh) / 2;
+      const P = (i) => pose[i] && [ox + (1 - pose[i][0]) * bw, oy + pose[i][1] * bh];
+      const avg = (a, b) => (a && b ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] : a || b);
+      const sL = P(11), sR = P(12), hL = P(23), hR = P(24);
+      if (!sL || !sR) return;
+      const sh = Math.hypot(sL[0] - sR[0], sL[1] - sR[1]) || bw / 6, U = Math.max(sh, bw / 9);
+      if (off.width !== ctx.canvas.width || off.height !== ctx.canvas.height) { off.width = tint.width = ctx.canvas.width; off.height = tint.height = ctx.canvas.height; }
+      o.clearRect(0, 0, off.width, off.height);
+      o.fillStyle = o.strokeStyle = "#000"; o.lineCap = o.lineJoin = "round";
+      const limb = (a, b, w) => { const A1 = P(a), B1 = P(b); if (A1 && B1) { o.lineWidth = w * U; o.beginPath(); o.moveTo(...A1); o.lineTo(...B1); o.stroke(); } };
+      // torso (a little wider at the shoulders, like a kimono)
+      const hipC = avg(hL, hR) || [(sL[0] + sR[0]) / 2, (sL[1] + sR[1]) / 2 + U * 1.6];
+      const out = (p, from, k) => [p[0] + (p[0] - from[0]) * k, p[1] + (p[1] - from[1]) * k];
+      const sc = avg(sL, sR);
+      o.beginPath(); o.moveTo(...out(sL, sc, 0.25)); o.lineTo(...out(sR, sc, 0.25)); o.lineTo(...(hR || [hipC[0] + U * 0.4, hipC[1]])); o.lineTo(...(hL || [hipC[0] - U * 0.4, hipC[1]])); o.closePath(); o.fill();
+      // hakama: wide from the hips, flaring towards the ankles
+      const kL = P(25), kR = P(26), aL = P(27) || kL, aR = P(28) || kR;
+      if (aL && aR) {
+        const hl = hL || [hipC[0] - U * 0.4, hipC[1]], hr = hR || [hipC[0] + U * 0.4, hipC[1]], side = Math.sign(hr[0] - hl[0]) || 1;
+        o.beginPath(); o.moveTo(hl[0] - side * U * 0.25, hl[1]); o.lineTo(hr[0] + side * U * 0.25, hr[1]);
+        o.lineTo(aR[0] + side * U * 0.55, aR[1] + U * 0.1); o.lineTo((aL[0] + aR[0]) / 2, Math.min(aL[1], aR[1]) - U * 0.35); o.lineTo(aL[0] - side * U * 0.55, aL[1] + U * 0.1); o.closePath(); o.fill();
+      }
+      limb(11, 13, 0.34); limb(13, 15, 0.28); limb(12, 14, 0.34); limb(14, 16, 0.28); limb(11, 12, 0.4);
+      limb(23, 25, 0.42); limb(25, 27, 0.32); limb(24, 26, 0.42); limb(26, 28, 0.32);
+      // head and topknot
+      const head = P(0) ? [P(0)[0], P(0)[1] - U * 0.12] : [sc[0], sc[1] - U * 0.75];
+      o.beginPath(); o.arc(head[0], head[1], U * 0.36, 0, Math.PI * 2); o.fill();
+      o.beginPath(); o.ellipse(head[0], head[1] - U * 0.42, U * 0.1, U * 0.16, 0, 0, Math.PI * 2); o.fill();
+      // the sword: from the hands along the forearm, slightly curved, with a guard
+      const w = avg(P(15), P(16)), e = avg(P(13), P(14));
+      let blade = null;
+      if (w && e) {
+        const dx = w[0] - e[0], dy = w[1] - e[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, len = Math.max(L * 3.2, U * 2.6);
+        const tip = [w[0] + ux * len, w[1] + uy * len], curve = [w[0] + ux * len * 0.55 - uy * U * 0.18, w[1] + uy * len * 0.55 + ux * U * 0.18];
+        o.lineWidth = U * 0.09; o.beginPath(); o.moveTo(...w); o.quadraticCurveTo(...curve, ...tip); o.stroke();
+        o.beginPath(); o.ellipse(w[0] + ux * U * 0.12, w[1] + uy * U * 0.12, U * 0.16, U * 0.06, Math.atan2(uy, ux) + Math.PI / 2, 0, Math.PI * 2); o.fill();
+        blade = { w, curve, tip };
+        trail.push({ ...blade, t });
+      }
+      trail = trail.filter((b) => t - b.t < 260);
+
+      const breathe = 0.75 + 0.25 * Math.sin(t / 260) + 0.08 * Math.sin(t / 47);
+      ctx.save();
+      // 1) the aura: a blurred, coloured copy of the silhouette, twice, breathing.
+      //    Only the shadow of the copy is drawn (the copy itself is pushed off the canvas): shadows blur in every browser.
+      tc.globalCompositeOperation = "source-over"; tc.clearRect(0, 0, tint.width, tint.height); tc.drawImage(off, 0, 0);
+      tc.globalCompositeOperation = "source-in"; tc.fillStyle = A(1); tc.fillRect(0, 0, tint.width, tint.height);
+      const far = tint.width + 50;
+      ctx.globalCompositeOperation = "lighter"; ctx.shadowOffsetX = far;
+      for (const [blur, al] of [[0.25, 1], [0.7, 0.9], [1.9, 0.75]]) { ctx.shadowColor = A(al * power); ctx.shadowBlur = U * blur * breathe; ctx.drawImage(tint, -far, 0); }
+      ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0;
+      // a thin rim of light right at the edge of the body
+      const rim = Math.max(1.5, U * 0.05);
+      ctx.globalAlpha = 0.45 * power;
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2; ctx.drawImage(tint, Math.cos(a) * rim, Math.sin(a) * rim); }
+      ctx.globalAlpha = 1;
+      // 2) the blade's afterimage
+      trail.forEach((b, i) => {
+        const k = 1 - (t - b.t) / 260;
+        ctx.strokeStyle = A(0.5 * k * power); ctx.lineWidth = U * 0.12 * k + 1; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(...b.w); ctx.quadraticCurveTo(...b.curve, ...b.tip); ctx.stroke();
+      });
+      // 3) the body itself, ink black
+      ctx.globalCompositeOperation = "source-over";
+      ctx.globalAlpha = 1; ctx.drawImage(off, 0, 0);
+      ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = core; ctx.fillRect(box.x, box.y, box.w, box.h);
+      ctx.globalCompositeOperation = "source-over";
+      // the edge of the blade catches the light
+      if (blade) { ctx.strokeStyle = A(0.9); ctx.lineWidth = Math.max(1, U * 0.025); ctx.beginPath(); ctx.moveTo(...blade.w); ctx.quadraticCurveTo(...blade.curve, ...blade.tip); ctx.stroke(); }
+      // 4) sparks rising off the body like heat
+      const bones = [[11, 23], [12, 24], [11, 13], [12, 14], [13, 15], [14, 16], [23, 25], [24, 26], [0, 0]];
+      let n = dt * 110 * power;
+      while (n-- > Math.random()) {
+        const [a, b] = bones[(Math.random() * bones.length) | 0], A1 = P(a), B1 = P(b) || A1;
+        if (!A1) continue;
+        const k = Math.random(), x = A1[0] + (B1[0] - A1[0]) * k + (Math.random() - 0.5) * U * 0.5, y = A1[1] + (B1[1] - A1[1]) * k;
+        sparks.push({ x, y, vx: (Math.random() - 0.5) * U * 0.4, vy: -U * (1.0 + Math.random() * 1.6), life: 0, max: 0.5 + Math.random() * 0.8, r: U * (0.015 + Math.random() * 0.035) });
+      }
+      ctx.globalCompositeOperation = "lighter";
+      sparks = sparks.filter((p) => (p.life += dt) < p.max);
+      for (const p of sparks) {
+        p.x += p.vx * dt + Math.sin((t + p.y) / 180) * U * 0.01; p.y += p.vy * dt;
+        const k = 1 - p.life / p.max, r = p.r * (0.6 + k);
+        // a small flame: bright core, stretched along its rise
+        ctx.fillStyle = A(0.9 * k); ctx.beginPath(); ctx.ellipse(p.x, p.y, r, r * 3.5, Math.atan2(p.vx, -p.vy), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    },
+  };
+}

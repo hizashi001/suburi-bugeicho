@@ -525,5 +525,7 @@
   "ghost.swings": "{n}振り",
   "ghost.recording": "録画中 あと{s}秒",
   "ghost.saved": "影「{name}」を残しました",
-  "ghost.nothing": "体が映っていなかったので、影は残りませんでした"
+  "ghost.nothing": "体が映っていなかったので、影は残りませんでした",
+  "ready.place": "全身が映る所まで下がって構える",
+  "chip.iai": "居合の構え"
 }

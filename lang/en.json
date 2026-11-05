@@ -694,5 +694,7 @@
   "ghost.swings": "{n} swings",
   "ghost.recording": "Recording, {s}s left",
   "ghost.saved": "Kept the ghost \"{name}\"",
-  "ghost.nothing": "No body was in view, so no ghost was kept"
+  "ghost.nothing": "No body was in view, so no ghost was kept",
+  "ready.place": "Step back until your whole body is in view, and take your stance",
+  "chip.iai": "Iai stance"
 }

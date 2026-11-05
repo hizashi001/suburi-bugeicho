@@ -161,7 +161,7 @@ function draw(now) {
   const im = maskImg(maskName), info = (MASKS.masks || {})[maskName] || {};
   if (im && eyes) {
     // the mask's own anchor onto the face: half masks by the nose tip (their nose over the nose), the rest by the eyes
-    const s = eyes.ipd / (EYE_R[0] - EYE_L[0]), a = eyes.ang;
+    const s = (eyes.ipd / (EYE_R[0] - EYE_L[0])) * (info.nose ? S.halfScale ?? 0.85 : 1), a = eyes.ang;
     const anchor = info.nose || [(EYE_L[0] + EYE_R[0]) / 2, EYE_L[1]], at = info.nose ? eyes.nose : eyes.mid;
     ctx.setTransform(s * Math.cos(a), s * Math.sin(a), -s * Math.sin(a), s * Math.cos(a), at[0], at[1]);
     ctx.drawImage(blendedMask(im), -anchor[0], -anchor[1]);
@@ -187,7 +187,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function record() {
   if (!cv.captureStream || !window.MediaRecorder) { alert(t("share.noRecord")); return; }
   $("btn-rec").disabled = true;
-  for (const n of [3, 2, 1]) { $("count").hidden = false; $("count").textContent = n; await wait(1000); }
+  for (let n = (CFG.ready && CFG.ready.sec) || 10; n > 0; n--) { $("count").hidden = false; $("count").textContent = n; await wait(1000); } // time to take up position
   $("count").hidden = true;
   const mime = pickMime(), chunks = [];
   const rec = new MediaRecorder(cv.captureStream(S.fps), mime ? { mimeType: mime, videoBitsPerSecond: S.bitrate } : { videoBitsPerSecond: S.bitrate });

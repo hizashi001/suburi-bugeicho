@@ -66,7 +66,7 @@ label.check { display: flex; gap: 8px; align-items: center; }
 <script type="module">
 // 影の書庫: the ghosts kept on this phone (recorded automatically in fights, or recorded here as a master's form),
 // played back as a grey shadow, sent to others as a file, and read in from a file.
-import { createGhostRecorder, ghostStore, ghostFile, readGhostFile, poseAt, drawGhost } from "./js/ghost.js";
+import { createGhostRecorder, ghostStore, ghostFile, readGhostFile, poseAt, drawGhost, createGhostRenderer } from "./js/ghost.js";
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
 const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
@@ -126,7 +126,8 @@ let playing = null;
 async function play(id) {
   stopCamera();
   const g = await ghostStore.get(id);
-  playing = { g, t0: performance.now() };
+  // a master's ghost burns gold, the others blue
+  playing = { g, t0: performance.now(), view: createGhostRenderer({ aura: g.master ? [255, 190, 90] : [120, 175, 255] }) };
   $("badge").hidden = false;
   requestAnimationFrame(playLoop);
 }
@@ -134,7 +135,7 @@ function playLoop(now) {
   if (!playing) return;
   const { g, t0 } = playing, tt = now - t0;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = "#05080f"; ctx.fillRect(0, 0, cv.width, cv.height);
-  drawGhost(ctx, poseAt(g, tt), box(), { aspect: g.aspect || 0.75 });
+  playing.view.draw(ctx, poseAt(g, tt), box(), { aspect: g.aspect || 0.75, t: now });
   const sw = g.events.filter((e) => e[1] === "swing" && e[0] <= tt).length;
   $("badge").textContent = `${fmtTime(tt)} / ${fmtTime(g.durationMs || 0)}${g.events.length ? " ・ " + t("ghost.swings", { n: sw }) : ""}`;
   if (tt > (g.durationMs || 0) + 600) { playing = null; $("badge").hidden = true; return; }
@@ -182,7 +183,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function recordKata() {
   const sec = +$("rec-sec").value;
   $("btn-rec").disabled = true;
-  for (const n of [3, 2, 1]) { $("count").hidden = false; $("count").textContent = n; await wait(1000); }
+  for (let n = (CFG.ready && CFG.ready.sec) || 10; n > 0; n--) { $("count").hidden = false; $("count").textContent = n; await wait(1000); } // time to take up position
   $("count").hidden = true;
   rec.start({ kind: "kata", master: $("rec-master").checked, name: $("rec-name").value.trim() || t("ghost.kind.kata") });
   const t0 = performance.now(); $("badge").hidden = false;
