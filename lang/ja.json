@@ -548,5 +548,10 @@
   "g3d.recording": "録画中 あと{s}秒",
   "g3d.playing": "再生 {s}秒",
   "menu.ghost3d": "3Dの影（試験）",
-  "menu.ghost3d.desc": "動きがその場で3Dの影になる"
+  "menu.ghost3d.desc": "動きがその場で3Dの影になる",
+  "g3d.body": "体",
+  "g3d.body.mannequin": "マネキン",
+  "g3d.body.vrm": "VRM（shadow）",
+  "g3d.loading": "読み込み中…",
+  "g3d.flip": "向きの補正 {n}/{total}"
 }

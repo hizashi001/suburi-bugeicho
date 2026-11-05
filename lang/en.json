@@ -717,5 +717,10 @@
   "g3d.recording": "Recording, {s}s left",
   "g3d.playing": "Playing {s}s",
   "menu.ghost3d": "3D ghost (test)",
-  "menu.ghost3d.desc": "Your motion as a 3D ghost, live"
+  "menu.ghost3d.desc": "Your motion as a 3D ghost, live",
+  "g3d.body": "Body",
+  "g3d.body.mannequin": "Mannequin",
+  "g3d.body.vrm": "VRM (shadow)",
+  "g3d.loading": "Loading…",
+  "g3d.flip": "Axis fix {n}/{total}"
 }

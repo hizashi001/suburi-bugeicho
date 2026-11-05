@@ -29,8 +29,10 @@ button:disabled { opacity: .45; }
 </style>
 <script type="importmap">
 { "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.2/lib/three-vrm.module.js",
+  "kalidokit": "https://cdn.jsdelivr.net/npm/kalidokit@1.1.5/dist/kalidokit.es.js"
 } }
 </script>
 </head>
@@ -61,6 +63,8 @@ button:disabled { opacity: .45; }
     <div class="row" id="views"></div>
     <span class="small muted" data-i18n="g3d.color"></span>
     <div class="row" id="colors"></div>
+    <span class="small muted" data-i18n="g3d.body"></span>
+    <div class="row" id="bodies"></div>
   </div>
   <div class="panel"><span class="small muted" data-i18n="g3d.diag"></span><div id="diag"></div></div>
 </main>
@@ -74,6 +78,9 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+import * as Kalidokit from "kalidokit";
 
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
@@ -173,13 +180,11 @@ function setPose(lm) {
   P = next;
 }
 const mid = (a, b) => tmpA.copy(P[a]).add(P[b]).multiplyScalar(0.5).clone();
-function updateGhost(dt, time) {
-  if (!P) { parts.visible = false; return; }
-  parts.visible = true;
+function updateMannequin() {
   // stand the ghost on the floor: the lowest foot point is the ground
   const low = Math.min(P[27].y, P[28].y, P[31] ? P[31].y : 9, P[32] ? P[32].y : 9);
   floorY = floorY * 0.9 + low * 0.1;
-  parts.position.set(0, -floorY, 0); ring.position.y = 0.002;
+  parts.position.set(0, -floorY, 0);
   segs.forEach((s) => placeBetween(s.m, P[s.a], P[s.b]));
   joints.forEach((j) => j.m.position.copy(P[j.i]));
   const sh = mid(11, 12), hip = mid(23, 24);
@@ -191,20 +196,31 @@ function updateGhost(dt, time) {
   // hakama: from the hips to between the knees and ankles, flaring
   const knee = mid(25, 26), ank = mid(27, 28), hem = knee.clone().lerp(ank, 0.6);
   placeBetween(hakama, hip, hem, 1);
+  const off = parts.position, W = (v) => v.clone().add(off);
+  return { hand: W(mid(15, 16)), elbow: W(mid(13, 14)), heat: [11, 12, 13, 14, 23, 24, 25, 26, 0].map((i) => W(P[i])) };
+}
+function updateGhost(dt, time) {
+  const useVrm = body === "vrm" && vrm;
+  if (vrm) vrm.scene.visible = !!(useVrm && P);
+  if (!P) { parts.visible = false; return; }
+  parts.visible = true;
+  parts.children.forEach((c) => (c.visible = !useVrm || c === sword || c === tsuba));
+  const at = useVrm ? updateVrm(dt) : updateMannequin();
+  if (useVrm) parts.position.set(0, 0, 0);
+  ring.position.y = 0.002;
   // the sword: from between the hands along the forearms, about a metre
-  const w = mid(15, 16), e = mid(13, 14), dir = tmpD.subVectors(w, e).normalize().clone();
+  const w = at.hand, dir = tmpD.subVectors(w, at.elbow).normalize().clone();
   const tip = w.clone().addScaledVector(dir, 1.0);
   placeBetween(sword, w, tip); sword.scale.x = sword.scale.z = 1;
   tsuba.position.copy(w).addScaledVector(dir, 0.04); tsuba.quaternion.setFromUnitVectors(up, dir);
   // trail: keep the last positions of hilt and tip
-  trail.unshift([w.clone().add(parts.position), tip.clone().add(parts.position)]); if (trail.length > TRAIL) trail.pop();
+  trail.unshift([w.clone(), tip.clone()]); if (trail.length > TRAIL) trail.pop();
   for (let i = 0; i < TRAIL; i++) { const tr = trail[Math.min(i, trail.length - 1)]; trailPos.set([...tr[0].toArray(), ...tr[1].toArray()], i * 6); }
   trailGeo.attributes.position.needsUpdate = true; trailGeo.computeBoundingSphere();
   // sparks rising off the body like heat
-  const src = [11, 12, 13, 14, 23, 24, 25, 26, 0];
   for (let n = 0; n < 6; n++) {
-    const j = P[src[(Math.random() * src.length) | 0]], i = pNext; pNext = (pNext + 1) % MAXP;
-    pPos.set([j.x + (Math.random() - 0.5) * 0.15, j.y - floorY + (Math.random() - 0.5) * 0.1, j.z + (Math.random() - 0.5) * 0.15], i * 3);
+    const j = at.heat[(Math.random() * at.heat.length) | 0], i = pNext; pNext = (pNext + 1) % MAXP;
+    pPos.set([j.x + (Math.random() - 0.5) * 0.15, j.y + (Math.random() - 0.5) * 0.1, j.z + (Math.random() - 0.5) * 0.15], i * 3);
     pVel.set([(Math.random() - 0.5) * 0.15, 0.4 + Math.random() * 0.7, (Math.random() - 0.5) * 0.15], i * 3); pLife[i] = 0.6 + Math.random() * 0.8;
   }
   for (let i = 0; i < MAXP; i++) {
@@ -212,9 +228,61 @@ function updateGhost(dt, time) {
     pLife[i] -= dt; for (let c = 0; c < 3; c++) pPos[i * 3 + c] += pVel[i * 3 + c] * dt;
   }
   pGeo.attributes.position.needsUpdate = true;
-  ghostMat.uniforms.time.value = time;
+  ghostMat.uniforms.time.value = time; timeU.value = time;
 }
 
+// ---------- a VRM body (made in VRoid Studio): the same skeleton drives a real human shape ----------
+// Every material is swapped for ink black with a rim of light; Kalidokit turns the pose into joint rotations.
+let vrm = null, body = "mannequin", lastWl = null, lastLm2 = null;
+const auraU = { value: aura }, glowU = { value: 1.4 }, timeU = { value: 0 };
+function ghostify() {
+  const m = new THREE.MeshStandardMaterial({ color: 0x020306, roughness: 1, metalness: 0 });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.aura = auraU; sh.uniforms.glow = glowU; sh.uniforms.time = timeU;
+    sh.fragmentShader = "uniform vec3 aura; uniform float glow; uniform float time;\n" + sh.fragmentShader.replace("#include <emissivemap_fragment>",
+      "#include <emissivemap_fragment>\n float fr = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 3.2);\n totalEmissiveRadiance += aura * fr * glow * (0.85 + 0.15 * sin(time * 3.0));");
+  };
+  return m;
+}
+async function loadVrm() {
+  const loader = new GLTFLoader(); loader.register((p) => new VRMLoaderPlugin(p));
+  const gltf = await loader.loadAsync(C3.vrm || "assets/models/shadow.vrm");
+  vrm = gltf.userData.vrm;
+  VRMUtils.removeUnnecessaryVertices(gltf.scene); VRMUtils.removeUnnecessaryJoints(gltf.scene);
+  if (vrm.meta.metaVersion === "0") VRMUtils.rotateVRM0(vrm);
+  vrm.scene.traverse((o) => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(ghostify) : ghostify(); o.frustumCulled = false; } });
+  vrm.scene.visible = false; scene.add(vrm.scene);
+  return vrm;
+}
+const tmpQ = new THREE.Quaternion(), tmpE = new THREE.Euler();
+// Kalidokit was written for models facing away from the camera (VRM 0); VRM 1 bodies face it, so some axes may need turning
+// the other way. Which is right is checked on the phone with the 向きの補正 button: [x, y, z] signs.
+const FLIPS = [[-1, 1, -1], [1, 1, 1], [1, -1, -1]];
+let flip = 0;
+function rigRot(name, r, damp = 1, lerp = 0.35) {
+  const b = vrm.humanoid.getNormalizedBoneNode(name); if (!b || !r || ![r.x, r.y, r.z].every(Number.isFinite)) return; // a pose it could not solve: keep the last one
+  const [fx, fy, fz] = FLIPS[flip];
+  tmpQ.setFromEuler(tmpE.set(fx * r.x * damp, fy * r.y * damp, fz * r.z * damp)); b.quaternion.slerp(tmpQ, lerp);
+}
+const boneAt = (name) => { const b = vrm.humanoid.getRawBoneNode(name); return b ? b.getWorldPosition(new THREE.Vector3()) : new THREE.Vector3(); };
+function updateVrm(dt) {
+  if (lastWl && lastLm2) {
+    const rig = Kalidokit.Pose.solve(lastWl, lastLm2, { runtime: "mediapipe", imageSize: { width: video.videoWidth || 720, height: video.videoHeight || 1280 }, enableLegs: true });
+    if (rig) {
+      window.__rig = rig; // for testing
+      rigRot("hips", rig.Hips.rotation, 0.7); rigRot("chest", rig.Spine, 0.25); rigRot("spine", rig.Spine, 0.45);
+      for (const side of ["Right", "Left"]) {
+        const s2 = side.toLowerCase();
+        rigRot(s2 + "UpperArm", rig[side + "UpperArm"]); rigRot(s2 + "LowerArm", rig[side + "LowerArm"]);
+        rigRot(s2 + "UpperLeg", rig[side + "UpperLeg"]); rigRot(s2 + "LowerLeg", rig[side + "LowerLeg"]);
+      }
+    }
+  }
+  vrm.update(dt);
+  const mid2 = (a, b) => boneAt(a).add(boneAt(b)).multiplyScalar(0.5);
+  return { hand: mid2("rightHand", "leftHand"), elbow: mid2("rightLowerArm", "leftLowerArm"),
+    heat: ["head", "chest", "spine", "hips", "rightUpperArm", "leftUpperArm", "rightLowerArm", "leftLowerArm", "rightUpperLeg", "leftUpperLeg"].map(boneAt) };
+}
 // ---------- camera + pose ----------
 const video = $("video");
 let landmarker = null, stream = null, frames = 0, fps = 0, lastDetect = 0, mode = "idle", rec = null, take = null, playT0 = 0;
@@ -244,7 +312,8 @@ function play() { if (!take) return; mode = "play"; playT0 = performance.now(); 
 function poseAt(tt) {
   const F = take.frames; let i = 0; while (i < F.length - 1 && F[i + 1].t <= tt) i++;
   const a = F[i], b = F[Math.min(i + 1, F.length - 1)], k = b.t > a.t ? Math.min(1, Math.max(0, (tt - a.t) / (b.t - a.t))) : 0;
-  return a.lm.map((p, j) => ({ x: p[0] + (b.lm[j][0] - p[0]) * k, y: p[1] + (b.lm[j][1] - p[1]) * k, z: p[2] + (b.lm[j][2] - p[2]) * k }));
+  const mix = (A, Bv) => A.map((p, j) => ({ x: p[0] + (Bv[j][0] - p[0]) * k, y: p[1] + (Bv[j][1] - p[1]) * k, z: p[2] + (Bv[j][2] - p[2]) * k, visibility: p[3] ?? 1 }));
+  return { wl: mix(a.lm, b.lm), l2: mix(a.l2, b.l2) };
 }
 $("btn-cam").onclick = () => startCamera().catch((e) => { $("btn-cam").disabled = false; throw e; });
 $("btn-rec").onclick = record;
@@ -265,18 +334,34 @@ $("colors").querySelectorAll("[data-c]").forEach((b) => (b.onclick = () => {
   $("colors").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
 }));
 
+const BODIES = ["mannequin", "vrm"];
+$("bodies").innerHTML = BODIES.map((b) => `<button data-b="${b}" aria-pressed="${b === body}">${t("g3d.body." + b)}</button>`).join("");
+$("bodies").querySelectorAll("[data-b]").forEach((btn) => (btn.onclick = async () => {
+  if (btn.dataset.b === "vrm" && !vrm) { btn.disabled = true; btn.textContent = t("g3d.loading"); try { await loadVrm(); } finally { btn.disabled = false; btn.textContent = t("g3d.body.vrm"); } }
+  body = btn.dataset.b;
+  $("bodies").querySelectorAll("[data-b]").forEach((x) => x.setAttribute("aria-pressed", x === btn));
+}));
+const flipBtn = document.createElement("button");
+const paintFlip = () => (flipBtn.textContent = t("g3d.flip", { n: flip + 1, total: FLIPS.length }));
+flipBtn.onclick = () => { flip = (flip + 1) % FLIPS.length; paintFlip(); };
+paintFlip(); $("bodies").append(flipBtn);
+
 // ---------- loop ----------
 let last = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (mode === "live" && landmarker && now - lastDetect >= 1000 / 30) {
     lastDetect = now;
-    const res = landmarker.detectForVideo(video, now), wl = res.worldLandmarks && res.worldLandmarks[0];
-    if (wl) { frames++; setPose(wl); if (rec && (!rec.frames.length || now - rec.t0 - rec.frames[rec.frames.length - 1].t >= 1000 / C3.fps)) rec.frames.push({ t: now - rec.t0, lm: wl.map((p) => [+p.x.toFixed(3), +p.y.toFixed(3), +p.z.toFixed(3)]) }); }
+    const res = landmarker.detectForVideo(video, now), wl = res.worldLandmarks && res.worldLandmarks[0], l2 = res.landmarks && res.landmarks[0];
+    if (wl) {
+      frames++; setPose(wl); lastWl = wl; lastLm2 = l2;
+      if (rec && (!rec.frames.length || now - rec.t0 - rec.frames[rec.frames.length - 1].t >= 1000 / C3.fps))
+        rec.frames.push({ t: now - rec.t0, lm: wl.map((p) => [+p.x.toFixed(3), +p.y.toFixed(3), +p.z.toFixed(3)]), l2: l2.map((p) => [+p.x.toFixed(3), +p.y.toFixed(3), +p.z.toFixed(3), +(p.visibility ?? 1).toFixed(2)]) });
+    }
   }
   if (mode === "play" && take) {
     const tt = now - playT0, end = take.frames[take.frames.length - 1].t;
-    setPose(poseAt(tt)); $("badge").textContent = t("g3d.playing", { s: (tt / 1000).toFixed(1) });
+    const pa = poseAt(tt); setPose(pa.wl); lastWl = pa.wl; lastLm2 = pa.l2; $("badge").textContent = t("g3d.playing", { s: (tt / 1000).toFixed(1) });
     if (tt > end + 500) { mode = stream ? "live" : "idle"; $("badge").hidden = true; }
   }
   updateGhost(dt, now / 1000);
