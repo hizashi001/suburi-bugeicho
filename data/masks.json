@@ -1,0 +1,284 @@
+{
+ "_note": "鬼面の重ね合わせ用。すべての面は同じキャンバスに、着ける人の両目が同じ2点に来るよう揃えてある。シェア動画に重ねるときは、顔の両目（MediaPipeの顔の目の位置など）を eyeL・eyeR に合わせて、拡大・回転・移動するだけでよい。eyeL は画像の左側の目（着ける人の右目）。half の目は推定なので、ずれたら下の srcEyes を直して作り直す",
+ "canvas": [
+  768,
+  768
+ ],
+ "eyeL": [
+  310.5,
+  343
+ ],
+ "eyeR": [
+  457.5,
+  343
+ ],
+ "eyeDistance": 147,
+ "kinds": {
+  "full": "顔全体を覆う面（描かれた目を着ける人の目に合わせる）",
+  "full_menpo": "面頬と垂（首当て）付き。目と口は透過",
+  "hood": "覆面。目の部分は透過",
+  "half": "顔の下半分の面頬（鼻から顎）。目の位置は面の幅と鼻の高さから推定"
+ },
+ "masks": {
+  "mask_drop_boss_01_shuten_doji.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     399,
+     516
+    ],
+    [
+     625,
+     516
+    ]
+   ]
+  },
+  "mask_drop_boss_02_ibaraki_doji.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     405,
+     496
+    ],
+    [
+     621,
+     496
+    ]
+   ]
+  },
+  "mask_drop_boss_03_tamamo_no_mae.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     373,
+     492
+    ],
+    [
+     651,
+     492
+    ]
+   ]
+  },
+  "mask_drop_boss_04_otakemaru.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     410,
+     492
+    ],
+    [
+     614,
+     492
+    ]
+   ]
+  },
+  "mask_drop_boss_05_yamata_no_orochi.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     389,
+     451
+    ],
+    [
+     639,
+     451
+    ]
+   ]
+  },
+  "mask_shop_ao_oni.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     377,
+     492
+    ],
+    [
+     643,
+     492
+    ]
+   ]
+  },
+  "mask_shop_hannya.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     395,
+     481
+    ],
+    [
+     629,
+     481
+    ]
+   ]
+  },
+  "mask_shop_hyottoko.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     379,
+     449
+    ],
+    [
+     651,
+     449
+    ]
+   ]
+  },
+  "mask_shop_karasu_tengu.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     362,
+     481
+    ],
+    [
+     659,
+     481
+    ]
+   ]
+  },
+  "mask_shop_kitsune.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     369,
+     522
+    ],
+    [
+     655,
+     522
+    ]
+   ]
+  },
+  "mask_shop_koomote.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     373,
+     487
+    ],
+    [
+     651,
+     487
+    ]
+   ]
+  },
+  "mask_shop_okame.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     375,
+     487
+    ],
+    [
+     645,
+     487
+    ]
+   ]
+  },
+  "mask_shop_tengu.png": {
+   "kind": "full",
+   "srcEyes": [
+    [
+     375,
+     471
+    ],
+    [
+     649,
+     471
+    ]
+   ]
+  },
+  "mask_shop_menpo.png": {
+   "kind": "full_menpo",
+   "srcEyes": [
+    [
+     300,
+     355
+    ],
+    [
+     576,
+     355
+    ]
+   ]
+  },
+  "mask_shop_shinobi_fukumen.png": {
+   "kind": "hood",
+   "srcEyes": [
+    [
+     387,
+     389
+    ],
+    [
+     637,
+     389
+    ]
+   ]
+  },
+  "mask_award_gold_oni.png": {
+   "kind": "half",
+   "srcEyes": [
+    [
+     343.7,
+     65.5
+    ],
+    [
+     679.3,
+     65.5
+    ]
+   ]
+  },
+  "mask_award_itadaki.png": {
+   "kind": "half",
+   "srcEyes": [
+    [
+     340.1,
+     66.0
+    ],
+    [
+     682.9,
+     66.0
+    ]
+   ]
+  },
+  "mask_award_kage.png": {
+   "kind": "half",
+   "srcEyes": [
+    [
+     337.1,
+     29.2
+    ],
+    [
+     687.9,
+     29.2
+    ]
+   ]
+  },
+  "mask_free_oni.png": {
+   "kind": "half",
+   "srcEyes": [
+    [
+     348.4,
+     12.5
+    ],
+    [
+     675.6,
+     12.5
+    ]
+   ]
+  },
+  "mask_shop_aka_oni.png": {
+   "kind": "half",
+   "srcEyes": [
+    [
+     284.8,
+     149.8
+    ],
+    [
+     611.2,
+     149.8
+    ]
+   ]
+  }
+ }
+}

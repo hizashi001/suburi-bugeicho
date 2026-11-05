@@ -652,7 +652,7 @@ applyStatic();
 const ASSET_PATH = Object.fromEntries(MANIFEST.assets.map((a) => [a.file, `assets/images/${a.section}/${a.file}`]));
 const imgTag = (file, cls = "art", fb = "") => {
   const main = ASSET_PATH[file]; if (!main) return "";
-  return `<img class="${cls}" src="${main}" alt="" data-fb="${fb}" onload="this.parentNode.classList.add('has-art')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">`;
+  return `<img class="${cls}" src="${main}" alt="" data-fb="${fb}" onload="this.parentNode&&this.parentNode.classList.add('has-art')" onerror="if(this.dataset.fb){this.src=this.dataset.fb;this.dataset.fb=''}else{this.remove()}">`;
 };
 
 // ---------- game data ----------
