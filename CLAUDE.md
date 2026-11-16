@@ -14,6 +14,7 @@
 | `docs/設計_シェアと影.md` | シェア動画・鬼面・影の登録と対戦の設計と、作る順番（2026-11-05 決定）。試験ページは `share.html`、影の書庫は `ghost.html`、影の部品は `js/ghost.js` |
 | `docs/引継ぎ_全体.md` | 新しいセッションで最初に読む引継ぎ（今どこまで・実機待ち・次にやること・注意）。刀を見つけるAIは別のチャットで `docs/引継ぎ_刀検出AI.md` |
 | `docs/提出資料の一覧.md` | どのチャット（本体・刀を見つけるAI・侍の旅・素材作り）に何を出すか、戻るときに何を持ってくるか |
+| `docs/連携報告.md` | サブゲーム「侍の旅」との連携の調査と試作（2026-11-16）。連携データの置き場は localStorage の `ghost-renkei.v1`、出入口は `js/renkei.js`（修行点・修行の倍率・極みの試練の結果・妖怪ごとの最高記録）。数値は `config/balance.json` の `shugyo` と `kiwami` |
 | `tools/test/` | 偽のカメラで動かす試験の台本（`tools/test/README.md`） |
 | `tabi/` | サブゲーム「GHOST 侍の旅」（影が旅するハクスラ）の一式。最初に `tabi/HANDOFF.md` を読む。遊べるページは `tabi/page/index.html`（公開URL：https://hizashi001.github.io/suburi-bugeicho/tabi/page/） |
 

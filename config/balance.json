@@ -531,6 +531,41 @@
     "pixelRatio": 1.5,
     "bloomThreshold": 0.4
   },
+  "shugyo": {
+    "_note": "修行点と修行の倍率（侍の旅 仕様書9.2。値はすべて仮）。points=出来事1回の修行点（tabata=TABATAの1種目、yokai=妖怪退治の1体、climb=登頂の1階、kiwami=極みの試練の合格1回）。fullPoints=その日の修行点がこの点で倍率の伸びが満額。gainPerDay=1日に上がる倍率の上限。min・max=倍率の下限と上限。freeRestDays=休んでも下がらない日数。decayPerDay=それを過ぎた休み1日ごとに下がる量。tabataMinHits=TABATAの1種目を数えるのに要る、通った振りの数。countDemo=試し振り・テスト用のボタンを使った分も数えるか（確認のときだけ true。ふだんは false）",
+    "points": {
+      "tabata": 1,
+      "yokai": 0.8,
+      "climb": 0.8,
+      "kiwami": 1
+    },
+    "fullPoints": 20,
+    "gainPerDay": 0.34,
+    "min": 1.0,
+    "max": 2.0,
+    "freeRestDays": 1,
+    "decayPerDay": 0.17,
+    "tabataMinHits": 1,
+    "countDemo": false
+  },
+  "kiwami": {
+    "_note": "極みの試練（試作。値はすべて仮）。maxMiss=この回数まちがえたら不合格。trials=本体に置く試練。seq=型の並び（型のid）、gapSec=前の振りの終わりから次の振りの始まりまでの上限（秒）、level=基準の判定の段階（0入門〜4神域。これ以上の段階で通れば「緩めずに合格」）。判定の値そのもの（judge.levels）はここでは変えない",
+    "maxMiss": 3,
+    "trials": [
+      {
+        "id": "shisaku_kesa_kesa_do",
+        "name_ja": "試作・袈裟袈裟胴",
+        "name_en": "Trial: KESA, KESA, DO",
+        "seq": [
+          "kesa",
+          "kesa",
+          "do"
+        ],
+        "gapSec": 1.0,
+        "level": 2
+      }
+    ]
+  },
   "swordlab": {
     "_note": "刀の学習データ作り（swordlab.html）。fps=1秒に残すコマ数、seconds=撮る長さの選択肢、maxSide=保存する画像の長い辺（px）、quality=JPEGの画質",
     "fps": 3,

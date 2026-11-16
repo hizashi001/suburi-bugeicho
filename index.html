@@ -373,6 +373,15 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
     <button class="mode kin" id="go-adv"><strong data-i18n="mode.adv"></strong><span data-i18n="mode.adv.desc"></span><span class="num" id="t-advbest"></span></button>
     <button class="mode" id="go-climb"><strong data-i18n="mode.climb"></strong><span data-i18n="mode.climb.desc"></span><span class="num" id="t-climb"></span></button>
     <button class="mode" id="go-tabata"><strong data-i18n="mode.tabata"></strong><span data-i18n="mode.tabata.desc"></span><span class="small" id="t-tabtoday"></span><span class="num" id="t-tabbest"></span></button>
+    <!-- 修行の倍率と極みの試練: a plain check panel for the link with 侍の旅 (the look comes later) -->
+    <div class="panel" id="renkei-panel">
+      <span class="label" data-i18n="shugyo.label"></span>
+      <b class="num" id="t-shugyo"></b>
+      <span class="small muted" id="t-shugyo-ev"></span>
+      <span class="label" data-i18n="kiwami.label"></span>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><select id="kw-trial"></select><select id="kw-level"></select><button class="mini" id="go-kiwami" data-i18n="kiwami.start"></button></div>
+      <span class="small muted" id="kw-note"></span>
+    </div>
     <div class="grid2">
       <button class="tile-btn" id="go-gear"><b data-i18n="menu.gear"></b><span id="t-gear"></span></button>
       <button class="tile-btn" id="go-forms"><b data-i18n="menu.forms"></b><span data-i18n="menu.forms.desc"></span></button>
@@ -621,6 +630,7 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
 <script type="module">
 import { rollDrops, newSeed, makeRng, SWORD_PARTS, SLOTS } from "./js/loot.js";
 import { createGhostRecorder, ghostStore } from "./js/ghost.js";
+import * as renkei from "./js/renkei.js";
 
 // ---------- language files and data ----------
 // Every on-screen string lives in lang/<code>.json. Names of forms, yokai, grades and swords stay in romaji in other languages, with a small gloss.
@@ -809,7 +819,7 @@ const torsoMeters = () => (S.height / 100) * 0.29; // shoulder-to-hip ≈ 29% of
 
 const diff = () => DIFF[S.diff];
 const expNeed = (lv) => Math.round(100 * Math.pow(lv, 1.6));
-// what is being played: "run" (妖怪退治), "climb" (登頂), "tabata" or "reg" (form registration)
+// what is being played: "run" (妖怪退治), "climb" (登頂), "tabata", "reg" (form registration) or "kiwami" (極みの試練)
 let mode = null;
 const fighting = () => mode === "run" || mode === "climb";
 // 武士部門 in a run or climb: gear, sword kind, skills, level and shikigami count. Everything else is bare skill.
@@ -915,6 +925,22 @@ function renderTitle() {
   $("t-tabtoday").textContent = t("title.tabToday", { forms: tabataPlan().forms.map(typeName).join("・") });
   const tt = S.tabataToday?.day === dayId() ? S.tabataToday.best[weightClassOf()] : 0;
   if (tt) $("t-tabbest").textContent = t("title.tabTodayBest", { score: fmt(tt) }) + ($("t-tabbest").textContent ? " ・ " + $("t-tabbest").textContent : "");
+  renderShugyo();
+}
+// 修行の倍率 (侍の旅 SPEC 9.2) and the 極みの試練 picker. All of it is read through js/renkei.js.
+function renderShugyo() {
+  const s = renkei.summary(B.shugyo);
+  $("t-shugyo").textContent = t("shugyo.line", { rate: s.rate.toFixed(2), pts: s.points, full: s.fullPoints, streak: s.streak });
+  $("t-shugyo-ev").textContent = t("shugyo.events", s.events);
+  const list = trialList(), keepT = $("kw-trial").value, keepL = $("kw-level").value;
+  $("kw-trial").innerHTML = list.map((x) => `<option value="${esc(x.id)}">${esc(techName(x))}${x.fromTabi ? esc(t("kiwami.fromTabi")) : ""}</option>`).join("");
+  if (list.some((x) => x.id === keepT)) $("kw-trial").value = keepT;
+  const cur = trialById($("kw-trial").value);
+  $("kw-level").innerHTML = DIFF.map((_, i) => `<option value="${i}">${esc(t("kiwami.levelOpt", { name: diffName(i) }))}</option>`).join("");
+  $("kw-level").value = keepL !== "" ? keepL : cur ? cur.level : 0;
+  const done = cur && s.kiwami[cur.id];
+  $("kw-note").textContent = cur ? t("kiwami.note", { seq: cur.seq.map(typeName).join(" → "), sec: cur.gapSec, need: diffName(cur.level) })
+    + (done ? " ・ " + t(done.clean ? "kiwami.doneClean" : "kiwami.doneRelaxed", { name: diffName(done.level) }) : "") : "";
 }
 
 // --- setup
@@ -1245,6 +1271,7 @@ let P = null;             // the player during a run or tabata: HP, stats and pe
 let R = null;             // the current run (連戦)
 let TB = null;            // the current tabata
 let reg = null;           // { queue, i, got }
+let KW = null;            // the current 極みの試練: { trial, level, i, prevEnd, miss, top, demo }
 let combo = 0, lastEnd = 0, lastValid = null, swingLog = 0;
 
 $("go-setup").onclick = () => show("setup");
@@ -1309,7 +1336,7 @@ function stopPlay() {
   phase = "idle"; clearCue(); endAttack(); setFrame(0);
   clearTimeout(verdictTimer); $("verdict").hidden = true;
   if (mode !== "reg") reg = null;
-  mode = null; R = null; TB = null; foe = null;
+  mode = null; R = null; TB = null; foe = null; KW = null;
 }
 
 // ---------- 妖怪退治: an endless run, one yokai after another ----------
@@ -1382,6 +1409,10 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   const points = Math.round(foe.dmg * finMult);
   const ghost = ghostRec.stop({ result: { killed: true, timeMs: Math.round(gnow() - P.fightStart), points, swings: P.swings - (P.fightSwings || 0), maxCombo: P.maxCombo, finisher: finKind } });
   if (ghost) ghostStore.save(ghost).then(() => ghostStore.trim(B.ghost ? B.ghost.keep : 50)).catch(() => {});
+  // 侍の旅 との連携: 修行点 (登頂 counts as a floor, 妖怪退治 as a yokai) and the best record against this yokai
+  shugyoEvent(R.climb ? "climb" : "yokai", foe.tainted);
+  if (shugyoCounts(foe.tainted)) renkei.recordKill({ yokai: m.id, timeMs: Math.round(gnow() - P.fightStart), points, wave: foe.wave, maxHp: foe.max, variant: foe.variant, boss: !!m.boss,
+    mode, division: S.division, diff: S.diff, kg: kg(), ghostId: ghost ? ghost.id : null }, B.shugyo);
   R.score += points; R.kills++;
   S.kills[m.id] = (S.kills[m.id] || 0) + 1;
   S.bestScore[m.id] = Math.max(S.bestScore[m.id] || 0, points);
@@ -1513,6 +1544,8 @@ function tabataRoundEnd(killed) {
   const r = { form: foe.form, m: foe.m, dmg: foe.dmg, killed, bonus: 0 };
   if (killed) r.bonus = B.tabata.killBonus + Math.round(Math.max(0, (TB.until - TB.now()) / 1000) * B.tabata.timeBonusPerSec);
   TB.rounds.push(r); TB.score += r.dmg + r.bonus; if (killed) TB.kills++;
+  // 修行点: one point per exercise, when it was really swung (a round stood through without a cut is not training)
+  if ((foe.hits || 0) >= B.shugyo.tabataMinHits && shugyoCounts(foe.tainted)) renkei.addEvent("tabata", B.shugyo);
   if (killed) { flash("goldfl"); play("chime"); popup("S", t("stamp.slain"), `+${fmt(r.dmg + r.bonus)}`); }
   if (TB.round >= B.tabata.rounds) return finishTabata();
   if (killed) { phase = "cleared"; foe.hp = 0; clearCue(); renderHud(); return; } // wait out the 20 s
@@ -1608,6 +1641,100 @@ function finishReg() {
   mode = null; refreshTypes();
 }
 
+// ---------- 修行点: every training event is reported to the link with 侍の旅 (js/renkei.js) ----------
+// Swings from the try-out button and fights helped by the test buttons are not training (shugyo.countDemo turns that off for checks).
+const shugyoCounts = (tainted) => !tainted || B.shugyo.countDemo;
+function shugyoEvent(kind, tainted) {
+  if (!shugyoCounts(tainted)) { toast(t("shugyo.notCounted")); return; }
+  renkei.addEvent(kind, B.shugyo);
+}
+
+// ---------- 極みの試練 (a first trial): one technique = forms in order, each within gapSec of the last ----------
+// The judging itself is untouched: judge(m) reports what it measured, and the trial compares those numbers
+// with the gates of whichever level was asked for (B.judge.levels[n]) — not with the level chosen in the settings.
+const gatePass = (j, d) => j.sp >= d.speed && (d.ang == null || j.ang <= d.ang) && (d.amp == null || j.ampR >= d.amp)
+  && (d.wob == null || j.wobEx <= d.wob) && (d.dip == null || j.dipEx <= d.dip);
+// the strictest level this swing would have passed (-1 = not even the easiest)
+function gateLevel(j) { for (let n = DIFF.length - 1; n >= 0; n--) if (gatePass(j, DIFF[n])) return n; return -1; }
+const clampLevel = (n) => Math.max(0, Math.min(DIFF.length - 1, Math.round(+n) || 0));
+// trials kept in the app (balance.json) and the ones 侍の旅 handed over; forms this app does not know are left out
+function trialList() {
+  const own = (B.kiwami.trials || []).map((x) => ({ ...x }));
+  const tabi = renkei.readTabi().trials.filter((x) => !own.some((o) => o.id === x.id)).map((x) => ({ ...x, fromTabi: true }));
+  return [...own, ...tabi].filter((x) => x.seq.every((f) => TYPE[f]))
+    .map((x) => ({ ...x, gapSec: x.gapSec > 0 ? +x.gapSec : 1, level: clampLevel(x.level) }));
+}
+const trialById = (id) => trialList().find((x) => x.id === id) || null;
+// startTrial(trial, level): level = the judging level to use (0 入門 … 4 神域). Below trial.level means "relaxed".
+function startTrial(trial, level = trial.level) {
+  closeResult();
+  show("battle");
+  mode = "kiwami"; P = null; foe = null; reg = null; R = null; TB = null;
+  KW = { trial, level: clampLevel(level), i: 0, prevEnd: 0, miss: 0, top: DIFF.length - 1, demo: false };
+  resetBattleUI();
+  $("btn-retreat").textContent = t("kiwami.quit");
+  play("kettei"); audio();
+  renderHud(); renderTrial();
+  const k = KW;
+  getReady(() => { if (KW === k) phase = "fight"; });
+}
+function renderTrial() {
+  if (!KW) return;
+  const k = KW, id = k.trial.seq[k.i];
+  $("regbox").hidden = false;
+  $("reg-who").textContent = t("kiwami.who", { name: techName(k.trial), level: diffName(k.level), miss: k.miss, max: B.kiwami.maxMiss });
+  $("reg-arrow").innerHTML = arrowSvg(tmpl(TYPE[id]).dir, true);
+  $("reg-cue").innerHTML = typeHtml(id);
+  $("reg-hint").textContent = t("kiwami.hint", { seq: k.trial.seq.map((f, i) => (i === k.i ? `【${typeName(f)}】` : typeName(f))).join(" → "), sec: k.trial.gapSec });
+  renderHud();
+}
+function trialSwing(m) {
+  const k = KW, want = k.trial.seq[k.i], j = judge(m), lv = gateLevel(j);
+  if (m.demo) k.demo = true;
+  // a swing that is not a real cut at this level is passed over (as in a fight); the clock for the gap keeps running
+  if (lv < k.level) { if (m.peak >= 0.35 * j.tm.peak) note(t("kiwami.why.gate", { name: typeName(j.t.id), level: diffName(k.level) })); return; }
+  const gap = k.i ? (m.tStart - k.prevEnd) / 1000 : 0;
+  const why = j.t.id !== want ? t("kiwami.why.form", { want: typeName(want), got: typeName(j.t.id) })
+    : gap > k.trial.gapSec ? t("kiwami.why.gap", { sec: gap.toFixed(2), max: k.trial.gapSec }) : null;
+  lastValid = m;
+  if (why) {
+    k.miss++; popup("miss", `${k.miss} / ${B.kiwami.maxMiss}`, why); note(why); play("beep");
+    if (k.miss >= B.kiwami.maxMiss) return finishTrial(false);
+    // it starts over; a late swing that is itself a good first cut counts as the new first one
+    k.top = DIFF.length - 1; k.i = 0;
+    if (j.t.id === k.trial.seq[0]) { k.i = 1; k.prevEnd = m.tEnd; k.top = lv; }
+    return renderTrial();
+  }
+  k.i++; k.prevEnd = m.tEnd; k.top = Math.min(k.top, lv);
+  popup("good", `${k.i} / ${k.trial.seq.length}`, `${typeName(want)} ${m.peak.toFixed(1)}m/s`); sndSwing("A");
+  if (k.i >= k.trial.seq.length) return finishTrial(true);
+  renderTrial();
+}
+// the result: passed or not, the level it was judged at, and whether that was at least the trial's own level (緩めずに合格)
+function finishTrial(passed) {
+  const k = KW, x = k.trial;
+  const res = { id: x.id, name_ja: x.name_ja, name_en: x.name_en, seq: x.seq, passed, level: k.level, need: x.level,
+    clean: passed && k.level >= x.level, top: passed ? k.top : null, miss: k.miss, demo: k.demo };
+  window.lastTrialResult = res; // for checks from the console
+  $("regbox").hidden = true; phase = "idle"; mode = null; KW = null;
+  if (passed && shugyoCounts(k.demo)) { renkei.recordTrial(res, B.shugyo); renkei.addEvent("kiwami", B.shugyo); }
+  if (passed) sndSwing("S"); else play("hurt");
+  const tile = (key, val) => `<div><span class="label">${esc(t(key))}</span><b>${esc(val)}</b></div>`;
+  openResult(`
+    <div class="stamp${passed ? (res.clean ? " kin" : "") : " grey"}${LANG === "ja" ? "" : " latin"}">${esc(t(passed ? "stamp.kiwami.pass" : "stamp.kiwami.fail"))}</div>
+    <div class="score" style="--d:.2s"><h2>${esc(techName(x))}</h2><span class="muted">${esc(x.seq.map(typeName).join(" → "))}</span>
+      <span class="small${res.clean ? "" : " muted"}">${esc(t(!passed ? "kiwami.res.fail" : res.clean ? "kiwami.res.clean" : "kiwami.res.relaxed", { need: diffName(x.level) }))}</span></div>
+    <div class="tiles" style="--d:.35s">
+      ${tile("kiwami.res.level", diffName(k.level))}${tile("kiwami.res.top", passed ? diffName(k.top) : "－")}${tile("kiwami.res.miss", `${k.miss} / ${B.kiwami.maxMiss}`)}
+    </div>
+    ${passed && !shugyoCounts(k.demo) ? `<p class="small muted" style="text-align:center;--d:.5s">${esc(t("shugyo.notCounted"))}</p>` : ""}`,
+    { ok: { label: t("kiwami.again"), fn: () => startTrial(x, res.level) }, ng: { label: t("kiwami.toTitle"), fn: () => { show("title"); } } });
+  return res;
+}
+$("go-kiwami").onclick = () => { const x = trialById($("kw-trial").value); if (x) startTrial(x, +$("kw-level").value); };
+$("kw-trial").onchange = () => { $("kw-level").value = ""; renderShugyo(); };
+$("kw-level").onchange = renderShugyo;
+
 function dropUnfinishedForms() {
   const before = S.customForms.length;
   S.customForms = S.customForms.filter((c) => c.dir);
@@ -1622,8 +1749,8 @@ function retreat() {
 $("btn-retreat").onclick = retreat;
 $("btn-x").onclick = retreat;
 $("btn-atk-now").onclick = () => { if (fighting() && phase === "fight" && !atk && !P.stag) startAttack(gnow()); };
-$("btn-stag-now").onclick = () => { if (fighting() && phase === "fight" && !P.stag) { foe.stagger = 0; startStagger(); } };
-$("btn-kill-now").onclick = () => { if (fighting() && phase === "fight") { foe.hp = 1; toast(t("toast.hp1")); renderHud(); } };
+$("btn-stag-now").onclick = () => { if (fighting() && phase === "fight" && !P.stag) { foe.tainted = true; foe.stagger = 0; startStagger(); } };
+$("btn-kill-now").onclick = () => { if (fighting() && phase === "fight") { foe.tainted = true; foe.hp = 1; toast(t("toast.hp1")); renderHud(); } };
 
 let verdictTimer = 0;
 function showVerdict(html, ms, then) {
@@ -1650,6 +1777,12 @@ function renderHud() {
   seal.className = "seal sm";
   const showP = fighting();
   $("p-hpbar-wrap").hidden = !showP; $("b-stagbar").hidden = !showP;
+  if (mode === "kiwami") {
+    seal.textContent = "極"; $("b-name").textContent = techName(KW.trial);
+    $("b-hpbar").style.width = (100 * KW.i / KW.trial.seq.length) + "%"; $("b-hpbar").style.background = "var(--kin)";
+    $("b-hp").textContent = t("kiwami.progress", { i: KW.i, n: KW.trial.seq.length }); $("p-hp").textContent = ""; $("b-timer").textContent = "";
+    return;
+  }
   if (mode === "reg") {
     seal.textContent = "型"; $("b-name").textContent = t("menu.forms");
     $("b-hpbar").style.width = (100 * reg.i / reg.queue.length) + "%"; $("b-hpbar").style.background = "var(--kin)";
@@ -1723,6 +1856,8 @@ function onMeasure(m) {
   if ($("scr-battle").hidden || resultActions || !$("verdict").hidden) return;
   if (!m.demo && isRecovery(m)) return;
   if (mode === "reg") return regSwing(m);
+  if (mode === "kiwami") return trialSwing(m);
+  if (m.demo && foe) foe.tainted = true; // a try-out swing: this fight or round is not counted as training
   // 受け: during a guard warning, a quick cut to either side knocks the blow away
   if (atk && !atk.done && atk.kind === "guard" && Math.abs(m.dir[0]) >= B.judge.parryLateral) { tryDodge("guard"); if (atk.done) return; }
   const j = judge(m); // cuts during other warnings still land
@@ -1731,6 +1866,7 @@ function onMeasure(m) {
   if (!j.ok) { if (m.peak >= 0.35 * j.tm.peak) note(t("why.note", { name: typeName(j.t.id), reasons: j.reasons.join(t("list.sep2")) })); return; }
   if (mode === "tabata" && j.t.id !== foe.form) { note(t("tabata.wrongForm", { name: typeName(foe.form) })); popup("miss", typeName(j.t.id), t("tabata.only", { name: typeName(foe.form) })); return; }
   lastValid = m;
+  foe.hits = (foe.hits || 0) + 1;
   onSwing(m, j);
 }
 
@@ -2396,7 +2532,7 @@ function ambience(on) {
 // ok = both hands above the head, ng = forearms crossed in front of the chest
 function gestureCtx() {
   if (resultActions) return { ...resultActions, hold: { ok: 1000, ng: 1000 } };
-  if (!$("scr-battle").hidden && !atk && (phase === "fight" || phase === "rest" || phase === "cleared" || mode === "reg")) return { ng: { label: t(mode === "reg" ? "reg.quit" : mode === "tabata" ? "tabata.quit" : "battle.retreat"), fn: retreat }, hold: { ng: B.gesture.ngHoldMs } };
+  if (!$("scr-battle").hidden && !atk && (phase === "fight" || phase === "rest" || phase === "cleared" || mode === "reg")) return { ng: { label: t(mode === "reg" ? "reg.quit" : mode === "kiwami" ? "kiwami.quit" : mode === "tabata" ? "tabata.quit" : "battle.retreat"), fn: retreat }, hold: { ng: B.gesture.ngHoldMs } };
   return null;
 }
 const gesture = {
@@ -2463,6 +2599,7 @@ setInterval(() => {
 // ---------- demo play (no camera) ----------
 function demoMeasure() {
   const x = mode === "reg" ? TYPE[reg.queue[reg.i]]
+    : mode === "kiwami" ? TYPE[KW.trial.seq[KW.i]]
     : mode === "tabata" && foe && Math.random() < 0.75 ? TYPE[foe.form]
     : P && P.stag && P.stag.kind === "samurai" && Math.random() < 0.7 ? TYPE[P.stag.seq[P.stag.i]] : pick(TYPES);
   const tm = tmpl(x), j = () => Math.random() - 0.5, n = performance.now();
