@@ -784,8 +784,8 @@
   "lab.broken": "This frame's picture was not saved. Delete this recording and record again",
   "shugyo.label": "Training multiplier (test display)",
   "shugyo.line": "×{rate} ・ Today {pts} / {full} pts ・ {streak}-day streak",
-  "shugyo.events": "Today: TABATA {tabata} rounds ・ Yokai {yokai} ・ Climb {climb} floors ・ KIWAMI trials {kiwami}",
-  "shugyo.notCounted": "The try-out or a test button was used, so no training points are counted",
+  "shugyo.events": "Today: TABATA {tabata} rounds ・ Yokai {yokai} ・ Climb {climb} floors ・ KIWAMI trials {kiwami} ・ Bosses {boss} ・ Cuts landed {swings}",
+  "shugyo.notCounted": "No camera, or the try-out or a test button was used, so no training points are counted",
   "kiwami.label": "KIWAMI trial (prototype)",
   "kiwami.start": "Attempt",
   "kiwami.levelOpt": "Judging: {name}",
@@ -808,6 +808,7 @@
   "kiwami.res.top": "Strictest level cleared",
   "kiwami.res.miss": "Misses",
   "kiwami.progress": "{i} / {n} cuts",
+  "kiwami.needForms": "{n} basic forms are not registered yet. Register all 9 to attempt a trial",
   "kiwami.again": "Again",
   "kiwami.toTitle": "Title"
 }

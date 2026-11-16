@@ -940,7 +940,8 @@ function renderShugyo() {
   $("kw-level").value = keepL !== "" ? keepL : cur ? cur.level : 0;
   const done = cur && s.kiwami[cur.id];
   $("kw-note").textContent = cur ? t("kiwami.note", { seq: cur.seq.map(typeName).join(" → "), sec: cur.gapSec, need: diffName(cur.level) })
-    + (done ? " ・ " + t(done.clean ? "kiwami.doneClean" : "kiwami.doneRelaxed", { name: diffName(done.level) }) : "") : "";
+    + (done ? " ・ " + t(done.clean ? "kiwami.doneClean" : "kiwami.doneRelaxed", { name: diffName(done.level) }) : "")
+    + (missingForms().length ? " ・ " + t("kiwami.needForms", { n: missingForms().length }) : "") : "";
 }
 
 // --- setup
@@ -1410,8 +1411,10 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   const ghost = ghostRec.stop({ result: { killed: true, timeMs: Math.round(gnow() - P.fightStart), points, swings: P.swings - (P.fightSwings || 0), maxCombo: P.maxCombo, finisher: finKind } });
   if (ghost) ghostStore.save(ghost).then(() => ghostStore.trim(B.ghost ? B.ghost.keep : 50)).catch(() => {});
   // 侍の旅 との連携: 修行点 (登頂 counts as a floor, 妖怪退治 as a yokai) and the best record against this yokai
-  shugyoEvent(R.climb ? "climb" : "yokai", foe.tainted);
-  if (shugyoCounts(foe.tainted)) renkei.recordKill({ yokai: m.id, timeMs: Math.round(gnow() - P.fightStart), points, wave: foe.wave, maxHp: foe.max, variant: foe.variant, boss: !!m.boss,
+  const fightMs = Math.round(gnow() - P.fightStart), shKind = R.climb ? "climb" : "yokai";
+  if (shugyoCounts(foe.tainted)) renkei.addEvents(B.shugyo, { counts: { [shKind]: 1, boss: m.boss ? 1 : 0 }, ms: { [shKind]: fightMs } });
+  else toast(t("shugyo.notCounted"));
+  if (shugyoCounts(foe.tainted)) renkei.recordKill({ yokai: m.id, timeMs: fightMs, points, wave: foe.wave, maxHp: foe.max, variant: foe.variant, boss: !!m.boss,
     mode, division: S.division, diff: S.diff, kg: kg(), ghostId: ghost ? ghost.id : null }, B.shugyo);
   R.score += points; R.kills++;
   S.kills[m.id] = (S.kills[m.id] || 0) + 1;
@@ -1642,12 +1645,13 @@ function finishReg() {
 }
 
 // ---------- 修行点: every training event is reported to the link with 侍の旅 (js/renkei.js) ----------
-// Swings from the try-out button and fights helped by the test buttons are not training (shugyo.countDemo turns that off for checks).
-const shugyoCounts = (tainted) => !tainted || B.shugyo.countDemo;
-function shugyoEvent(kind, tainted) {
-  if (!shugyoCounts(tainted)) { toast(t("shugyo.notCounted")); return; }
-  renkei.addEvent(kind, B.shugyo);
-}
+// It counts only with the camera running, and never for swings from the try-out button or fights helped by the test buttons
+// (shugyo.countDemo turns that rule off for checks on a PC).
+const shugyoCounts = (tainted) => (!tainted && !!stream) || B.shugyo.countDemo;
+// one swing that was accepted (in a fight, a TABATA round or a trial): a plain daily tally for the quests
+const countSwing = (m) => { if (shugyoCounts(m.demo)) renkei.addEvent("swings", B.shugyo); };
+// 極みの試練 needs every basic form registered first (the speed gate compares with the player's own forms)
+const missingForms = () => (B.kiwami.needAllForms ? TYPES.filter((x) => !S.forms[x.id]) : []);
 
 // ---------- 極みの試練 (a first trial): one technique = forms in order, each within gapSec of the last ----------
 // The judging itself is untouched: judge(m) reports what it measured, and the trial compares those numbers
@@ -1661,12 +1665,13 @@ const clampLevel = (n) => Math.max(0, Math.min(DIFF.length - 1, Math.round(+n) |
 function trialList() {
   const own = (B.kiwami.trials || []).map((x) => ({ ...x }));
   const tabi = renkei.readTabi().trials.filter((x) => !own.some((o) => o.id === x.id)).map((x) => ({ ...x, fromTabi: true }));
-  return [...own, ...tabi].filter((x) => x.seq.every((f) => TYPE[f]))
+  return [...own, ...tabi].filter((x) => x.seq.every((f) => TYPE[f] && !(B.kiwami.excludeForms || []).includes(f)))
     .map((x) => ({ ...x, gapSec: x.gapSec > 0 ? +x.gapSec : 1, level: clampLevel(x.level) }));
 }
 const trialById = (id) => trialList().find((x) => x.id === id) || null;
 // startTrial(trial, level): level = the judging level to use (0 入門 … 4 神域). Below trial.level means "relaxed".
 function startTrial(trial, level = trial.level) {
+  if (missingForms().length) { toast(t("kiwami.needForms", { n: missingForms().length })); show("forms"); return; }
   closeResult();
   show("battle");
   mode = "kiwami"; P = null; foe = null; reg = null; R = null; TB = null;
@@ -1705,7 +1710,7 @@ function trialSwing(m) {
     if (j.t.id === k.trial.seq[0]) { k.i = 1; k.prevEnd = m.tEnd; k.top = lv; }
     return renderTrial();
   }
-  k.i++; k.prevEnd = m.tEnd; k.top = Math.min(k.top, lv);
+  k.i++; k.prevEnd = m.tEnd; k.top = Math.min(k.top, lv); countSwing(m);
   popup("good", `${k.i} / ${k.trial.seq.length}`, `${typeName(want)} ${m.peak.toFixed(1)}m/s`); sndSwing("A");
   if (k.i >= k.trial.seq.length) return finishTrial(true);
   renderTrial();
@@ -1866,7 +1871,7 @@ function onMeasure(m) {
   if (!j.ok) { if (m.peak >= 0.35 * j.tm.peak) note(t("why.note", { name: typeName(j.t.id), reasons: j.reasons.join(t("list.sep2")) })); return; }
   if (mode === "tabata" && j.t.id !== foe.form) { note(t("tabata.wrongForm", { name: typeName(foe.form) })); popup("miss", typeName(j.t.id), t("tabata.only", { name: typeName(foe.form) })); return; }
   lastValid = m;
-  foe.hits = (foe.hits || 0) + 1;
+  foe.hits = (foe.hits || 0) + 1; countSwing(m);
   onSwing(m, j);
 }
 

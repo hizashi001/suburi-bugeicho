@@ -20,20 +20,29 @@ export const RENKEI_VER = 1;
 const DAY_MS = 86400000, TURN_MS = 13 * 3600000;
 export const dayId = (now = Date.now()) => Math.floor((now - TURN_MS) / DAY_MS);
 
-export const EVENT_KINDS = ["tabata", "yokai", "climb", "kiwami"];
+// what is counted each day. The first four earn 修行点; "boss" and "swings" are plain tallies for the daily quests.
+export const EVENT_KINDS = ["tabata", "yokai", "climb", "kiwami", "boss", "swings"];
+// the two kinds that are fights against a yokai: their points can also be paid by time fought (cfg.fightBy = "time")
+export const FIGHT_KINDS = ["yokai", "climb"];
 const noEvents = () => Object.fromEntries(EVENT_KINDS.map((k) => [k, 0]));
-const freshShugyo = (day) => ({ day, events: noEvents(), prevDay: null, prevRate: null, prevStreak: 0 });
+const noMs = () => Object.fromEntries(FIGHT_KINDS.map((k) => [k, 0]));
+const freshShugyo = (day) => ({ day, events: noEvents(), ms: noMs(), prevDay: null, prevRate: null, prevStreak: 0 });
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const round2 = (v) => Math.round(v * 100) / 100;
 
 // ---------- 修行点 and 修行の倍率: pure functions of the stored state, the day and the settings ----------
-// sh  = { day, events: {tabata, yokai, climb, kiwami}, prevDay, prevRate, prevStreak }
-//       day/events are the day in progress; prev* describe the last earlier day that had any points
+// sh  = { day, events: {tabata, yokai, climb, kiwami, boss, swings}, ms: {yokai, climb}, prevDay, prevRate, prevStreak }
+//       day/events/ms are the day in progress (ms = time spent fighting, each kill capped); prev* describe the last earlier day that had any points
 // cfg = balance.json "shugyo"
 
-// today's points: counts × points each (kept as counts, so 0.8 never piles up rounding errors)
+// today's points. Kept as counts and milliseconds, so 0.8 never piles up rounding errors.
+// cfg.fightBy: "count" = each yokai / floor is worth cfg.points; "time" = one point per cfg.time.secPerPoint seconds of fighting.
 export function pointsOf(sh, cfg) {
-  return Math.round(EVENT_KINDS.reduce((s, k) => s + (sh.events[k] || 0) * (cfg.points[k] || 0), 0) * 10) / 10;
+  const byTime = cfg.fightBy === "time";
+  const sum = EVENT_KINDS.reduce((s, k) => s + (byTime && FIGHT_KINDS.includes(k)
+    ? ((sh.ms && sh.ms[k]) || 0) / 1000 / cfg.time.secPerPoint
+    : (sh.events[k] || 0) * (cfg.points[k] || 0)), 0);
+  return Math.round(sum * 10) / 10;
 }
 // the multiplier a day starts from: the last trained day's value, minus the decay for days of rest.
 // The first freeRestDays of rest cost nothing; each day after that costs decayPerDay.
@@ -55,11 +64,11 @@ export function streakOf(sh, cfg) {
 // move the state to `day`: a finished day that had points becomes the new "prev"
 export function rollTo(sh, cfg, day) {
   if (!sh || typeof sh.day !== "number" || !sh.events) return freshShugyo(day);
-  if (sh.day === day) return sh;
-  if (day < sh.day) return { ...sh, day, events: noEvents() }; // the clock went back: keep the history, start the day clean
+  if (sh.day === day) return { ...sh, events: { ...noEvents(), ...sh.events }, ms: { ...noMs(), ...sh.ms } };
+  if (day < sh.day) return { ...sh, day, events: noEvents(), ms: noMs() }; // the clock went back: keep the history, start the day clean
   const trained = pointsOf(sh, cfg) > 0;
   return {
-    day, events: noEvents(),
+    day, events: noEvents(), ms: noMs(),
     prevDay: trained ? sh.day : sh.prevDay,
     prevRate: trained ? rateOf(sh, cfg) : sh.prevRate,
     prevStreak: trained ? streakOf(sh, cfg) : sh.prevStreak,
@@ -93,16 +102,22 @@ function stamp(h, cfg, day) {
 }
 
 // ---------- 本体 → 旅 ----------
-// a training event happened (n times). Returns the new summary.
-export function addEvent(kind, cfg, { n = 1, now = Date.now() } = {}) {
-  if (!EVENT_KINDS.includes(kind)) throw new Error("renkei: unknown event " + kind);
+// training happened. counts = { kind: how many }, ms = { yokai | climb: how long that one fight took }.
+// One call is one fight (or one round, one swing…), so the time is capped here at cfg.time.maxPerKill points' worth.
+// Returns the new summary.
+export function addEvents(cfg, { counts = {}, ms = {}, now = Date.now() } = {}) {
+  for (const k of Object.keys(counts)) if (!EVENT_KINDS.includes(k)) throw new Error("renkei: unknown event " + k);
+  for (const k of Object.keys(ms)) if (!FIGHT_KINDS.includes(k)) throw new Error("renkei: no fight time for " + k);
+  const capMs = cfg.time.maxPerKill * cfg.time.secPerPoint * 1000;
   writeHalf("hontai", (h) => {
     h.shugyo = rollTo(h.shugyo, cfg, dayId(now));
-    h.shugyo.events[kind] = (h.shugyo.events[kind] || 0) + n;
+    for (const [k, n] of Object.entries(counts)) h.shugyo.events[k] += n;
+    for (const [k, v] of Object.entries(ms)) h.shugyo.ms[k] += Math.max(0, Math.min(v, capMs));
     stamp(h, cfg, dayId(now));
   }, now);
   return summary(cfg, now);
 }
+export const addEvent = (kind, cfg, { n = 1, now = Date.now() } = {}) => addEvents(cfg, { counts: { [kind]: n }, now });
 // 極みの試練 passed. res = { id, name_ja, name_en, seq, level, need, clean, top }
 // One entry per technique: the strictest pass is kept, and the 緩めずに合格 mark is never taken away.
 export function recordTrial(res, cfg, { now = Date.now() } = {}) {
@@ -158,7 +173,7 @@ export function summary(cfg, now = Date.now()) {
   const sh = rollTo(h.shugyo, cfg, dayId(now));
   return {
     day: sh.day, rate: rateOf(sh, cfg), base: baseRate(sh, cfg), points: pointsOf(sh, cfg), fullPoints: cfg.fullPoints,
-    streak: streakOf(sh, cfg), events: { ...noEvents(), ...sh.events },
+    streak: streakOf(sh, cfg), events: { ...sh.events }, ms: { ...sh.ms }, fightBy: cfg.fightBy,
     kiwami: h.kiwami || {}, best: h.best || {}, updatedAt: h.updatedAt || 0,
   };
 }

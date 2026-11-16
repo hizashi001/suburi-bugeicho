@@ -380,7 +380,7 @@
     "hpPerFloor": 0.04
   },
   "judge": {
-    "_note": "判定の段階。上から入門・初段・二段・三段・免許皆伝。速さと振り幅は手本（登録した型、無ければ標準）に対する割合。null はその段階では見ない。軌道のきれいさは判定ではなく与ダメージの軌道係数（lineFloor〜1.0）に効く。stagAng は怯み（金の矢印）で呼ばれた向きにどれだけ近ければよいか（度）。finisherAny が true の段階では、とどめに居合・秘伝でなくても一定の速さの一振りで決まる。depthGain はカメラの奥行き（突きの向き）を何倍に見るか。奥行きは実際より小さく出るため",
+    "_note": "判定の段階。上から入門・初段・三段・師範・神域。速さと振り幅は手本（登録した型、無ければ標準）に対する割合。null はその段階では見ない。軌道のきれいさは判定ではなく与ダメージの軌道係数（lineFloor〜1.0）に効く。stagAng は怯み（金の矢印）で呼ばれた向きにどれだけ近ければよいか（度）。finisherAny が true の段階では、とどめに居合・秘伝でなくても一定の速さの一振りで決まる。depthGain はカメラの奥行き（突きの向き）を何倍に見るか。奥行きは実際より小さく出るため",
     "levels": [
       {
         "speed": 0.3,
@@ -532,12 +532,17 @@
     "bloomThreshold": 0.4
   },
   "shugyo": {
-    "_note": "修行点と修行の倍率（侍の旅 仕様書9.2。値はすべて仮）。points=出来事1回の修行点（tabata=TABATAの1種目、yokai=妖怪退治の1体、climb=登頂の1階、kiwami=極みの試練の合格1回）。fullPoints=その日の修行点がこの点で倍率の伸びが満額。gainPerDay=1日に上がる倍率の上限。min・max=倍率の下限と上限。freeRestDays=休んでも下がらない日数。decayPerDay=それを過ぎた休み1日ごとに下がる量。tabataMinHits=TABATAの1種目を数えるのに要る、通った振りの数。countDemo=試し振り・テスト用のボタンを使った分も数えるか（確認のときだけ true。ふだんは false）",
+    "_note": "修行点と修行の倍率（侍の旅 仕様書9.2。値はすべて仮）。points=出来事1回の修行点（tabata=TABATAの1種目、yokai=妖怪退治の1体、climb=登頂の1階、kiwami=極みの試練の合格1回）。fightBy=妖怪退治と登頂の点の出し方。count なら points のとおり1体・1階ごと、time なら戦闘の時間で出す（time.secPerPoint 秒につき1点、1体の上限は time.maxPerKill 点）。TABATAと試練はどちらでも points のとおり。fullPoints=その日の修行点がこの点で倍率の伸びが満額。gainPerDay=1日に上がる倍率の上限。min・max=倍率の下限と上限。freeRestDays=休んでも下がらない日数。decayPerDay=それを過ぎた休み1日ごとに下がる量。tabataMinHits=TABATAの1種目を数えるのに要る、通った振りの数。countDemo=カメラ無し・試し振り・テスト用のボタンを使った分も数えるか（確認のときだけ true。ふだんは false）",
     "points": {
       "tabata": 1,
       "yokai": 0.8,
       "climb": 0.8,
       "kiwami": 1
+    },
+    "fightBy": "count",
+    "time": {
+      "secPerPoint": 20,
+      "maxPerKill": 3
     },
     "fullPoints": 20,
     "gainPerDay": 0.34,
@@ -545,11 +550,15 @@
     "max": 2.0,
     "freeRestDays": 1,
     "decayPerDay": 0.17,
-    "tabataMinHits": 1,
+    "tabataMinHits": 5,
     "countDemo": false
   },
   "kiwami": {
-    "_note": "極みの試練（試作。値はすべて仮）。maxMiss=この回数まちがえたら不合格。trials=本体に置く試練。seq=型の並び（型のid）、gapSec=前の振りの終わりから次の振りの始まりまでの上限（秒）、level=基準の判定の段階（0入門〜4神域。これ以上の段階で通れば「緩めずに合格」）。判定の値そのもの（judge.levels）はここでは変えない",
+    "_note": "極みの試練（試作。値はすべて仮）。maxMiss=この回数まちがえたら不合格。needAllForms=基本の型を全部登録していないと挑めない。excludeForms=試練の並びに使わない型（認識が安定するまで突きは入れない。入っている技は一覧に出さない）。trials=本体に置く試練。seq=型の並び（型のid）、gapSec=前の振りの終わりから次の振りの始まりまでの上限（秒）、level=基準の判定の段階（0入門〜4神域。これ以上の段階で通れば「緩めずに合格」）。判定の値そのもの（judge.levels）はここでは変えない",
+    "needAllForms": true,
+    "excludeForms": [
+      "tsuki"
+    ],
     "maxMiss": 3,
     "trials": [
       {

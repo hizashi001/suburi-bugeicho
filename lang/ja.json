@@ -615,8 +615,8 @@
   "lab.broken": "このコマの写真が保存できていません。この撮影を消して、撮り直してください",
   "shugyo.label": "修行の倍率（仮の表示）",
   "shugyo.line": "倍率 ×{rate} ・ 今日の修行点 {pts} / {full} ・ 連続 {streak} 日",
-  "shugyo.events": "今日：TABATA {tabata} 種目 ・ 妖怪退治 {yokai} 体 ・ 登頂 {climb} 階 ・ 極みの試練 {kiwami} 回",
-  "shugyo.notCounted": "試し振りかテスト用のボタンを使ったので、修行点には数えません",
+  "shugyo.events": "今日：TABATA {tabata} 種目 ・ 妖怪退治 {yokai} 体 ・ 登頂 {climb} 階 ・ 極みの試練 {kiwami} 回 ・ ボス {boss} 体 ・ 通った振り {swings} 回",
+  "shugyo.notCounted": "カメラ無しか、試し振り・テスト用のボタンを使ったので、修行点には数えません",
   "kiwami.label": "極みの試練（試作）",
   "kiwami.start": "挑む",
   "kiwami.levelOpt": "判定：{name}",
@@ -639,6 +639,7 @@
   "kiwami.res.top": "通った一番厳しい判定",
   "kiwami.res.miss": "失敗",
   "kiwami.progress": "{i} / {n} 振り",
+  "kiwami.needForms": "型の登録がまだ {n} つ残っています。9つとも登録すると挑めます",
   "kiwami.again": "もう一度",
   "kiwami.toTitle": "表紙へ"
 }
