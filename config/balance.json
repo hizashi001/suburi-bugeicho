@@ -575,6 +575,13 @@
       }
     ]
   },
+  "duel": {
+    "_note": "一騎打ち（仇討ち用。値はすべて仮）。同じ妖怪・同じHP・装具なし・位なし・式神なしで、討伐の速さだけを比べる。hp=通常の妖怪のHP、bossHp=ボスのHP（何体めでも同じ）。enemyAtk=敵が攻撃するか、freq=攻撃の頻度（attackRate の何番めか）。この2つは設定の画面の値を使わず、全員同じにする",
+    "hp": 1500,
+    "bossHp": 3000,
+    "enemyAtk": true,
+    "freq": 1
+  },
   "swordlab": {
     "_note": "刀の学習データ作り（swordlab.html）。fps=1秒に残すコマ数、seconds=撮る長さの選択肢、maxSide=保存する画像の長い辺（px）、quality=JPEGの画質",
     "fps": 3,

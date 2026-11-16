@@ -381,6 +381,10 @@ input[type=number] { width: 5.5em; font-variant-numeric: tabular-nums; }
       <span class="label" data-i18n="kiwami.label"></span>
       <div class="row" style="gap:8px;flex-wrap:wrap"><select id="kw-trial"></select><select id="kw-level"></select><button class="mini" id="go-kiwami" data-i18n="kiwami.start"></button></div>
       <span class="small muted" id="kw-note"></span>
+      <span class="label" data-i18n="duel.label"></span>
+      <div class="row" style="gap:8px;flex-wrap:wrap"><select id="du-yokai"></select><button class="mini" id="go-duel" data-i18n="duel.start"></button></div>
+      <span class="small muted" id="du-note"></span>
+      <div id="du-revenge" style="display:flex;flex-direction:column;gap:6px"></div>
     </div>
     <div class="grid2">
       <button class="tile-btn" id="go-gear"><b data-i18n="menu.gear"></b><span id="t-gear"></span></button>
@@ -819,11 +823,15 @@ const torsoMeters = () => (S.height / 100) * 0.29; // shoulder-to-hip ≈ 29% of
 
 const diff = () => DIFF[S.diff];
 const expNeed = (lv) => Math.round(100 * Math.pow(lv, 1.6));
-// what is being played: "run" (妖怪退治), "climb" (登頂), "tabata", "reg" (form registration) or "kiwami" (極みの試練)
+// what is being played: "run" (妖怪退治), "climb" (登頂), "duel" (一騎打ち), "tabata", "reg" (form registration) or "kiwami" (極みの試練)
 let mode = null;
-const fighting = () => mode === "run" || mode === "climb";
+const fighting = () => mode === "run" || mode === "climb" || mode === "duel";
 // 武士部門 in a run or climb: gear, sword kind, skills, level and shikigami count. Everything else is bare skill.
-const bushi = () => fighting() && S.division === "bushi";
+// 一騎打ち ("duel") is always bare skill, whatever the division: everyone fights it under the same conditions.
+const bushi = () => (mode === "run" || mode === "climb") && S.division === "bushi";
+// enemy attacks: the player's own settings, except in a duel where they are the same for everyone
+const atkOn = () => (mode === "duel" ? B.duel.enemyAtk : S.enemyAtk);
+const atkRate = () => B.attackRate[mode === "duel" ? B.duel.freq : S.freq];
 // 登頂 starts from LV 1 every day and uses only the gear found on that day's mountain
 const climbNow = () => (R && R.c) || climbOf();
 const lvNow = () => (mode === "climb" ? climbNow().lv : S.lv);
@@ -942,6 +950,17 @@ function renderShugyo() {
   $("kw-note").textContent = cur ? t("kiwami.note", { seq: cur.seq.map(typeName).join(" → "), sec: cur.gapSec, need: diffName(cur.level) })
     + (done ? " ・ " + t(done.clean ? "kiwami.doneClean" : "kiwami.doneRelaxed", { name: diffName(done.level) }) : "")
     + (missingForms().length ? " ・ " + t("kiwami.needForms", { n: missingForms().length }) : "") : "";
+  // 一騎打ち: the yokai to fight, the fastest time so far, and the 仇討ち requests handed over by the journey
+  const keepY = $("du-yokai").value;
+  $("du-yokai").innerHTML = MONSTERS.map((m) => `<option value="${m.id}">${esc(monName(m))}${s.duel[m.id] ? esc(t("duel.optBest", { sec: secStr(s.duel[m.id].timeMs) })) : ""}</option>`).join("");
+  if (keepY) $("du-yokai").value = keepY;
+  const dm = MONSTERS.find((m) => m.id === $("du-yokai").value) || MONSTERS[0];
+  $("du-note").textContent = t("duel.note", { hp: fmt(dm.boss ? B.duel.bossHp : B.duel.hp) });
+  $("du-revenge").innerHTML = revengeList().map((x) => {
+    const done = s.revenge[x.id];
+    return `<button class="mini" data-rv="${esc(x.id)}">${esc(t("duel.revenge", { from: x.from || "？", name: monName(x.m), sec: secStr(x.targetMs) }))}${done ? esc(t(done.won ? "duel.revengeWon" : "duel.revengeTried", { sec: secStr(done.timeMs) })) : ""}</button>`;
+  }).join("");
+  $("du-revenge").querySelectorAll("[data-rv]").forEach((b) => (b.onclick = () => { const x = revengeList().find((r) => r.id === b.dataset.rv); if (x) startDuel(x.m, x.id); }));
 }
 
 // --- setup
@@ -1380,15 +1399,15 @@ function pickYokai(wave, st) {
 function nextYokai() {
   if (R.climb && R.day !== dayId()) return endRun("newday");
   R.wave++;
-  const st = P.st, E = B.enemy, { m, variant } = pickYokai(R.wave, st), tier = Math.max(0, MONSTERS.indexOf(m));
-  const max = Math.round(E.hpBase * (1 + E.hpPerTier * tier) * (1 + (R.climb ? B.climb.hpPerFloor : B.run.hpPerWave) * (R.wave - 1)) * (m.boss ? E.bossHp : 1) * (variant === "gold" ? E.goldHp : variant === "taisho" ? E.taishoHp : 1));
+  const st = P.st, E = B.enemy, { m, variant } = R.duel ? { m: R.duel, variant: "base" } : pickYokai(R.wave, st), tier = Math.max(0, MONSTERS.indexOf(m));
+  const max = R.duel ? (m.boss ? B.duel.bossHp : B.duel.hp) : Math.round(E.hpBase * (1 + E.hpPerTier * tier) * (1 + (R.climb ? B.climb.hpPerFloor : B.run.hpPerWave) * (R.wave - 1)) * (m.boss ? E.bossHp : 1) * (variant === "gold" ? E.goldHp : variant === "taisho" ? E.taishoHp : 1));
   foe = { m, wave: R.wave, variant, hp: max, max, dmg: 0, atkDmg: E.atkBase * (1 + E.atkPerTier * tier) * (m.boss ? E.bossAtk : 1), tags: tagsOf(m.asset), stagger: B.stagger.max };
   P.fudoUsed = P.yagenUsed = P.rengekiUsed = false; P.stag = null; P.fightStart = 0;
   phase = "encounter";
   renderHud();
   const title = variant === "gold" ? t("mon.goldName", { name: monName(m) }) : variant === "taisho" ? t("mon.taishoName", { name: monName(m) }) : monName(m);
   showVerdict(`<div class="seal huge${variant === "gold" ? " gold" : ""}">${monArt(m, variant)}</div><h2>${variant === "base" ? nameHtml("mon." + m.id) : esc(title)}</h2>
-    <div class="row" style="justify-content:center"><span class="tag">${esc(t(R.climb ? "climb.floor" : "run.wave", { n: R.wave }))}</span>${m === ZASHIKI ? `<span class="tag gold">${esc(t("tag.lucky"))}</span>` : ""}${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
+    <div class="row" style="justify-content:center"><span class="tag">${esc(t(R.duel ? "duel.tag" : R.climb ? "climb.floor" : "run.wave", { n: R.wave }))}</span>${m === ZASHIKI ? `<span class="tag gold">${esc(t("tag.lucky"))}</span>` : ""}${m.boss ? `<span class="tag boss">${esc(t("tag.boss"))}</span>` : ""}${variant === "gold" ? `<span class="tag gold">${esc(t("tag.gold"))}</span>` : ""}${variant === "taisho" ? `<span class="tag taisho">${esc(t("tag.taisho"))}</span>` : ""}</div>
     ${m.boss ? `<span class="hiden">${esc(t("enc.hiden", { seq: B.hiden.seq.map(typeName).join(" → ") }))}</span>` : ""}`,
     (m.boss ? B.bout.bossEncounterSec : B.bout.encounterSec) * 1000, () => beginFight());
   bgm(m.boss ? bossBgm(R.wave) : fightBgm());
@@ -1409,6 +1428,7 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
   phase = "kill"; endAttack(); clearCue(); setFrame(0); P.stag = null;
   const points = Math.round(foe.dmg * finMult);
   const ghost = ghostRec.stop({ result: { killed: true, timeMs: Math.round(gnow() - P.fightStart), points, swings: P.swings - (P.fightSwings || 0), maxCombo: P.maxCombo, finisher: finKind } });
+  if (R.duel) return finishDuel(m, points, ghost);
   if (ghost) ghostStore.save(ghost).then(() => ghostStore.trim(B.ghost ? B.ghost.keep : 50)).catch(() => {});
   // 侍の旅 との連携: 修行点 (登頂 counts as a floor, 妖怪退治 as a yokai) and the best record against this yokai
   const fightMs = Math.round(gnow() - P.fightStart), shKind = R.climb ? "climb" : "yokai";
@@ -1455,6 +1475,7 @@ function killYokai(finMult = 1, finKind = null, stillness = 0) {
 // the run ends: by retreating, resting (no swing for a minute) or falling. The yokai being fought scores 0.
 function endRun(reason) {
   if (!R) return;
+  if (R.duel) return endDuel(reason);
   ghostRec.cancel(); // resting mid-fight: that fight is not kept as a ghost
   const run = R, p = P, climb = !!run.climb, c = run.c;
   phase = "idle"; endAttack(); clearCue(); setFrame(0); clearTimeout(verdictTimer); $("verdict").hidden = true;
@@ -1644,6 +1665,58 @@ function finishReg() {
   mode = null; refreshTypes();
 }
 
+// ---------- 一騎打ち (the duel made for 仇討ち) ----------
+// One yokai, a fixed HP (balance.json "duel"), no gear, no level, no shikigami, enemy attacks the same for everyone.
+// Only the time to the kill is compared. The fastest fight against each yokai keeps its ghost (starred, so it is never trimmed).
+const secStr = (ms) => (ms / 1000).toFixed(2);
+// 仇討ち requests from the journey that can be fought now: a yokai this app knows, not past its time limit
+const revengeList = () => renkei.readTabi().revenge.map((x) => ({ ...x, m: MONSTERS.find((m) => m.id === x.yokai) })).filter((x) => x.m && !(x.until && x.until < Date.now()));
+function startDuel(m, revengeId = null) { launch("duel", { duel: m, revenge: revengeId, wave: 0 }); }
+function finishDuel(m, points, ghost) {
+  const run = R, p = P, timeMs = Math.round(gnow() - p.fightStart), counts = shugyoCounts(foe.tainted), maxHp = foe.max;
+  const prev = renkei.summary(B.shugyo).duel[m.id] || null;
+  const rv = run.revenge ? revengeList().find((x) => x.id === run.revenge) : null;
+  const won = !!rv && timeMs < rv.targetMs;
+  let record = false;
+  if (counts) {
+    renkei.addEvents(B.shugyo, { counts: { yokai: 1, boss: m.boss ? 1 : 0 }, ms: { yokai: timeMs } });
+    record = renkei.recordDuel({ yokai: m.id, timeMs, points, maxHp, diff: S.diff, kg: kg(), kind: kind(), swings: p.swings, ghostId: ghost ? ghost.id : null }, B.shugyo);
+    if (rv) renkei.recordRevenge(rv.id, { yokai: m.id, targetMs: rv.targetMs, timeMs, won }, B.shugyo);
+  }
+  if (ghost) {
+    // the fastest duel against this yokai keeps its ghost; the one it replaces goes back to being an ordinary ghost
+    if (record) { ghost.starred = true; ghost.duelBest = m.id; }
+    ghostStore.save(ghost)
+      .then(() => (record && prev && prev.ghostId ? ghostStore.update(prev.ghostId, { starred: false, duelBest: null }) : null))
+      .then(() => ghostStore.trim(B.ghost ? B.ghost.keep : 50)).catch(() => {});
+  }
+  phase = "idle"; mode = null; R = null; foe = null;
+  flash("goldfl"); play("slay"); setTimeout(() => play(record || won ? "fanfare" : "chime"), 350);
+  const tile = (key, val) => `<div><span class="label">${esc(t(key))}</span><b class="num">${esc(val)}</b></div>`;
+  openResult(`
+    <div class="stamp${record || won ? " kin" : ""}${LANG === "ja" ? "" : " latin"}">${esc(t(rv ? (won ? "stamp.duel.won" : "stamp.duel.lost") : record ? "stamp.record" : "stamp.slain"))}</div>
+    <div class="score" style="--d:.2s"><span class="label">${esc(t("duel.res.time", { name: monName(m) }))}</span><b class="num">${secStr(timeMs)}</b><span class="small muted">${esc(t("duel.note", { hp: fmt(maxHp) }))}</span></div>
+    <div class="tiles" style="--d:.35s">
+      ${tile("duel.res.best", prev ? secStr(prev.timeMs) : "－")}${rv ? tile("duel.res.target", secStr(rv.targetMs)) : tile("res.swings", p.swings)}${tile("res.maxCombo", p.maxCombo)}
+    </div>
+    ${counts ? "" : `<p class="small muted" style="text-align:center;--d:.5s">${esc(t("shugyo.notCounted"))}</p>`}`,
+    { ok: { label: t("duel.again"), fn: () => startDuel(m, run.revenge) }, ng: { label: t("kiwami.toTitle"), fn: () => { show("title"); } } });
+}
+// a duel that ended without the kill (retreat, rest, or falling): nothing is recorded
+function endDuel(reason) {
+  const m = R.duel, rvId = R.revenge;
+  ghostRec.cancel();
+  phase = "idle"; endAttack(); clearCue(); setFrame(0); clearTimeout(verdictTimer); $("verdict").hidden = true;
+  mode = null; R = null; foe = null;
+  play("hurt");
+  openResult(`
+    <div class="stamp grey${LANG === "ja" ? "" : " latin"}">${esc(t("stamp.run." + reason))}</div>
+    <p class="small muted" style="text-align:center;--d:.3s">${esc(t("duel.end", { name: monName(m) }))}</p>`,
+    { ok: { label: t("duel.again"), fn: () => startDuel(m, rvId) }, ng: { label: t("kiwami.toTitle"), fn: () => { show("title"); } } });
+}
+$("go-duel").onclick = () => { const m = MONSTERS.find((x) => x.id === $("du-yokai").value); if (m) startDuel(m); };
+$("du-yokai").onchange = () => renderShugyo();
+
 // ---------- 修行点: every training event is reported to the link with 侍の旅 (js/renkei.js) ----------
 // It counts only with the camera running, and never for swings from the try-out button or fights helped by the test buttons
 // (shugyo.countDemo turns that rule off for checks on a PC).
@@ -1810,7 +1883,7 @@ function renderHud() {
   $("b-stag").style.width = (100 * foe.stagger / B.stagger.max) + "%";
   $("p-hpbar").style.width = (100 * P.hp / P.hpMax) + "%";
   $("p-hp").textContent = t("battle.php", { hp: Math.ceil(P.hp), max: P.hpMax });
-  $("run-chip").textContent = R.climb ? t("climb.chip", { n: R.wave, score: fmt(R.c.score) }) : t("run.chip", { kills: R.kills, score: fmt(R.score) });
+  $("run-chip").textContent = R.duel ? t("duel.chip", { name: monName(R.duel) }) : R.climb ? t("climb.chip", { n: R.wave, score: fmt(R.c.score) }) : t("run.chip", { kills: R.kills, score: fmt(R.score) });
 }
 
 // ---------- judging (unchanged: swings are compared with your registered forms) ----------
@@ -1985,7 +2058,7 @@ function onSwing(m, j) {
   if (foe.hp <= 0) { P.chainHits = []; P.chainLines = []; return foeDown(); }
   if (fighting() && !P.stag && foe.stagger <= 0) startStagger();
   // strong yokai answer a long combo with a barrage
-  if (fighting() && (foe.m.boss || foe.variant !== "base") && foe.m.atk && S.enemyAtk && !atk && !P.stag && combo > 0 && combo % B.barrage.afterCombo === 0) startBarrage();
+  if (fighting() && (foe.m.boss || foe.variant !== "base") && foe.m.atk && atkOn() && !atk && !P.stag && combo > 0 && combo % B.barrage.afterCombo === 0) startBarrage();
 }
 function foeDown() {
   if (mode === "tabata") return tabataRoundEnd(true);
@@ -2201,7 +2274,7 @@ let atk = null;          // { kind, t0, done, warn }
 let nextAtkAt = 0, lastDemoAt = -1e9;
 function scheduleAttack(at) {
   const base = foe ? foe.m.atk : 9, st = P ? P.st : stats();
-  nextAtkAt = at ?? gnow() + base * B.attackRate[S.freq] * (1 + (st.partner.atk_interval || 0) / 100) * rand(0.75, 1.25) * 1000;
+  nextAtkAt = at ?? gnow() + base * atkRate() * (1 + (st.partner.atk_interval || 0) / 100) * rand(0.75, 1.25) * 1000;
 }
 const engaged = () => !!stream || performance.now() - lastDemoAt < 20000;
 function startAttack(tt) {
@@ -2280,7 +2353,7 @@ function endAttack() {
   if (!P || !P.stag) { if (phase === "fight" && fighting()) clearCue(); }
 }
 function attackTick(tt) {
-  if (!fighting() || phase !== "fight" || !foe || !foe.m.atk || !S.enemyAtk || P.stag || resultActions) return;
+  if (!fighting() || phase !== "fight" || !foe || !foe.m.atk || !atkOn() || P.stag || resultActions) return;
   if (!atk && !engaged()) { nextAtkAt = Math.max(nextAtkAt, tt + 3000); return; }
   if (!atk) { if (tt >= nextAtkAt) startAttack(tt); return; }
   if (atk.done) return;

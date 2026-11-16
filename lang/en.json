@@ -810,5 +810,21 @@
   "kiwami.progress": "{i} / {n} cuts",
   "kiwami.needForms": "{n} basic forms are not registered yet. Register all 9 to attempt a trial",
   "kiwami.again": "Again",
-  "kiwami.toTitle": "Title"
+  "kiwami.toTitle": "Title",
+  "duel.label": "Duel (for revenge, prototype)",
+  "duel.start": "Fight",
+  "duel.optBest": " (best {sec} s)",
+  "duel.note": "HP {hp} ・ no gear ・ no level ・ no shikigami ・ the enemy attacks. Only the time to the kill is compared",
+  "duel.tag": "Duel",
+  "duel.chip": "Duel ・ {name}",
+  "duel.revenge": "Revenge: {from} ・ {name} ・ beat {sec} s",
+  "duel.revengeWon": " ✓ Avenged ({sec} s)",
+  "duel.revengeTried": " (your best {sec} s)",
+  "stamp.duel.won": "AVENGED",
+  "stamp.duel.lost": "NOT YET",
+  "duel.res.time": "{name} ・ time to the kill (s)",
+  "duel.res.best": "Best so far",
+  "duel.res.target": "Their record",
+  "duel.end": "The duel with {name} ended without the kill. Nothing was recorded",
+  "duel.again": "Again"
 }

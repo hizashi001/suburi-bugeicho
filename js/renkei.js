@@ -148,6 +148,36 @@ export function recordKill(rec, cfg, { now = Date.now() } = {}) {
   }, now);
 }
 
+// 一騎打ち (the duel made for 仇討ち): the same yokai, the same HP, no gear, no level — so only these records are compared.
+// rec = { yokai, timeMs, points, maxHp, diff, kg, kind, swings, ghostId }. The fastest one is kept per yokai, with a count of tries.
+// Returns true when it is a new fastest time.
+export function recordDuel(rec, cfg, { now = Date.now() } = {}) {
+  let isBest = false;
+  writeHalf("hontai", (h) => {
+    h.duel = h.duel || {};
+    const old = h.duel[rec.yokai];
+    const { yokai, ...rest } = rec;
+    isBest = !old || rec.timeMs < old.timeMs;
+    h.duel[rec.yokai] = isBest ? { ...rest, tries: (old ? old.tries : 0) + 1, day: dayId(now), at: now } : { ...old, tries: old.tries + 1 };
+    stamp(h, cfg, dayId(now));
+  }, now);
+  return isBest;
+}
+// the outcome of one 仇討ち request from the journey. A win is never taken back; the best time is kept.
+export function recordRevenge(id, res, cfg, { now = Date.now() } = {}) {
+  writeHalf("hontai", (h) => {
+    h.revenge = h.revenge || {};
+    const old = h.revenge[id];
+    h.revenge[id] = {
+      yokai: res.yokai, targetMs: res.targetMs,
+      won: !!(res.won || (old && old.won)),
+      timeMs: old ? Math.min(old.timeMs, res.timeMs) : res.timeMs,
+      tries: (old ? old.tries : 0) + 1, at: now,
+    };
+    stamp(h, cfg, dayId(now));
+  }, now);
+}
+
 // ---------- 旅 → 本体 ----------
 // the journey replaces its half (or part of it): { trials: [...], revenge: [...], items: [...] }
 export function writeTabi(patch, { now = Date.now() } = {}) {
@@ -159,8 +189,8 @@ export function readTabi() {
     updatedAt: tb.updatedAt || 0,
     // techniques the journey lets the player attempt: { id, name_ja, name_en, seq: [form ids], gapSec, level }
     trials: (Array.isArray(tb.trials) ? tb.trials : []).filter((x) => x && typeof x.id === "string" && Array.isArray(x.seq) && x.seq.length >= 2),
-    // 仇討ち requests: { id, yokai, targetMs, from, until, ghost }  (shape still open — see the report's questions)
-    revenge: Array.isArray(tb.revenge) ? tb.revenge : [],
+    // 仇討ち requests: { id, yokai, targetMs, from, until }  — beat targetMs against that yokai in a duel, before `until` (ms, optional)
+    revenge: (Array.isArray(tb.revenge) ? tb.revenge : []).filter((x) => x && typeof x.id === "string" && typeof x.yokai === "string" && x.targetMs > 0),
     // belongings: passed through untouched until the two inventories are designed together
     items: Array.isArray(tb.items) ? tb.items : [],
   };
@@ -174,7 +204,7 @@ export function summary(cfg, now = Date.now()) {
   return {
     day: sh.day, rate: rateOf(sh, cfg), base: baseRate(sh, cfg), points: pointsOf(sh, cfg), fullPoints: cfg.fullPoints,
     streak: streakOf(sh, cfg), events: { ...sh.events }, ms: { ...sh.ms }, fightBy: cfg.fightBy,
-    kiwami: h.kiwami || {}, best: h.best || {}, updatedAt: h.updatedAt || 0,
+    kiwami: h.kiwami || {}, best: h.best || {}, duel: h.duel || {}, revenge: h.revenge || {}, updatedAt: h.updatedAt || 0,
   };
 }
 // the whole entry, for the report and for debugging

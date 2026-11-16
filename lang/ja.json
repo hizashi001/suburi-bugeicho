@@ -641,5 +641,21 @@
   "kiwami.progress": "{i} / {n} 振り",
   "kiwami.needForms": "型の登録がまだ {n} つ残っています。9つとも登録すると挑めます",
   "kiwami.again": "もう一度",
-  "kiwami.toTitle": "表紙へ"
+  "kiwami.toTitle": "表紙へ",
+  "duel.label": "一騎打ち（仇討ち用・試作）",
+  "duel.start": "挑む",
+  "duel.optBest": "（最速 {sec}秒）",
+  "duel.note": "HP {hp} ・ 装具なし ・ 位なし ・ 式神なし ・ 敵の攻撃あり。討伐の速さだけを比べます",
+  "duel.tag": "一騎打ち",
+  "duel.chip": "一騎打ち ・ {name}",
+  "duel.revenge": "仇討ち：{from} ・ {name} ・ {sec}秒を破る",
+  "duel.revengeWon": " ✓ 仇討ち成功（{sec}秒）",
+  "duel.revengeTried": " （自分の最速 {sec}秒）",
+  "stamp.duel.won": "仇討ち",
+  "stamp.duel.lost": "及ばず",
+  "duel.res.time": "{name} ・ 討伐までの時間（秒）",
+  "duel.res.best": "これまでの最速",
+  "duel.res.target": "相手の記録",
+  "duel.end": "{name}との一騎打ちは、倒しきれずに終わりました。記録は残りません",
+  "duel.again": "もう一度"
 }
