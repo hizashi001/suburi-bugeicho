@@ -553,6 +553,16 @@
       },
       "interp": "curve"
     },
+    "d3": {
+      "_note": "影を3Dで出す試験（js/shadow3d.js、docs/設計_影の3D.md）。model=体のモデル。signGap=手足が手前か奥かを入れ替えるのに要る、奥行きの差（ならした後。絵の幅に対する割合）。signEaseSec=その奥行きの差をならす時間。flatHold=骨が画面の上でこの割合より長く描かれている間は、手前・奥を入れ替えない。flatFull=この割合より長く描かれていれば、奥行きの差は0とみなす（少しの長さの違いで体が前後に傾くのを防ぐ）。blendSec=手前・奥が入れ替わる時にかける時間。rim=縁の光の強さ",
+      "model": "assets/models/shadow.vrm",
+      "signGap": 0.08,
+      "signEaseSec": 0.25,
+      "flatHold": 0.92,
+      "flatFull": 0.94,
+      "blendSec": 0.08,
+      "rim": 1.4
+    },
     "lab": {
       "speeds": [
         1,

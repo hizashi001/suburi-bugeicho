@@ -67,6 +67,13 @@ input[type=range] { width: 100%; }
     <span class="small muted num" id="perf"></span>
   </div>
 </main>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/",
+  "@pixiv/three-vrm": "https://cdn.jsdelivr.net/npm/@pixiv/three-vrm@2.1.2/lib/three-vrm.module.js"
+} }
+</script>
 <script type="module">
 // 影の試験場 (docs/設計_影の見た目.md, stage 0): one ghost, two ways of drawing it, side by side.
 // Every later stage is judged here with the same ghosts. A new way of drawing is added to RENDERERS below.
@@ -83,6 +90,7 @@ const [DICT, FALLBACK, CFG, SAMPLES] = await Promise.all([
   getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("config/balance.json", {}), getJSON("tools/test/ghosts/index.json", []),
 ]);
 const SH = { facing: { sideDeg: 55, backDeg: 125 }, lab: { speeds: [1, 0.5, 0.25] }, ...(CFG.shadow || {}) };
+const D3 = SH.d3 || {};
 const MOTION = SH.motion || { smooth: { minCutoff: 1.2, beta: 8, dCutoff: 4 }, holdMs: 200, boneLock: "clamp", footLock: { speed: 0.15, blendMs: 80, drift: 0.02 }, interp: "curve" };
 const t = (key, vars) => { let s = DICT[key] ?? FALLBACK[key] ?? key; if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)); return s; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -116,7 +124,24 @@ function bonesRenderer() {
   };
 }
 const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
+// the 3D ways of drawing (js/shadow3d.js, docs/設計_影の3D.md) are loaded only when chosen: three.js is big.
+// They always use the tidied motion and the ghost's own clock (opts.time), whatever the "motion" choice says.
+function lazy3d(g, kind) {
+  let impl = null, msg = t("slab.loading");
+  const m = createMotion(g, MOTION, SH.facing);
+  import("./js/shadow3d.js").then((x) => (kind === "vrm" ? x.createVrmRenderer(g, m, D3, { aura: auraOf(g) }) : x.createLiftView(g, m, D3)))
+    .then((r) => (impl = r)).catch((e) => { msg = String((e && e.message) || e); console.error(e); });
+  return {
+    get impl() { return impl; },
+    draw(ctx, pose, box, o) {
+      if (impl) return impl.draw(ctx, pose, box, o);
+      ctx.fillStyle = "#97a0b4"; ctx.font = `${Math.round(box.w / 24)}px system-ui, sans-serif`; ctx.textAlign = "center"; ctx.fillText(msg, box.x + box.w / 2, box.y + box.h / 2, box.w * 0.9);
+    },
+  };
+}
 const RENDERERS = [
+  { id: "vrm", make: (g) => lazy3d(g, "vrm") },
+  { id: "lift", make: (g) => lazy3d(g, "lift") },
   // look prototypes (js/shadowstyle.js): three finishes to choose from before stage 2
   { id: "kiri", make: (g) => createStyleRenderer("kiri", { aura: auraOf(g) }) },
   { id: "sumi", make: (g) => createStyleRenderer("sumi", { aura: auraOf(g) }) },
@@ -132,8 +157,8 @@ const ghosts = [];                       // every ghost read so far
 let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black";
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
-  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "aura", mode: "raw", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "kiri", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "bones", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrm", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
 const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };
@@ -227,7 +252,7 @@ function loop(now) {
     if (cur && s.view) {
       const t0 = performance.now();
       // the renderers run on their own clock while playing, and on the ghost's clock while stepping, so a stopped frame stays still
-      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur, meta: s.mode === "tidy" && motion ? motion.metaAt(tNow) : null });
+      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur, time: tNow, meta: s.mode === "tidy" && motion ? motion.metaAt(tNow) : null });
       s.ms += (performance.now() - t0 - s.ms) * 0.1;
     }
   }
@@ -248,7 +273,7 @@ function loop(now) {
 }
 // for checks from the console
 window.slab = { get state() { return { cur: cur && cur.id, tNow, playing, ghosts: ghosts.length }; }, seek: (ms) => { tNow = ms; playing = false; }, facing: (ms) => facingOf(poseAt(cur, ms), SH.facing),
-  get ghost() { return cur; }, get motion() { return motion; }, add: (g) => addGhost(g), createMotion, poseAt, MOTION };
+  get ghost() { return cur; }, get views() { return sides.map((s) => s.view); }, get motion() { return motion; }, add: (g) => addGhost(g), createMotion, poseAt, MOTION };
 renderUi();
 requestAnimationFrame(loop);
 </script>
