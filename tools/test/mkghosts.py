@@ -17,6 +17,9 @@ def rot_y(p, deg):
 def add(a, b): return (a[0] + b[0], a[1] + b[1], a[2] + b[2])
 def mix(a, b, k): return tuple(a[i] + (b[i] - a[i]) * k for i in range(3))
 def ease(k): k = max(0.0, min(1.0, k)); return k * k * (3 - 2 * k)
+def dist(a, b): return math.sqrt(sum((a[i] - b[i]) ** 2 for i in range(3)))
+UPPER, FORE = 0.29, 0.27            # upper arm and forearm, metres
+REACH, CHEST = (UPPER + FORE) * 0.97, (0.0, 0.30, 0.30)
 
 # hand positions in the body's own frame (metres; x = the body's left, y = up from the hips, z = forwards)
 HANDS = {
@@ -35,9 +38,17 @@ def body(hand, yaw=0.0, twist=0.0, sink=0.0):
     lo = lambda p: rot_y(p, yaw)
     sL, sR = (0.19, 0.50, 0.0), (-0.19, 0.50, 0.0)
     hL, hR = (-0.035 + hand[0], hand[1] - 0.05, hand[2]), (0.035 + hand[0], hand[1] + 0.05, hand[2])  # left hand at the pommel, right near the guard
+    # the arms are two stiff bones (so the bone-length step of stage 1 has something true to keep):
+    # hands that are out of reach are drawn in towards the chest together, and the elbow is placed by the two-bone joint
+    for _ in range(40):
+        if dist(sL, hL) <= REACH and dist(sR, hR) <= REACH: break
+        hL, hR = mix(CHEST, hL, 0.95), mix(CHEST, hR, 0.95)
     def elbow(s, h, side):
-        m = mix(s, h, 0.5)
-        return (m[0] + side * 0.10, m[1] - 0.10, m[2] - 0.02)
+        d = max(1e-6, dist(s, h)); dr = tuple((h[i] - s[i]) / d for i in range(3))
+        a = (UPPER * UPPER - FORE * FORE + d * d) / (2 * d); up_ = math.sqrt(max(0.0, UPPER * UPPER - a * a))
+        pole = (side * 0.5, -1.0, -0.3); k = sum(pole[i] * dr[i] for i in range(3))
+        pole = tuple(pole[i] - dr[i] * k for i in range(3)); n = math.sqrt(sum(c * c for c in pole)) or 1.0
+        return tuple(s[i] + dr[i] * a + pole[i] / n * up_ for i in range(3))
     J = {
         0: up((0.0, 0.72, 0.06)),
         11: up(sL), 12: up(sR),

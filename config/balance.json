@@ -537,6 +537,22 @@
       "sideDeg": 55,
       "backDeg": 125
     },
+    "motion": {
+      "_note": "影の動きの手当て（js/shadowmotion.js）。smooth=震え取り。minCutoffを下げるほど止まっている時に強くならす、betaを上げるほど速い動きを残す、dCutoffは速さの見積もりのならし方（上げるほど振り始めにすぐ反応する）。holdMs=見えなかった点が見えた時に、元の位置へ戻すまでの時間。boneLock=腕と脚の長さの手当て。false=しない、clamp=画面の上で骨が伸びた時だけ縮める（奥行きは信じない）、full=奥行きも使って長さを影全体の中央値に固定する（奥行きが不正確だと横の揺れになる）。footLock.speed=足首がこれより遅い間は足を止める（絵の高さに対する割合／秒）、blendMs=止める・離すの切り替えの時間、drift=止めた所から足がこれより離れたら止め直す（絵の高さに対する割合。ゆっくりのすり足で足が急に飛ぶのを防ぐ）。interp=コマの間の補い方（curve か line）",
+      "smooth": {
+        "minCutoff": 1.2,
+        "beta": 8,
+        "dCutoff": 4
+      },
+      "holdMs": 200,
+      "boneLock": "clamp",
+      "footLock": {
+        "speed": 0.15,
+        "blendMs": 80,
+        "drift": 0.02
+      },
+      "interp": "curve"
+    },
     "lab": {
       "speeds": [
         1,

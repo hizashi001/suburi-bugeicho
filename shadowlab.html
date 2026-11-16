@@ -49,8 +49,8 @@ input[type=range] { width: 100%; }
     <span class="small muted" id="info"></span>
   </div>
   <div class="pair">
-    <div class="side"><select class="mini" id="r-left"></select><div class="stage"><canvas id="cv-left"></canvas></div></div>
-    <div class="side"><select class="mini" id="r-right"></select><div class="stage"><canvas id="cv-right"></canvas></div></div>
+    <div class="side"><select class="mini" id="r-left"></select><select class="mini" id="m-left"></select><div class="stage"><canvas id="cv-left"></canvas></div></div>
+    <div class="side"><select class="mini" id="r-right"></select><select class="mini" id="m-right"></select><div class="stage"><canvas id="cv-right"></canvas></div></div>
   </div>
   <div class="panel">
     <input type="range" id="seek" min="0" max="1000" value="0">
@@ -62,6 +62,8 @@ input[type=range] { width: 100%; }
     </div>
     <span class="small num" id="time"></span>
     <span class="small num" id="facing"></span>
+    <div class="row"><span class="small" data-i18n="slab.fix"></span><span class="row" id="fixes"></span></div>
+    <span class="small num" id="motion"></span>
     <span class="small muted num" id="perf"></span>
   </div>
 </main>
@@ -69,7 +71,7 @@ input[type=range] { width: 100%; }
 // 影の試験場 (docs/設計_影の見た目.md, stage 0): one ghost, two ways of drawing it, side by side.
 // Every later stage is judged here with the same ghosts. A new way of drawing is added to RENDERERS below.
 import { readGhostFile, poseAt, drawGhost, createGhostRenderer } from "./js/ghost.js";
-import { facingOf, hasDepth } from "./js/shadowmotion.js";
+import { facingOf, hasDepth, createMotion } from "./js/shadowmotion.js";
 
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
@@ -79,7 +81,8 @@ const getJSON = (u, fb) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? r
 const [DICT, FALLBACK, CFG, SAMPLES] = await Promise.all([
   getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("config/balance.json", {}), getJSON("tools/test/ghosts/index.json", []),
 ]);
-const SH = CFG.shadow || { facing: { sideDeg: 55, backDeg: 125 }, lab: { speeds: [1, 0.5, 0.25] } };
+const SH = { facing: { sideDeg: 55, backDeg: 125 }, lab: { speeds: [1, 0.5, 0.25] }, ...(CFG.shadow || {}) };
+const MOTION = SH.motion || { smooth: { minCutoff: 1.2, beta: 8, dCutoff: 4 }, holdMs: 200, boneLock: "clamp", footLock: { speed: 0.15, blendMs: 80, drift: 0.02 }, interp: "curve" };
 const t = (key, vars) => { let s = DICT[key] ?? FALLBACK[key] ?? key; if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)); return s; };
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
@@ -121,10 +124,18 @@ const BGS = { black: "#05080f", indigo: "#1c2a4a", grey: "#b9bcc4" };
 // ---------- state ----------
 const ghosts = [];                       // every ghost read so far
 let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black";
+// stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
-  { cv: $("cv-left"), sel: $("r-left"), r: "aura", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), r: "bones", view: null, ms: 0 },
+  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "aura", mode: "raw", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "aura", mode: "tidy", view: null, ms: 0 },
 ];
+// the steps of the clean-up, each of which can be switched off to see what it does
+const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };
+let motion = null;
+function remakeMotion() {
+  motion = cur ? createMotion(cur, { ...MOTION, smooth: fixes.smooth ? MOTION.smooth : null, boneLock: fixes.bone === "off" ? false : fixes.bone, footLock: fixes.foot ? MOTION.footLock : null, interp: fixes.interp ? MOTION.interp : "line" }, SH.facing) : null;
+}
+const poseFor = (s) => (s.mode === "tidy" && motion ? motion.at(tNow) : poseAt(cur, tNow));
 const total = () => (cur ? cur.frames[cur.frames.length - 1][0] : 0);
 
 function addGhost(g, select = true) {
@@ -134,6 +145,7 @@ function addGhost(g, select = true) {
 }
 function pick(i) {
   cur = ghosts[i]; $("pick").value = i; tNow = 0; playing = false;
+  remakeMotion();
   sides.forEach((s) => (s.view = RENDERERS.find((r) => r.id === s.r).make(cur)));
   $("info").textContent = t("slab.info", { name: cur.name || cur.id, sec: (total() / 1000).toFixed(1), frames: cur.frames.length, fps: cur.fps, depth: t(hasDepth(cur) ? "slab.depth.yes" : "slab.depth.no") });
   renderUi();
@@ -142,7 +154,7 @@ function frameIndex() { const F = cur.frames; let i = 0; while (i < F.length - 1
 function renderUi() {
   $("btn-play").textContent = t(playing ? "slab.pause" : "slab.play");
   [$("btn-play"), $("btn-prev"), $("btn-next"), $("seek")].forEach((el) => (el.disabled = !cur));
-  if (!cur) { $("info").textContent = t("slab.none"); $("time").textContent = ""; $("facing").textContent = ""; }
+  if (!cur) { $("info").textContent = t("slab.none"); $("time").textContent = ""; $("facing").textContent = ""; $("motion").textContent = ""; }
 }
 
 // ---------- controls ----------
@@ -179,7 +191,14 @@ sides.forEach((s, n) => {
   s.sel.innerHTML = RENDERERS.map((r) => `<option value="${r.id}">${esc(t(n ? "slab.right" : "slab.left"))}：${esc(t("slab.r." + r.id))}</option>`).join("");
   s.sel.value = s.r;
   s.sel.onchange = () => { s.r = s.sel.value; if (cur) s.view = RENDERERS.find((r) => r.id === s.r).make(cur); };
+  s.msel.innerHTML = ["raw", "tidy"].map((m) => `<option value="${m}">${esc(t("slab.mode"))}：${esc(t("slab.mode." + m))}</option>`).join("");
+  s.msel.value = s.mode;
+  s.msel.onchange = () => (s.mode = s.msel.value);
 });
+$("fixes").innerHTML = Object.keys(fixes).map((k) => (k === "bone"
+  ? `<label class="small">${esc(t("slab.fix.bone"))} <select class="mini" data-k="bone">${["off", "clamp", "full"].map((v) => `<option value="${v}"${v === fixes.bone ? " selected" : ""}>${esc(t("slab.fix.bone." + v))}</option>`).join("")}</select></label>`
+  : `<label class="small"><input type="checkbox" data-k="${k}" checked> ${esc(t("slab.fix." + k))}</label>`)).join("");
+$("fixes").querySelectorAll("input, select").forEach((el) => (el.onchange = () => { fixes[el.dataset.k] = el.type === "checkbox" ? el.checked : el.value; remakeMotion(); }));
 document.addEventListener("keydown", (e) => {
   if (e.code === "Space") { e.preventDefault(); $("btn-play").click(); }
   if (e.code === "ArrowLeft") step(-1);
@@ -202,7 +221,7 @@ function loop(now) {
     if (cur && s.view) {
       const t0 = performance.now();
       // the renderers run on their own clock while playing, and on the ghost's clock while stepping, so a stopped frame stays still
-      s.view.draw(ctx, poseAt(cur, tNow), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur });
+      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur });
       s.ms += (performance.now() - t0 - s.ms) * 0.1;
     }
   }
@@ -212,13 +231,18 @@ function loop(now) {
     const f = facingOf(poseAt(cur, tNow), SH.facing);
     const d = (v) => (v == null ? "－" : (v >= 0 ? "+" : "") + Math.round(v));
     $("facing").textContent = f ? t("slab.facing", { sh: d(f.shoulders), hip: d(f.hips), tw: d(f.twist), side: t("slab.side." + f.side) }) : t("slab.facing.none");
+    if (motion) {
+      const m = motion.metaAt(tNow), mark = (b) => t(b ? "slab.foot.on" : "slab.foot.off");
+      $("motion").textContent = t("slab.motion", { l: mark(m.planted[27]), r: mark(m.planted[28]), now: Object.values(m.seen).filter((v) => v < 1).length, filled: motion.info.filled, side: m.facing ? t("slab.side." + m.facing.side) : "－" });
+    }
   }
   frames++;
   if (now - perfAt >= 1000) { fps = Math.round((frames * 1000) / (now - perfAt)); frames = 0; perfAt = now; $("perf").textContent = t("slab.perf", { fps, l: sides[0].ms.toFixed(1), r: sides[1].ms.toFixed(1) }); }
   requestAnimationFrame(loop);
 }
 // for checks from the console
-window.slab = { get state() { return { cur: cur && cur.id, tNow, playing, ghosts: ghosts.length }; }, seek: (ms) => { tNow = ms; playing = false; }, facing: (ms) => facingOf(poseAt(cur, ms), SH.facing) };
+window.slab = { get state() { return { cur: cur && cur.id, tNow, playing, ghosts: ghosts.length }; }, seek: (ms) => { tNow = ms; playing = false; }, facing: (ms) => facingOf(poseAt(cur, ms), SH.facing),
+  get ghost() { return cur; }, get motion() { return motion; }, add: (g) => addGhost(g), createMotion, poseAt, MOTION };
 renderUi();
 requestAnimationFrame(loop);
 </script>
