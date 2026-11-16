@@ -72,6 +72,7 @@ input[type=range] { width: 100%; }
 // Every later stage is judged here with the same ghosts. A new way of drawing is added to RENDERERS below.
 import { readGhostFile, poseAt, drawGhost, createGhostRenderer } from "./js/ghost.js";
 import { facingOf, hasDepth, createMotion } from "./js/shadowmotion.js";
+import { createStyleRenderer } from "./js/shadowstyle.js";
 
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
@@ -114,7 +115,12 @@ function bonesRenderer() {
     },
   };
 }
+const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
 const RENDERERS = [
+  // look prototypes (js/shadowstyle.js): three finishes to choose from before stage 2
+  { id: "kiri", make: (g) => createStyleRenderer("kiri", { aura: auraOf(g) }) },
+  { id: "sumi", make: (g) => createStyleRenderer("sumi", { aura: auraOf(g) }) },
+  { id: "kasane", make: (g) => createStyleRenderer("kasane", { aura: auraOf(g) }) },
   { id: "aura", make: (g) => createGhostRenderer({ aura: g.master ? [255, 190, 90] : [120, 175, 255] }) },
   { id: "bones", make: () => bonesRenderer() },
   { id: "plain", make: () => ({ draw: (ctx, pose, box, o) => drawGhost(ctx, pose, box, { aspect: o.aspect }) }) },
@@ -127,7 +133,7 @@ let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black"
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
   { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "aura", mode: "raw", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "aura", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "kiri", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
 const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };
@@ -168,10 +174,10 @@ $("file").onchange = async (e) => {
 $("samples").innerHTML = SAMPLES.map((s, i) => `<button class="mini" data-s="${i}">${esc(s.name)}</button>`).join("");
 $("samples").querySelectorAll("button").forEach((b) => (b.onclick = async () => {
   const s = SAMPLES[+b.dataset.s];
-  const have = ghosts.findIndex((g) => g.name === s.name && g.computed);
+  const have = ghosts.findIndex((g) => g.sampleFile === s.file);
   if (have >= 0) return pick(have);
   const g = await getJSON("tools/test/ghosts/" + s.file, null);
-  if (g) addGhost(g);
+  if (g) { g.sampleFile = s.file; g.name = s.name; addGhost(g); }
 }));
 $("pick").onchange = (e) => pick(+e.target.value);
 $("btn-play").onclick = () => { if (!cur) return; if (!playing && tNow >= total()) tNow = 0; playing = !playing; lastTick = performance.now(); renderUi(); };
@@ -221,7 +227,7 @@ function loop(now) {
     if (cur && s.view) {
       const t0 = performance.now();
       // the renderers run on their own clock while playing, and on the ghost's clock while stepping, so a stopped frame stays still
-      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur });
+      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur, meta: s.mode === "tidy" && motion ? motion.metaAt(tNow) : null });
       s.ms += (performance.now() - t0 - s.ms) * 0.1;
     }
   }

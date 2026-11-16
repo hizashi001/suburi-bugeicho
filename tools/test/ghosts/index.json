@@ -14,5 +14,9 @@
  {
   "file": "calc_spin.ghost.json",
   "name": "計算・回転切り"
+ },
+ {
+  "file": "real_midare.ghost.json",
+  "name": "ヒデキ・早い乱撃"
  }
 ]

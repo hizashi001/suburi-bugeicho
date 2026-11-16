@@ -126,5 +126,7 @@ for g in GHOSTS:
     with open(os.path.join(OUT, g["id"] + ".ghost.json"), "w", encoding="utf8", newline="\n") as f:
         json.dump(g, f, ensure_ascii=False, separators=(",", ":"))
 with open(os.path.join(OUT, "index.json"), "w", encoding="utf8", newline="\n") as f:
-    json.dump([{"file": g["id"] + ".ghost.json", "name": g["name"]} for g in GHOSTS], f, ensure_ascii=False, indent=1)
+    # ghosts recorded on the iPhone are kept beside the computed ones and listed after them
+    REAL = [{"file": "real_midare.ghost.json", "name": "ヒデキ・早い乱撃"}]
+    json.dump([{"file": g["id"] + ".ghost.json", "name": g["name"]} for g in GHOSTS] + REAL, f, ensure_ascii=False, indent=1)
 print([(g["id"], len(g["frames"])) for g in GHOSTS])
