@@ -531,6 +531,20 @@
     "pixelRatio": 1.5,
     "bloomThreshold": 0.4
   },
+  "shadow": {
+    "_note": "影の見た目（docs/設計_影の見た目.md）。facing=体の向きの分け方。肩の線の向き（度。0が正面）がsideDeg以上で横、backDeg以上で背中とみなす。lab.speeds=試験ページ（shadowlab.html）の再生の速さの選択肢",
+    "facing": {
+      "sideDeg": 55,
+      "backDeg": 125
+    },
+    "lab": {
+      "speeds": [
+        1,
+        0.5,
+        0.25
+      ]
+    }
+  },
   "shugyo": {
     "_note": "修行点と修行の倍率（侍の旅 仕様書9.2。値はすべて仮）。points=出来事1回の修行点（tabata=TABATAの1種目、yokai=妖怪退治の1体、climb=登頂の1階、kiwami=極みの試練の合格1回）。fightBy=妖怪退治と登頂の点の出し方。count なら points のとおり1体・1階ごと、time なら戦闘の時間で出す（time.secPerPoint 秒につき1点、1体の上限は time.maxPerKill 点）。TABATAと試練はどちらでも points のとおり。fullPoints=その日の修行点がこの点で倍率の伸びが満額。gainPerDay=1日に上がる倍率の上限。min・max=倍率の下限と上限。freeRestDays=休んでも下がらない日数。decayPerDay=それを過ぎた休み1日ごとに下がる量。tabataMinHits=TABATAの1種目を数えるのに要る、通った振りの数。countDemo=カメラ無し・試し振り・テスト用のボタンを使った分も数えるか（確認のときだけ true。ふだんは false）",
     "points": {

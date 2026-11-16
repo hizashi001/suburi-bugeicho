@@ -3,7 +3,11 @@
 // A ghost file (.ghost.json):
 //   { format: "ghost/1", id, name, kind: "fight" | "kata", master, created, fps, aspect,
 //     points: [landmark indices], frames: [[t ms, x, y, x, y, …], …]  (camera picture 0–1, not mirrored, -1 = not seen),
+//     depth: [[z, z, …], …]  (optional, one row per frame, one z per point: how far each point is from the hips,
+//             towards the camera = negative, in the same scale as x; 0 where the point was not seen),
 //     events: [[t ms, type, …], …], plus meta for fights: weapon, division, diff, yokai, result }
+// "depth" was added on 2026-11-16 so that a ghost knows which way the body faces (front, side or back).
+// It sits beside "frames" instead of inside it, so older ghosts and older readers keep working.
 
 export const FORMAT = "ghost/1";
 // nose, shoulders, elbows, wrists, hips, knees, ankles: enough to draw a body and a sword
@@ -17,7 +21,7 @@ export function createGhostRecorder({ fps = 15, minVis = 0.3 } = {}) {
     get active() { return !!g; },
     start(meta = {}) {
       g = { format: FORMAT, id: "g_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), created: new Date().toISOString(),
-        fps, points: POINTS, frames: [], events: [], kind: "fight", master: false, name: "", ...meta };
+        fps, points: POINTS, frames: [], depth: [], events: [], kind: "fight", master: false, name: "", ...meta };
       t0 = performance.now(); lastAt = -1e9;
     },
     // lm: one person's landmarks (camera picture 0–1); aspect: picture width / height
@@ -25,12 +29,13 @@ export function createGhostRecorder({ fps = 15, minVis = 0.3 } = {}) {
       if (!g || !lm || now - lastAt < 1000 / fps) return;
       lastAt = now;
       if (aspect && !g.aspect) g.aspect = +aspect.toFixed(4);
-      const row = [Math.round(now - t0)];
+      const row = [Math.round(now - t0)], zs = [];
       for (const i of POINTS) {
         const p = lm[i];
-        if (p && (p.visibility ?? 1) >= minVis) row.push(+p.x.toFixed(3), +p.y.toFixed(3)); else row.push(-1, -1);
+        if (p && (p.visibility ?? 1) >= minVis) { row.push(+p.x.toFixed(3), +p.y.toFixed(3)); zs.push(+(p.z || 0).toFixed(3)); }
+        else { row.push(-1, -1); zs.push(0); }
       }
-      g.frames.push(row);
+      g.frames.push(row); g.depth.push(zs);
     },
     event(type, ...data) { if (g) g.events.push([Math.round(performance.now() - t0), type, ...data]); },
     // returns the finished ghost (or null when nothing was recorded); nothing is saved here
@@ -55,7 +60,7 @@ function db() {
   }));
 }
 const req = (r) => new Promise((ok, ng) => { r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error); });
-export const metaOf = (g) => { const { frames, events, ...m } = g; return { ...m, frameCount: frames.length, swingCount: events.filter((e) => e[1] === "swing").length }; };
+export const metaOf = (g) => { const { frames, depth, events, ...m } = g; return { ...m, frameCount: frames.length, swingCount: events.filter((e) => e[1] === "swing").length }; };
 export const ghostStore = {
   async save(g) {
     const d = await db(), tx = d.transaction(["meta", "data"], "readwrite");
@@ -89,7 +94,8 @@ export async function readGhostFile(file) {
 }
 
 // ---------- playback ----------
-// the pose at time t (ms), in between two recorded frames; points not seen in either frame stay unseen
+// the pose at time t (ms), in between two recorded frames; points not seen in either frame stay unseen.
+// Each point is [x, y], or [x, y, z] when the ghost carries depth.
 export function poseAt(g, t) {
   const F = g.frames;
   if (!F.length) return null;
@@ -98,10 +104,13 @@ export function poseAt(g, t) {
   poseAt.g = g; poseAt.i = i;
   const a = F[i], b = F[Math.min(i + 1, F.length - 1)], k = b[0] > a[0] ? Math.max(0, Math.min(1, (t - a[0]) / (b[0] - a[0]))) : 0;
   const pose = {};
+  const D = Array.isArray(g.depth) && g.depth.length === F.length ? g.depth : null;
+  const za = D && D[i], zb = D && D[Math.min(i + 1, F.length - 1)];
   g.points.forEach((p, j) => {
     const ax = a[1 + j * 2], ay = a[2 + j * 2], bx = b[1 + j * 2], by = b[2 + j * 2];
     if (ax < 0 && bx < 0) return;
     pose[p] = ax < 0 ? [bx, by] : bx < 0 ? [ax, ay] : [ax + (bx - ax) * k, ay + (by - ay) * k];
+    if (D) pose[p].push(ax < 0 ? zb[j] : bx < 0 ? za[j] : za[j] + (zb[j] - za[j]) * k);
   });
   return pose;
 }

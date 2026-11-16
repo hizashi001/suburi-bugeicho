@@ -53,3 +53,7 @@ node tools/test/t10.js tools/test run   # 例：妖怪退治を偽のカメラ�
 | `keys.py` | 画面の文言のキーが言語ファイルにそろっているか |
 
 鬼面の加工の道具は `tools/masks/`（背景を抜く `cutout.py`、目の位置でそろえる `align.py` と `anchors.json`、256色に圧縮する `quant.py` など）。
+
+## 計算で作った影（影の試験場用）
+
+`python tools/test/mkghosts.py` で `tools/test/ghosts/` に4本（ゆっくりの型・速い連撃・ひねり・回転切り）を書き出す。棒の体を式で動かして、スマホのカメラのように写した物。骨格推定を通していないので、震えも推し間違いも無い。`shadowlab.html` の「計算で作った影」から読める。node は要らない。

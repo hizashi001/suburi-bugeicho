@@ -1,0 +1,18 @@
+[
+ {
+  "file": "calc_slow.ghost.json",
+  "name": "計算・ゆっくりの型"
+ },
+ {
+  "file": "calc_combo.ghost.json",
+  "name": "計算・速い連撃"
+ },
+ {
+  "file": "calc_twist.ghost.json",
+  "name": "計算・ひねり"
+ },
+ {
+  "file": "calc_spin.ghost.json",
+  "name": "計算・回転切り"
+ }
+]

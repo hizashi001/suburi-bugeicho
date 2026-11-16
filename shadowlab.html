@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shadow lab</title>
+<style>
+:root { --ai: #0f1626; --ai-2: #1b2438; --line: #2c3a58; --washi: #ece6d6; --muted: #97a0b4; --kin: #d6ab4c; --shu: #cf4a33; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ai); color: var(--washi); font: 15px/1.5 system-ui, -apple-system, "Hiragino Sans", sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 12px 16px 40px; display: flex; flex-direction: column; gap: 12px; }
+h1 { font-size: 1.2rem; margin: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .spread { justify-content: space-between; }
+button, .btn, select { background: var(--ai-2); color: var(--washi); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; font: inherit; text-decoration: none; }
+button.primary { background: var(--kin); color: #1b1407; border-color: var(--kin); font-weight: 700; }
+button.mini, select.mini { padding: 5px 10px; font-size: .85rem; }
+button[aria-pressed=true] { border-color: var(--kin); color: var(--kin); }
+button:disabled { opacity: .45; }
+.small { font-size: .8rem; } .muted { color: var(--muted); } .num { font-variant-numeric: tabular-nums; }
+.panel { background: var(--ai-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.side select { width: 100%; }
+.stage { position: relative; width: 100%; aspect-ratio: 9 / 16; border-radius: 10px; overflow: hidden; }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+input[type=range] { width: 100%; }
+#errbox { position: fixed; left: 8px; right: 8px; bottom: 8px; z-index: 9; background: #5c1414; color: #fff; border: 1px solid var(--shu); border-radius: 8px; padding: 8px 10px; font: 12px/1.4 ui-monospace, monospace; white-space: pre-wrap; }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div id="errbox" hidden></div>
+<script>
+(function () {
+  const show = (m) => { const b = document.getElementById("errbox"); if (!b) return; b.hidden = false; b.textContent = ("⚠ " + m + "\n" + b.textContent).slice(0, 1200); };
+  window.addEventListener("error", (e) => show(`${e.message} (${(e.filename || "").split("/").pop()}:${e.lineno || ""})`));
+  window.addEventListener("unhandledrejection", (e) => show(String(e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+})();
+</script>
+<main>
+  <div class="row spread"><h1 data-i18n="slab.title"></h1><a class="btn small" href="index.html" data-i18n="common.back"></a></div>
+  <p class="small muted" data-i18n="slab.lead"></p>
+  <div class="panel">
+    <div class="row">
+      <button class="primary" id="btn-open" data-i18n="slab.open"></button><input type="file" id="file" accept=".json,application/json" multiple hidden>
+      <span class="small" data-i18n="slab.sample"></span><span class="row" id="samples"></span>
+    </div>
+    <select id="pick"></select>
+    <span class="small muted" id="info"></span>
+  </div>
+  <div class="pair">
+    <div class="side"><select class="mini" id="r-left"></select><div class="stage"><canvas id="cv-left"></canvas></div></div>
+    <div class="side"><select class="mini" id="r-right"></select><div class="stage"><canvas id="cv-right"></canvas></div></div>
+  </div>
+  <div class="panel">
+    <input type="range" id="seek" min="0" max="1000" value="0">
+    <div class="row">
+      <button class="primary" id="btn-play" data-i18n="slab.play"></button>
+      <button class="mini" id="btn-prev" data-i18n="slab.prev"></button><button class="mini" id="btn-next" data-i18n="slab.next"></button>
+      <span class="small" data-i18n="slab.speed"></span><span class="row" id="speeds"></span>
+      <span class="small" data-i18n="slab.bg"></span><span class="row" id="bgs"></span>
+    </div>
+    <span class="small num" id="time"></span>
+    <span class="small num" id="facing"></span>
+    <span class="small muted num" id="perf"></span>
+  </div>
+</main>
+<script type="module">
+// 影の試験場 (docs/設計_影の見た目.md, stage 0): one ghost, two ways of drawing it, side by side.
+// Every later stage is judged here with the same ghosts. A new way of drawing is added to RENDERERS below.
+import { readGhostFile, poseAt, drawGhost, createGhostRenderer } from "./js/ghost.js";
+import { facingOf, hasDepth } from "./js/shadowmotion.js";
+
+const KEY = "suburi-bugeicho.v1";
+let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
+const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
+document.documentElement.lang = LANG;
+const getJSON = (u, fb) => fetch(u, { cache: "no-cache" }).then((r) => (r.ok ? r.json() : fb)).catch(() => fb);
+const [DICT, FALLBACK, CFG, SAMPLES] = await Promise.all([
+  getJSON(`lang/${LANG}.json`, {}), LANG === "ja" ? {} : getJSON("lang/ja.json", {}), getJSON("config/balance.json", {}), getJSON("tools/test/ghosts/index.json", []),
+]);
+const SH = CFG.shadow || { facing: { sideDeg: 55, backDeg: 125 }, lab: { speeds: [1, 0.5, 0.25] } };
+const t = (key, vars) => { let s = DICT[key] ?? FALLBACK[key] ?? key; if (vars) s = s.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)); return s; };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
+const $ = (id) => document.getElementById(id);
+
+// ---------- the ways of drawing ----------
+// make() returns { draw(ctx, pose, box, { aspect, t, ghost }) }. One is made per side, so each keeps its own sparks and trails.
+const BONES = [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28]];
+function bonesRenderer() {
+  return {
+    draw(ctx, pose, box, { aspect = 0.75 } = {}) {
+      if (!pose) return;
+      const bw = Math.min(box.w, box.h * aspect), bh = bw / aspect, ox = box.x + (box.w - bw) / 2, oy = box.y + (box.h - bh) / 2;
+      const P = (i) => pose[i] && [ox + (1 - pose[i][0]) * bw, oy + pose[i][1] * bh];
+      // nearer the camera = brighter and thicker; without depth everything is the same
+      const near = (i) => (pose[i] && pose[i].length > 2 ? Math.max(0, Math.min(1, 0.5 - pose[i][2] * 2.2)) : 0.6);
+      const order = BONES.map(([a, b]) => ({ a, b, n: (near(a) + near(b)) / 2 })).filter((o) => P(o.a) && P(o.b)).sort((x, y) => x.n - y.n);
+      ctx.save(); ctx.lineCap = "round";
+      for (const o of order) {
+        ctx.strokeStyle = `rgba(${Math.round(90 + 150 * o.n)},${Math.round(120 + 110 * o.n)},255,${0.45 + 0.55 * o.n})`;
+        ctx.lineWidth = bw / 60 * (0.6 + 1.2 * o.n);
+        ctx.beginPath(); ctx.moveTo(...P(o.a)); ctx.lineTo(...P(o.b)); ctx.stroke();
+      }
+      for (const i of Object.keys(pose)) {
+        const p = P(i); ctx.fillStyle = `rgba(255,${Math.round(200 + 55 * near(i))},${Math.round(120 + 100 * near(i))},${0.5 + 0.5 * near(i)})`;
+        ctx.beginPath(); ctx.arc(p[0], p[1], bw / 90 * (0.7 + near(i)), 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    },
+  };
+}
+const RENDERERS = [
+  { id: "aura", make: (g) => createGhostRenderer({ aura: g.master ? [255, 190, 90] : [120, 175, 255] }) },
+  { id: "bones", make: () => bonesRenderer() },
+  { id: "plain", make: () => ({ draw: (ctx, pose, box, o) => drawGhost(ctx, pose, box, { aspect: o.aspect }) }) },
+];
+const BGS = { black: "#05080f", indigo: "#1c2a4a", grey: "#b9bcc4" };
+
+// ---------- state ----------
+const ghosts = [];                       // every ghost read so far
+let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black";
+const sides = [
+  { cv: $("cv-left"), sel: $("r-left"), r: "aura", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), r: "bones", view: null, ms: 0 },
+];
+const total = () => (cur ? cur.frames[cur.frames.length - 1][0] : 0);
+
+function addGhost(g, select = true) {
+  ghosts.push(g);
+  $("pick").innerHTML = ghosts.map((x, i) => `<option value="${i}">${esc(x.name || x.id)}</option>`).join("");
+  if (select) pick(ghosts.length - 1);
+}
+function pick(i) {
+  cur = ghosts[i]; $("pick").value = i; tNow = 0; playing = false;
+  sides.forEach((s) => (s.view = RENDERERS.find((r) => r.id === s.r).make(cur)));
+  $("info").textContent = t("slab.info", { name: cur.name || cur.id, sec: (total() / 1000).toFixed(1), frames: cur.frames.length, fps: cur.fps, depth: t(hasDepth(cur) ? "slab.depth.yes" : "slab.depth.no") });
+  renderUi();
+}
+function frameIndex() { const F = cur.frames; let i = 0; while (i < F.length - 1 && F[i + 1][0] <= tNow) i++; return i; }
+function renderUi() {
+  $("btn-play").textContent = t(playing ? "slab.pause" : "slab.play");
+  [$("btn-play"), $("btn-prev"), $("btn-next"), $("seek")].forEach((el) => (el.disabled = !cur));
+  if (!cur) { $("info").textContent = t("slab.none"); $("time").textContent = ""; $("facing").textContent = ""; }
+}
+
+// ---------- controls ----------
+$("btn-open").onclick = () => $("file").click();
+$("file").onchange = async (e) => {
+  for (const f of e.target.files) {
+    try { addGhost(await readGhostFile(f)); } catch { alert(t("slab.bad", { name: f.name })); }
+  }
+  e.target.value = "";
+};
+$("samples").innerHTML = SAMPLES.map((s, i) => `<button class="mini" data-s="${i}">${esc(s.name)}</button>`).join("");
+$("samples").querySelectorAll("button").forEach((b) => (b.onclick = async () => {
+  const s = SAMPLES[+b.dataset.s];
+  const have = ghosts.findIndex((g) => g.name === s.name && g.computed);
+  if (have >= 0) return pick(have);
+  const g = await getJSON("tools/test/ghosts/" + s.file, null);
+  if (g) addGhost(g);
+}));
+$("pick").onchange = (e) => pick(+e.target.value);
+$("btn-play").onclick = () => { if (!cur) return; if (!playing && tNow >= total()) tNow = 0; playing = !playing; lastTick = performance.now(); renderUi(); };
+const step = (d) => { if (!cur) return; playing = false; const F = cur.frames, i = Math.max(0, Math.min(F.length - 1, frameIndex() + d)); tNow = F[i][0]; renderUi(); };
+$("btn-prev").onclick = () => step(-1);
+$("btn-next").onclick = () => step(1);
+$("seek").oninput = (e) => { if (!cur) return; playing = false; tNow = (e.target.value / 1000) * total(); renderUi(); };
+const pressable = (box, items, get, set) => {
+  box.innerHTML = items.map((x) => `<button class="mini" data-v="${esc(x.v)}">${esc(x.label)}</button>`).join("");
+  const paint = () => box.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === String(get()))));
+  box.querySelectorAll("button").forEach((b) => (b.onclick = () => { set(b.dataset.v); paint(); }));
+  paint();
+};
+pressable($("speeds"), SH.lab.speeds.map((v) => ({ v, label: "×" + v })), () => speed, (v) => (speed = +v));
+pressable($("bgs"), Object.keys(BGS).map((v) => ({ v, label: t("slab.bg." + v) })), () => bg, (v) => (bg = v));
+sides.forEach((s, n) => {
+  s.sel.innerHTML = RENDERERS.map((r) => `<option value="${r.id}">${esc(t(n ? "slab.right" : "slab.left"))}：${esc(t("slab.r." + r.id))}</option>`).join("");
+  s.sel.value = s.r;
+  s.sel.onchange = () => { s.r = s.sel.value; if (cur) s.view = RENDERERS.find((r) => r.id === s.r).make(cur); };
+});
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space") { e.preventDefault(); $("btn-play").click(); }
+  if (e.code === "ArrowLeft") step(-1);
+  if (e.code === "ArrowRight") step(1);
+});
+
+// ---------- the loop ----------
+let frames = 0, fps = 0, perfAt = performance.now();
+function loop(now) {
+  if (cur && playing) {
+    tNow += (now - lastTick) * speed;
+    if (tNow >= total()) { tNow = total(); playing = false; renderUi(); }
+  }
+  lastTick = now;
+  for (const s of sides) {
+    const dpr = Math.min(2, window.devicePixelRatio || 1), w = Math.round(s.cv.clientWidth * dpr), h = Math.round(s.cv.clientHeight * dpr);
+    if (s.cv.width !== w || s.cv.height !== h) { s.cv.width = w; s.cv.height = h; }
+    const ctx = s.cv.getContext("2d");
+    ctx.fillStyle = BGS[bg]; ctx.fillRect(0, 0, w, h);
+    if (cur && s.view) {
+      const t0 = performance.now();
+      // the renderers run on their own clock while playing, and on the ghost's clock while stepping, so a stopped frame stays still
+      s.view.draw(ctx, poseAt(cur, tNow), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur });
+      s.ms += (performance.now() - t0 - s.ms) * 0.1;
+    }
+  }
+  if (cur) {
+    if (document.activeElement !== $("seek")) $("seek").value = total() ? Math.round((tNow / total()) * 1000) : 0;
+    $("time").textContent = t("slab.time", { t: (tNow / 1000).toFixed(2), total: (total() / 1000).toFixed(2), i: frameIndex() + 1 });
+    const f = facingOf(poseAt(cur, tNow), SH.facing);
+    const d = (v) => (v == null ? "－" : (v >= 0 ? "+" : "") + Math.round(v));
+    $("facing").textContent = f ? t("slab.facing", { sh: d(f.shoulders), hip: d(f.hips), tw: d(f.twist), side: t("slab.side." + f.side) }) : t("slab.facing.none");
+  }
+  frames++;
+  if (now - perfAt >= 1000) { fps = Math.round((frames * 1000) / (now - perfAt)); frames = 0; perfAt = now; $("perf").textContent = t("slab.perf", { fps, l: sides[0].ms.toFixed(1), r: sides[1].ms.toFixed(1) }); }
+  requestAnimationFrame(loop);
+}
+// for checks from the console
+window.slab = { get state() { return { cur: cur && cur.id, tNow, playing, ghosts: ghosts.length }; }, seek: (ms) => { tNow = ms; playing = false; }, facing: (ms) => facingOf(poseAt(cur, ms), SH.facing) };
+renderUi();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
