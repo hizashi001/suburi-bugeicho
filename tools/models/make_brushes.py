@@ -36,7 +36,9 @@ def main(src, keep):
     os.makedirs(keep, exist_ok=True)
     files = sorted(f for f in os.listdir(src) if f.startswith("shadow_brush_") and f.endswith(".png"))
     for f in files:
-        if not os.path.exists(os.path.join(keep, f)): shutil.copy2(os.path.join(src, f), os.path.join(keep, f))
+        # a picture not made yet (no transparency) is a new original: keep it, replacing an older original of the same name
+        fresh = Image.open(os.path.join(src, f)).mode != "RGBA"
+        if fresh or not os.path.exists(os.path.join(keep, f)): shutil.copy2(os.path.join(src, f), os.path.join(keep, f))
     out = {}
     for f in files:
         p, orig = os.path.join(src, f), os.path.join(keep, f)

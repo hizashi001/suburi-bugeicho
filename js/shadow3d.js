@@ -456,7 +456,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     const dir = SU.brushes, img = (f) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = dir + f; });
     const [sw, sm, dry, sp, rects] = await Promise.all([
       Promise.all([1, 2, 3, 4].map((n) => img(`shadow_brush_sweep_0${n}.png`))),
-      Promise.all([1, 2].map((n) => img(`shadow_brush_smoke_0${n}.png`))),
+      Promise.all([1, 2, 3].map((n) => img(`shadow_brush_smoke_0${n}.png`))),
       img("shadow_brush_dry_02.png"), img("shadow_brush_splat_01.png"),
       fetch(dir + "shadow_brush_splat_01.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
     ]);

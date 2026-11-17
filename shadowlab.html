@@ -165,7 +165,7 @@ const ghosts = [];                       // every ghost read so far
 let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "paper";
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
-  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "vrmSmoke", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "bones", mode: "tidy", view: null, ms: 0 },
   { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmArmor", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
