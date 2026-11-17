@@ -208,14 +208,15 @@ const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.
   ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null } = {}) {
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false } = {}) {
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
   const lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg), asp = g.aspect || 0.75;
-  const HEAD = { share: 0.5, max: 45, keep: 1, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
+  const HEAD = { share: 0.5, max: 45, keep: 1, front: 0, frontUpTo: 100, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
   // posture: the skeleton is trusted for the arms and the sword; the trunk is "sung with reverb" — kept upright and square
   const POSE = { leanKeep: 1, leanMax: 90, twistMax: 180, ...(cfg.posture || {}) };
+  const SHEATH = { above: 0.12, speed: 1.2, ease: 0.25, ...(cfg.sheath || {}) };
   const HAND = { fist: [70, 90, 60], bendMax: 35, twistMax: 90, ...(cfg.hand || {}) };
   const CLOTH = { legShare: 0.6, match: "CLOTH", skip: "Shoes", stiffness: 0.5, drag: 0.4, gravity: 0.35, sleeveKeep: 0.25, sleeveReach: 0.06, ...(cfg.cloth || {}) };
   const gl = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -292,7 +293,8 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const ID = new THREE.Quaternion();
   let lastT = null, lastTime = null;
 
-  function pose(J) {
+  let prevHand = null, prevTime = null, sheathK = 0, swordNow = { h: new THREE.Vector3(), tip: new THREE.Vector3(0, 0.1, 0) };
+  function pose(J, time = 0) {
     // the whole body first: sized so that torso + leg match the person's, hips placed on the picture's hips
     const s = J.size / (torsoRest + legRest);
     vrm.scene.scale.setScalar(s);
@@ -336,7 +338,10 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       const fl = Math.hypot(J[0][0] - neck.x, J[0][1] - neck.y), dz = Math.sqrt(Math.max(0, R * R - fl * fl));
       const want = new THREE.Vector3(J[0][0] - neck.x, J[0][1] - neck.y, Math.sign(r.z || 1) * dz);
       if (want.length() > 1e-5) {
-        const turn = limit(new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(r.clone().normalize(), want.normalize()), HEAD.keep), HEAD.max);
+        let turn = limit(new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(r.clone().normalize(), want.normalize()), HEAD.keep), HEAD.max);
+        // the face looks to the front (the viewer) even when the body stands half-turned (hanmi); not when the back is turned
+        const f = FWD.clone().applyQuaternion(turn.clone().multiply(qTop)), yawNow = Math.atan2(f.x, f.z);
+        if (Math.abs(yawNow) < HEAD.frontUpTo * D2R) turn = new THREE.Quaternion().setFromAxisAngle(UP, -yawNow * HEAD.front).multiply(turn);
         const qNeck = put("neck", new THREE.Quaternion().slerp(turn, HEAD.share).multiply(qTop), qTop);
         put("head", turn.clone().multiply(qTop), qNeck);
       }
@@ -344,6 +349,20 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     // the sword: along the forearms (the skeleton cannot tell more: docs/設計_影の3D.md), steadied between the two arms
     const fa = J.sword ? v(J.sword) : v(J[15]).sub(v(J[13])).normalize().add(v(J[16]).sub(v(J[14])).normalize());
     const dir = fa.length() > 1e-5 ? fa.normalize() : UP.clone();
+    // hands resting at the hips: the sword is in its scabbard, pointing back and down from the left hip, not floating
+    {
+      const mid = v(J[15]).add(v(J[16])).multiplyScalar(0.5), dtMs = prevTime == null ? 0 : time - prevTime;
+      const low = clamp((J.hc[1] + J.U * SHEATH.above - mid.y) / (J.U * 0.25), 0, 1);
+      const spd = prevHand && dtMs > 0 && dtMs < 300 ? (mid.distanceTo(prevHand) / dtMs) * 1000 / J.U : 0;
+      const want = J.kata ? 0 : low * (1 - clamp((spd - SHEATH.speed) / SHEATH.speed, 0, 1));
+      sheathK = !prevHand || dtMs <= 0 || dtMs >= 300 ? want : sheathK + (want - sheathK) * Math.min(1, dtMs / 1000 / SHEATH.ease);
+      prevHand = mid; prevTime = time;
+      if (sheathK > 0.01) {
+        const fH = FWD.clone().applyQuaternion(qHips), uH = UP.clone().applyQuaternion(qHips), lH = new THREE.Vector3(1, 0, 0).applyQuaternion(qHips);
+        const back = fH.multiplyScalar(-0.85).addScaledVector(uH, -0.45).addScaledVector(lH, 0.15).normalize();
+        dir.lerp(back, sheathK).normalize();
+      }
+    }
     // the hands: the forearm turns about its length so the thumbs face the body's "up", then the wrist bends towards the sword
     const bodyUp = UP.clone().applyQuaternion(qTop);
     for (const [, lower, hand, , el, wr] of CHAINS.slice(0, 2)) {   // (CHAINS rows: upper, lower, end, joint a, b, c)
@@ -365,6 +384,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       .map(([n, sx]) => bone(n).getWorldPosition(new THREE.Vector3()).addScaledVector(new THREE.Vector3(sx, 0, 0).applyQuaternion(world[n]), 0.06 * s));
     const hand = fists.length === 2 ? fists[0].add(fists[1]).multiplyScalar(0.5) : v(J[15]).add(v(J[16])).multiplyScalar(0.5);
     const len = J.U * 2.1;
+    swordNow = { h: hand.clone(), tip: hand.clone().addScaledVector(dir, len + J.U * 0.08) };
     sword.position.copy(hand).addScaledVector(dir, len / 2 + J.U * 0.08); sword.quaternion.setFromUnitVectors(UP, dir); sword.scale.set(s, len, s);
   }
 
@@ -380,28 +400,162 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     }
     ctx.restore();
   }
-  // the smoke, drawn in the picture's own (mirrored) frame
-  function drawSmoke(ctx, bw, bh, aspect, time) {
-    const P = (w) => [(w.x + 0.5) * bw, (0.5 - w.y * aspect) * bh];
-    const now = SMOKE_JOINTS.map(([n]) => (bone(n) ? P(bone(n).getWorldPosition(new THREE.Vector3())) : null));
+  // ---------- smoke: ink puffs at the joints, drawn in the picture's own (mirrored) frame ----------
+  const pxOf = (w, bw, bh, aspect) => [(w.x + 0.5) * bw, (0.5 - w.y * aspect) * bh];
+  function recordJoints(bw, bh, aspect, time) {                     // once per drawn frame: where each joint is on the picture
+    const now = SMOKE_JOINTS.map(([n]) => (bone(n) ? pxOf(bone(n).getWorldPosition(new THREE.Vector3()), bw, bh, aspect) : null));
     if (hist.length && Math.abs(hist[hist.length - 1].time - time) > 400) hist.length = 0;   // a jump: forget the trail
     hist.push({ time, pts: now }); while (hist.length > 90) hist.shift();
+  }
+  // st: { color [r,g,b], size, rise, sway, ink, puffs, life, seed } — the defaults are SMOKE (cfg.smoke)
+  function drawSmoke(ctx, bw, time, st = {}) {
+    const S = { ...SMOKE, color: [3, 4, 8], seed: 0, ...st }, [cr, cg, cb] = S.color, L = S.life;
+    if (!hist.length) return;
     const at = (t) => { let best = hist[hist.length - 1]; for (const h of hist) if (Math.abs(h.time - t) < Math.abs(best.time - t)) best = h; return best.pts; };
-    const [ar, ag, ab] = aura, L = SMOKE.life;
-    // ink puffs at the joints, rising, widening and fading: ink on the ink body is unseen, so they only soften the outline
     ctx.save(); ctx.shadowBlur = 0;
     SMOKE_JOINTS.forEach(([, w], j) => {
-      for (let k = 0; k < SMOKE.puffs; k++) {
-        const seed = j * 13 + k, age = (((time / 1000 + (k / SMOKE.puffs) * L + hash(seed) * L) % L) + L) % L, u = age / L;
+      for (let k = 0; k < S.puffs; k++) {
+        const seed = j * 13 + k + S.seed, age = (((time / 1000 + (k / S.puffs) * L + hash(seed) * L) % L) + L) % L, u = age / L;
         const from = at(time - age * 1000)[j]; if (!from) continue;
-        const r = bw * SMOKE.size * w * (0.45 + 0.9 * u) * (0.8 + 0.4 * hash(seed + 5));
-        const x = from[0] + Math.sin(time / 1000 * 2 + seed) * bw * SMOKE.sway * u, y = from[1] - bw * SMOKE.rise * u * (0.7 + 0.6 * hash(seed + 9));
-        const a = Math.pow(1 - u, 1.5) * SMOKE.ink;
+        const r = bw * S.size * w * (0.45 + 0.9 * u) * (0.8 + 0.4 * hash(seed + 5));
+        const x = from[0] + Math.sin(time / 1000 * 2 + seed) * bw * S.sway * u, y = from[1] - bw * S.rise * u * (0.7 + 0.6 * hash(seed + 9));
+        const a = Math.pow(1 - u, 1.5) * S.ink;
         const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
-        gr.addColorStop(0, `rgba(3,4,8,${a})`); gr.addColorStop(0.5, `rgba(3,4,8,${a * 0.6})`); gr.addColorStop(1, "rgba(3,4,8,0)");
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        gr.addColorStop(0, `rgba(${cr},${cg},${cb},${a})`); gr.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.6})`); gr.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, r * (S.tall ? 0.6 : 1), r * (S.tall || 0.75 + 0.5 * hash(seed + 3)), S.tall ? Math.sin(time / 700 + seed) * 0.4 : hash(seed + 7) * 3, 0, Math.PI * 2); ctx.fill();
       }
     });
+    ctx.restore();
+  }
+
+  // ---------- 墨絵 (sumi): the body as a mass of ink, the blade as one brush stroke, its path as a sweep of the brush ----------
+  // The 3D body is never shown as a surface: its outline and which way each part faces are read from a hidden picture
+  // (normals), and a brush is laid over that: wobbling, bleeding edges, dry-brush streaks where the light falls.
+  const SU = { wob: 0.012, edgeR: 7, dry: 0.7, streak: 1, glow: 0, ink: [14, 14, 16], bladeW: 0.016, trailMs: 260,
+    trailMin: 2.5, trailDepth: 0.45, bristles: 26, bristleW: 0.007, splat: 1, smokeBack: 0.3, smokeFront: 0.35, ...(cfg.sumi || {}) };
+  let post = null, splats = [], swordHist = [];
+  if (sumi) {
+    const rt = new THREE.WebGLRenderTarget(4, 4);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { tMask: { value: rt.texture }, res: { value: new THREE.Vector2(4, 4) }, time: { value: 0 }, wob: { value: SU.wob }, edgeR: { value: SU.edgeR },
+        dry: { value: SU.dry }, streak: { value: SU.streak }, glow: { value: SU.glow }, ink: { value: new THREE.Vector3(...SU.ink.map((c) => c / 255)) },
+        aura: { value: new THREE.Vector3(aura[0] / 255, aura[1] / 255, aura[2] / 255) } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+      fragmentShader: [
+        "uniform sampler2D tMask; uniform vec2 res; uniform float time, wob, edgeR, dry, streak, glow; uniform vec3 ink, aura; varying vec2 vUv;",
+        "float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
+        "float nz(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);",
+        "  return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }",
+        "float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int i = 0; i < 5; i++) { s += a * nz(p); p = p * 2.03 + 7.1; a *= 0.5; } return s; }",
+        "void main(){",
+        "  float asp = res.x / res.y; vec2 q = vUv * vec2(asp, 1.0) * 4.0;",
+        "  vec2 d = vec2(fbm(q + time * 0.12), fbm(q + 17.3 - time * 0.1)) - 0.5;",
+        "  vec2 uv = vUv + d * wob;",
+        "  vec4 s = texture2D(tMask, uv); float m = s.a;",
+        "  float b = 0.0, far = 0.0; vec3 nn = s.rgb * 2.0 - 1.0;",
+        "  for (int i = 0; i < 12; i++) { float a = float(i) / 12.0 * 6.2832; vec2 o = vec2(cos(a), sin(a)) / res;",
+        "    vec4 t1 = texture2D(tMask, uv + o * edgeR); vec4 t2 = texture2D(tMask, uv + o * edgeR * 3.0);",
+        "    b += t1.a; far += t2.a; nn += (t1.rgb * 2.0 - 1.0) * t1.a + (t2.rgb * 2.0 - 1.0) * t2.a; }",
+        "  b /= 12.0; far /= 12.0;",
+        "  vec3 n = normalize(nn + vec3(0.0, 0.0, 0.001));",                                   // broad normals: eyes, fingers and seams vanish
+        "  float inside = m * smoothstep(0.3, 1.0, b);",
+        "  float lit = clamp(dot(n, normalize(vec3(-0.45, 0.6, 0.65))), 0.0, 1.0);",
+        "  vec2 w = vUv * vec2(asp, 1.0); w += (vec2(fbm(w * 2.0 + 3.0), fbm(w * 2.0 + 9.0)) - 0.5) * 0.6;",
+        "  vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * w;",
+        "  float st = fbm(r * vec2(2.0, 34.0) * streak + 3.0);",                                 // bent dry-brush streaks
+        "  float white = smoothstep(0.7, 0.78, lit * 0.95 + (st - 0.5) * 1.1) * dry * smoothstep(0.6, 0.95, inside);",           // paper showing where the light falls
+        "  float edge = smoothstep(0.42, 0.5, fbm(q * 2.5 + 9.0) * 0.75 + inside * 0.75);",       // the edge breaks into dry brush
+        "  float dens = m * (1.0 - white) * edge;",
+        "  float bleed = clamp(b - m, 0.0, 1.0) * smoothstep(0.58, 0.66, fbm(q * 5.0 - time * 0.05));",
+        "  dens = max(dens, bleed);",
+        "  float a = smoothstep(0.35, 0.6, dens);",                                               // ink or paper, little grey
+        "  float g = glow * clamp(far - m * 0.6, 0.0, 1.0) * (1.0 - a);",
+        "  float A = clamp(a + g, 0.0, 1.0);",
+        "  vec3 col = (ink * a + aura * g) / max(A, 1e-4);",
+        "  gl_FragColor = vec4(col * A, A);",
+        "}",
+      ].join("\n"),
+      transparent: true, blending: THREE.NoBlending, depthTest: false, depthWrite: false,
+    });
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false;
+    const pscene = new THREE.Scene(); pscene.add(quad);
+    post = { rt, mat, pscene, normal: new THREE.MeshNormalMaterial() };
+    vrm.scene.traverse((o) => { if (o.isMesh) o.material = post.normal; });
+    sword.visible = false;
+  }
+  function renderSumi(bw, bh, time) {
+    if (post.rt.width !== bw || post.rt.height !== bh) { post.rt.setSize(bw, bh); post.mat.uniforms.res.value.set(bw, bh); }
+    post.mat.uniforms.time.value = time / 1000;
+    gl.setRenderTarget(post.rt); gl.setClearColor(0x000000, 0); gl.clear(); gl.render(scene, cam);
+    gl.setRenderTarget(null); gl.clear(); gl.render(post.pscene, cam);
+  }
+  const inkCss = (a) => `rgba(${SU.ink[0]},${SU.ink[1]},${SU.ink[2]},${a})`;
+  // the blade: one tapering stroke with a little curve (sori)
+  function drawBlade(ctx, h, tip, bw) {
+    const dx = tip[0] - h[0], dy = tip[1] - h[1], L = Math.hypot(dx, dy); if (L < 2) return;
+    const nx = -dy / L, ny = dx / L, W = bw * SU.bladeW, pts = [], back = [];
+    for (let i = 0; i <= 16; i++) {
+      const t = i / 16, bend = Math.sin(Math.PI * t * 0.8) * 0.045 * L, w = W * (1 - 0.85 * t) * 0.5;
+      const cx = h[0] + dx * t + nx * bend, cy = h[1] + dy * t + ny * bend;
+      pts.push([cx + nx * w, cy + ny * w]); back.push([cx - nx * w, cy - ny * w]);
+    }
+    back.reverse();
+    ctx.fillStyle = inkCss(0.95); ctx.beginPath(); ctx.moveTo(...pts[0]);
+    for (const p of pts) ctx.lineTo(...p);
+    for (const p of back) ctx.lineTo(...p);
+    ctx.closePath(); ctx.fill();
+  }
+  // the path of the blade: one sweep of a wide brush — many bristles along the path of the blade's outer part,
+  // solid where the stroke is fresh and fast, breaking into dry streaks as it ages
+  function drawTrail(ctx, bw, time) {
+    const live = swordHist.filter((e) => time - e.time <= SU.trailMs && e.time <= time);
+    if (live.length < 2) return;
+    const N = SU.bristles, ks = live.map((e, i) => {
+      if (!i) return 0;
+      const p = live[i - 1], dt = Math.max(1, e.time - p.time), spd = Math.hypot(e.tip[0] - p.tip[0], e.tip[1] - p.tip[1]) / bw / (dt / 1000);
+      return clamp(spd / SU.trailMin - 1, 0, 1);
+    });
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    for (let j = 0; j < N; j++) {
+      const f = 1 - (j / (N - 1)) * SU.trailDepth, wj = bw * SU.bristleW * (0.6 + 0.8 * hash(j * 3 + 1));
+      for (let i = 1; i < live.length; i++) {
+        const A = live[i - 1], B = live[i], age = (time - B.time) / SU.trailMs, k = ks[i] * Math.min(1, ks[i - 1] + 0.5);
+        if (k <= 0.02) continue;
+        // a bristle runs dry: the older the stroke and the further in from the tip, the more gaps
+        const dryness = age * 0.9 + (1 - f) * 0.6 + (1 - k) * 0.5;
+        if (hash(j * 131 + Math.floor(B.time / 30) * 7) < dryness * 0.75) continue;
+        ctx.strokeStyle = inkCss(Math.min(1, k * 1.3) * (1 - age * 0.6));
+        ctx.lineWidth = wj * (1 - age * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(A.h[0] + (A.tip[0] - A.h[0]) * f, A.h[1] + (A.tip[1] - A.h[1]) * f);
+        ctx.lineTo(B.h[0] + (B.tip[0] - B.h[0]) * f, B.h[1] + (B.tip[1] - B.h[1]) * f);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+  // ink flung off a fast blade: flies a moment, then stays like drops on paper and fades
+  function stepSplats(ctx, bw, dt) {
+    const e = swordHist.length >= 2 ? [swordHist[swordHist.length - 2], swordHist[swordHist.length - 1]] : null;
+    if (e && dt > 0 && SU.splat > 0) {
+      const ddt = Math.max(1, e[1].time - e[0].time) / 1000, vx = (e[1].tip[0] - e[0].tip[0]) / ddt, vy = (e[1].tip[1] - e[0].tip[1]) / ddt, spd = Math.hypot(vx, vy) / bw;
+      const n = spd > SU.trailMin * 1.6 ? Math.floor((spd / SU.trailMin) * SU.splat * (0.5 + Math.random())) : 0;
+      for (let i = 0; i < Math.min(n, 6); i++) {
+        const k = Math.random();
+        splats.push({ x: e[1].tip[0] + (e[0].tip[0] - e[1].tip[0]) * k, y: e[1].tip[1] + (e[0].tip[1] - e[1].tip[1]) * k,
+          vx: vx * (0.25 + 0.4 * Math.random()) + (Math.random() - 0.5) * bw * 0.6, vy: vy * (0.25 + 0.4 * Math.random()) + (Math.random() - 0.5) * bw * 0.6,
+          r: bw * (0.002 + 0.008 * Math.random() ** 2), age: 0, life: 0.5 + Math.random() * 0.6 });
+      }
+    }
+    splats = splats.filter((p) => (p.age += dt) < p.life);
+    ctx.save(); ctx.lineCap = "round";
+    for (const p of splats) {
+      const flying = p.age < 0.12;
+      if (flying) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += bw * 2 * dt; }
+      const a = 0.9 * (1 - p.age / p.life);
+      ctx.fillStyle = inkCss(a); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      if (flying) { ctx.strokeStyle = inkCss(a * 0.6); ctx.lineWidth = p.r; ctx.beginPath(); ctx.moveTo(p.x - p.vx * 0.02, p.y - p.vy * 0.02); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+    }
     ctx.restore();
   }
 
@@ -412,16 +566,31 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       if (gl.domElement.width !== bw || gl.domElement.height !== bh) gl.setSize(bw, bh, false);
       const jump = lastT == null || t < lastT || t - lastT > 400 || lastTime == null || Math.abs(time - lastTime) > 400;
       const dt = jump ? 0 : Math.min(0.05, (t - lastT) / 1000); lastT = t; lastTime = time;
-      const J = lift.at(time); pose(J);
+      const J = lift.at(time); pose(J, time);
       if (jump && vrm.springBoneManager) vrm.springBoneManager.reset();
       vrm.update(dt);
-      gl.render(scene, cam);
+      if (smoke || sumi) recordJoints(bw, bh, aspect, time);
       ctx.save();
       ctx.translate(ox + bw, oy); ctx.scale(-1, 1);                    // mirrored, like every other ghost drawing
-      ctx.shadowColor = `rgba(${aura[0]},${aura[1]},${aura[2]},0.55)`; ctx.shadowBlur = bw * 0.035;
-      if (smoke) drawHalo(ctx, bw, bh, time);
-      ctx.drawImage(gl.domElement, 0, 0, bw, bh);
-      if (smoke) drawSmoke(ctx, bw, bh, aspect, time);
+      if (sumi) {
+        if (jump) { splats = []; swordHist = []; }
+        swordHist.push({ time, h: pxOf(swordNow.h, bw, bh, aspect), tip: pxOf(swordNow.tip, bw, bh, aspect) });
+        while (swordHist.length && time - swordHist[0].time > SU.trailMs + 100) swordHist.shift();
+        renderSumi(bw, bh, time);
+        drawSmoke(ctx, bw, time, { color: [22, 22, 26], size: SMOKE.size * 1.6, rise: SMOKE.rise * 3.2, sway: SMOKE.sway * 3, ink: SU.smokeBack, life: SMOKE.life * 1.8, seed: 500, tall: 2.2 });
+        drawTrail(ctx, bw, time);
+        ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+        const last = swordHist[swordHist.length - 1];
+        drawBlade(ctx, last.h, last.tip, bw);
+        drawSmoke(ctx, bw, time, { color: SU.ink, ink: SU.smokeFront });
+        stepSplats(ctx, bw, dt);
+      } else {
+        gl.render(scene, cam);
+        ctx.shadowColor = `rgba(${aura[0]},${aura[1]},${aura[2]},0.55)`; ctx.shadowBlur = bw * 0.035;
+        if (smoke) drawHalo(ctx, bw, bh, time);
+        ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+        if (smoke) drawSmoke(ctx, bw, time);
+      }
       ctx.restore();
       if (label && J.kata) {                                           // which form is being shown, for the lab
         ctx.save(); ctx.fillStyle = `rgba(${aura[0]},${aura[1]},${aura[2]},${0.4 + 0.6 * J.kata.w})`; ctx.font = `${Math.round(bw / 26)}px system-ui, sans-serif`;
