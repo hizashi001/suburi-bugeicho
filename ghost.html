@@ -67,6 +67,7 @@ label.check { display: flex; gap: 8px; align-items: center; }
 // 影の書庫: the ghosts kept on this phone (recorded automatically in fights, or recorded here as a master's form),
 // played back as a grey shadow, sent to others as a file, and read in from a file.
 import { createGhostRecorder, ghostStore, ghostFile, readGhostFile, poseAt, drawGhost, createGhostRenderer } from "./js/ghost.js";
+import { outlineFromMask } from "./js/shadowoutline.js";
 const KEY = "suburi-bugeicho.v1";
 let saved = {}; try { saved = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch {}
 const LANG = ["ja", "en"].includes(saved.lang) ? saved.lang : ((navigator.language || "").toLowerCase().startsWith("ja") ? "ja" : "en");
@@ -153,7 +154,7 @@ async function startCamera() {
   if (!landmarker) {
     const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
     const files = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-    const opts = (delegate) => ({ baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate }, runningMode: "VIDEO", numPoses: 1 });
+    const opts = (delegate) => ({ baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task", delegate }, runningMode: "VIDEO", numPoses: 1, outputSegmentationMasks: true });
     try { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("GPU")); } catch { landmarker = await vision.PoseLandmarker.createFromOptions(files, opts("CPU")); }
   }
   $("btn-cam").hidden = true; $("btn-rec").disabled = false;
@@ -171,7 +172,10 @@ function camLoop(now) {
   if (landmarker && now - lastDetect > 1000 / 30) {
     lastDetect = now;
     const res = landmarker.detectForVideo(video, now); lastLm = res.landmarks && res.landmarks[0];
-    if (lastLm && rec.active) rec.frame(lastLm, now, aspect);
+    const mask = res.segmentationMasks && res.segmentationMasks[0];
+    // the body's outline (points only) is taken from the person's mask only when a frame is kept (js/shadowoutline.js)
+    if (lastLm && rec.active) rec.frame(lastLm, now, aspect, mask ? () => { try { return outlineFromMask(mask.getAsFloat32Array(), mask.width, mask.height, G.outlinePoints || 96); } catch { return null; } } : null);
+    if (mask) mask.close();
   }
   if (lastLm) {
     const pose = {}; for (const i of [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28]) if ((lastLm[i].visibility ?? 1) > 0.3) pose[i] = [lastLm[i].x, lastLm[i].y];

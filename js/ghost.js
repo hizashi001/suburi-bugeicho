@@ -8,6 +8,8 @@
 //     events: [[t ms, type, …], …], plus meta for fights: weapon, division, diff, yokai, result }
 // "depth" was added on 2026-11-16 so that a ghost knows which way the body faces (front, side or back).
 // It sits beside "frames" instead of inside it, so older ghosts and older readers keep working.
+//   outlines: [[t ms, x0, y0, x1, y1, …], …]  (optional, 2026-11-17: the body's outline as N points from the top of the head
+//             round the body, picture 0–1, not mirrored; points only, never a picture. js/shadowoutline.js)
 
 export const FORMAT = "ghost/1";
 // nose, shoulders, elbows, wrists, hips, knees, ankles: enough to draw a body and a sword
@@ -24,9 +26,10 @@ export function createGhostRecorder({ fps = 15, minVis = 0.3 } = {}) {
         fps, points: POINTS, frames: [], depth: [], events: [], kind: "fight", master: false, name: "", ...meta };
       t0 = performance.now(); lastAt = -1e9;
     },
-    // lm: one person's landmarks (camera picture 0–1); aspect: picture width / height
-    frame(lm, now = performance.now(), aspect) {
-      if (!g || !lm || now - lastAt < 1000 / fps) return;
+    // lm: one person's landmarks (camera picture 0–1); aspect: picture width / height;
+    // outline: optional, a function giving the body's outline points (asked only when a frame is kept). Returns true when kept.
+    frame(lm, now = performance.now(), aspect, outline = null) {
+      if (!g || !lm || now - lastAt < 1000 / fps) return false;
       lastAt = now;
       if (aspect && !g.aspect) g.aspect = +aspect.toFixed(4);
       const row = [Math.round(now - t0)], zs = [];
@@ -36,6 +39,8 @@ export function createGhostRecorder({ fps = 15, minVis = 0.3 } = {}) {
         else { row.push(-1, -1); zs.push(0); }
       }
       g.frames.push(row); g.depth.push(zs);
+      if (outline) { const o = outline(); if (o) (g.outlines ||= []).push([row[0], ...o]); }
+      return true;
     },
     event(type, ...data) { if (g) g.events.push([Math.round(performance.now() - t0), type, ...data]); },
     // returns the finished ghost (or null when nothing was recorded); nothing is saved here
@@ -60,7 +65,7 @@ function db() {
   }));
 }
 const req = (r) => new Promise((ok, ng) => { r.onsuccess = () => ok(r.result); r.onerror = () => ng(r.error); });
-export const metaOf = (g) => { const { frames, depth, events, ...m } = g; return { ...m, frameCount: frames.length, swingCount: events.filter((e) => e[1] === "swing").length }; };
+export const metaOf = (g) => { const { frames, depth, events, outlines, ...m } = g; return { ...m, frameCount: frames.length, swingCount: events.filter((e) => e[1] === "swing").length }; };
 export const ghostStore = {
   async save(g) {
     const d = await db(), tx = d.transaction(["meta", "data"], "readwrite");

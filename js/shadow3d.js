@@ -12,7 +12,8 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
 import { buildArmor, loadArmorParts, loadSkinnedBody } from "./shadowarmor.js";
-import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow, drawBladeAfterglow, createSnap, createAmp } from "./shadowpaint.js";
+import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow, drawBladeAfterglow, createSnap, createAmp, drawSil, drawHorns, drawRibbons } from "./shadowpaint.js";
+import { outlineAt, reshape } from "./shadowoutline.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -210,11 +211,15 @@ const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.
   ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false, armor = false, paint = false } = {}) {
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false, armor = false, paint = false, sil = null } = {}) {
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
-  if (paint && (cfg.amp || {}).on !== false) motion = createAmp(g, motion, cfg.amp);              // wider than the person, never smaller
+  // sil: the body is the person's own recorded outline (js/shadowoutline.js), reshaped to the avatar `sil` ("person" = as is);
+  // the 3D body is then only the hidden frame that places the blade, the eyes and the smoke
+  if (sil && !(g.outlines && g.outlines.length > 1)) sil = null;
+  const motion0 = motion, AV = sil ? ((cfg.avatars || {})[sil] || null) : null;
+  if (paint && !sil && (cfg.amp || {}).on !== false) motion = createAmp(g, motion, cfg.amp);      // wider than the person, never smaller
   let lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg);
   if (paint && (cfg.snap || {}).on !== false) lift = createSnap(g, motion, lift, cfg.snap);      // build-up and a fast cut
   const asp = g.aspect || 0.75;
@@ -581,6 +586,14 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     gl.setRenderTarget(pp.rt); gl.setClearColor(0x000000, 0); gl.clear(); gl.render(scene, cam);
     gl.setRenderTarget(null); gl.clear(); gl.render(pp.ps, cam);
   }
+  let silKept = [], ribbonTrails = [[], []];
+  function silAt(time, bw, bh, aspect) {
+    const tt = lift.remap ? lift.remap(time) : time;
+    let o = outlineAt(g, tt); if (!o) return null;
+    if (AV) o = reshape(o, motion0.at(tt), aspect, AV);
+    const px = new Array(o.length); for (let i = 0; i < o.length; i += 2) { px[i] = o[i] * bw; px[i + 1] = o[i + 1] * bh; }
+    return { px, pose: motion0.at(tt) };
+  }
   let eyeTrails = [[], []], ghostsPool = [], ghostsKept = [];
   // keep a copy of the painted body every ghostGap ms (a few canvases reused), for afterimages while the hands move fast
   function keepGhost(bw, bh, time) {
@@ -750,19 +763,40 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         const last = swordHist[swordHist.length - 1], prev = swordHist.length > 1 ? swordHist[swordHist.length - 2] : null;
         const tipV = prev && last.time > prev.time ? [((last.tip[0] - prev.tip[0]) / (last.time - prev.time)) * 1000, ((last.tip[1] - prev.tip[1]) / (last.time - prev.time)) * 1000] : null;
         weather.set(weatherKind, bw, bh); weather.step(dt, time, last.tip, tipV);
-        renderPaint(bw, bh, time);
+        const S = sil ? silAt(time, bw, bh, aspect) : null;
+        if (!S) renderPaint(bw, bh, time);
         weather.draw(ctx, false);
         drawSmoke(ctx, bw, time, { color: [30, 30, 34], size: SMOKE.size * 2.2, rise: SMOKE.rise * 2.5, sway: SMOKE.sway * 3, ink: PA.backSmoke, life: SMOKE.life * 2, seed: 900, tall: 1.6, sprites: WORLD.smoke, spriteInk: 1, puffs: 2 });
         drawTrail(ctx, bw, time);
         // afterimages: older bodies, fainter, only while the hands (the blade) move fast
         const fast = tipV ? clamp((Math.hypot(tipV[0], tipV[1]) / bw / PA.ghostSpeed - 1), 0, 1) : 0;
-        if (fast > 0.02) {
-          ctx.save();
-          ghostsKept.forEach((gk, i) => { const age = (time - gk.time) / (PA.ghostGap * (PA.ghosts + 1)); if (age <= 0 || age >= 1) return; ctx.globalAlpha = PA.ghostAlpha * fast * (1 - age); ctx.drawImage(gk.c, 0, 0, bw, bh); });
-          ctx.restore();
+        if (S) {
+          // afterimages of the outline, then the painted outline, the avatar's ornaments
+          if (jump) silKept = [];
+          if (!silKept.length || time - silKept[silKept.length - 1].time >= PA.ghostGap || time < silKept[silKept.length - 1].time) { silKept.push({ time, px: S.px }); while (silKept.length > PA.ghosts) silKept.shift(); }
+          if (fast > 0.02) silKept.forEach((k) => { const age = (time - k.time) / (PA.ghostGap * (PA.ghosts + 1)); if (age > 0 && age < 1) drawSil(ctx, k.px, bw, { time, alpha: PA.ghostAlpha * fast * (1 - age), rim: 0, texture: 0, wobble: 0 }); });
+          const SIL = PA.sil || {};
+          drawSil(ctx, S.px, bw, { time, paint: WORLD.paint, ink: SIL.ink, light: SIL.light, rim: SIL.rim, texture: SIL.texture, wobble: SIL.wobble });
+          const p = S.pose, P = (k) => (p && p[k] ? [p[k][0] * bw, p[k][1] * bh] : null), sh = [P(11), P(12)];
+          if (AV && AV.horns && p && P(0) && sh[0] && sh[1]) {
+            const sc = [(sh[0][0] + sh[1][0]) / 2, (sh[0][1] + sh[1][1]) / 2], nose = P(0), up = [nose[0] - sc[0], nose[1] - sc[1]], L = Math.hypot(...up) || 1;
+            const u = [up[0] / L, up[1] / L], sd = [-u[1], u[0]], top = [S.px[0], S.px[1]];
+            drawHorns(ctx, [top[0] - u[0] * L * 0.25, top[1] - u[1] * L * 0.25], u, sd, L * (AV.horns === true ? 1.2 : AV.horns), SIL.ink || [20, 20, 24]);
+          }
+          if (AV && AV.ribbons && sh[0] && sh[1]) {
+            if (jump) ribbonTrails = [[], []];
+            sh.forEach((q, i) => { ribbonTrails[i].push(q); if (ribbonTrails[i].length > 22) ribbonTrails[i].shift(); });
+            drawRibbons(ctx, ribbonTrails, bw, [-PA.wind[0], PA.wind[1]], SIL.ink || [20, 20, 24]);
+          }
+        } else {
+          if (fast > 0.02) {
+            ctx.save();
+            ghostsKept.forEach((gk, i) => { const age = (time - gk.time) / (PA.ghostGap * (PA.ghosts + 1)); if (age <= 0 || age >= 1) return; ctx.globalAlpha = PA.ghostAlpha * fast * (1 - age); ctx.drawImage(gk.c, 0, 0, bw, bh); });
+            ctx.restore();
+          }
+          ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+          keepGhost(bw, bh, time);
         }
-        ctx.drawImage(gl.domElement, 0, 0, bw, bh);
-        keepGhost(bw, bh, time);
         drawBladeAfterglow(ctx, swordHist, bw, PA.bladeColor, time, PA.afterglowMs, PA.bladeGlow * PA.glow);
         drawBlade(ctx, last.h, last.tip, bw);
         drawBladeGlow(ctx, last.h, last.tip, bw, PA.bladeColor, time, PA.bladeGlow * PA.glow);

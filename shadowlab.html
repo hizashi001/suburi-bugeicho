@@ -129,9 +129,9 @@ const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
 function lazy3d(g, kind) {
   let impl = null, msg = t("slab.loading");
   const m = createMotion(g, MOTION, SH.facing);
-  const kata = kind === "vrmKata" || kind === "vrmSumi" || kind === "vrmArmor" || kind === "vrmRonin" || kind === "vrmFairy" ? "mix" : kind === "vrmKataOnly" ? "only" : null, sumi = kind === "vrmSumi" || kind === "vrmSumiRaw" || kind === "vrmArmor", armor = kind === "vrmArmor", paint = kind === "vrmRonin" || kind === "vrmFairy";
+  const kata = kind === "vrmKata" || kind === "vrmSumi" || kind === "vrmArmor" || kind === "vrmRonin" || kind === "vrmFairy" || kind.startsWith("sil") ? "mix" : kind === "vrmKataOnly" ? "only" : null, sumi = kind === "vrmSumi" || kind === "vrmSumiRaw" || kind === "vrmArmor", armor = kind === "vrmArmor", paint = kind === "vrmRonin" || kind === "vrmFairy" || kind.startsWith("sil"), sil = { silPerson: "person", silOni: "oni", silSennyo: "sennyo" }[kind] || null;
   const label = (k) => t("slab.kata", { form: t("slab.kata." + k.form), u: Math.round(k.u * 100), w: Math.round(k.w * 100) });
-  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, kind === "vrmFairy" ? { ...D3, paint: { ...D3.paint, ...D3.paint.skins.fairy } } : D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" || !!kata, kata, label, sumi, armor, paint })))
+  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, kind === "vrmFairy" ? { ...D3, paint: { ...D3.paint, ...D3.paint.skins.fairy } } : D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" || !!kata, kata, label, sumi, armor, paint, sil })))
     .then((r) => (impl = r)).catch((e) => { msg = String((e && e.message) || e); console.error(e); });
   return {
     get impl() { return impl; },
@@ -142,6 +142,9 @@ function lazy3d(g, kind) {
   };
 }
 const RENDERERS = [
+  { id: "silPerson", make: (g) => lazy3d(g, "silPerson") },
+  { id: "silOni", make: (g) => lazy3d(g, "silOni") },
+  { id: "silSennyo", make: (g) => lazy3d(g, "silSennyo") },
   { id: "vrmRonin", make: (g) => lazy3d(g, "vrmRonin") },
   { id: "vrmFairy", make: (g) => lazy3d(g, "vrmFairy") },
   { id: "vrmArmor", make: (g) => lazy3d(g, "vrmArmor") },

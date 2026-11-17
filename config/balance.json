@@ -640,6 +640,7 @@
         "key": 3.2,
         "rimLight": 2.6,
         "fill": 0.9,
+        "sil": { "_note": "輪郭の影の塗り。ink=体の色、light=光の当たる縁の色、rim=縁の光の強さ、texture=筆の質感の強さ、wobble=輪郭の揺れ（絵の幅に対する割合）", "ink": [22, 22, 26], "light": [205, 208, 214], "rim": 0.45, "texture": 0.22, "wobble": 0.003 },
         "skins": {
           "_note": "キャラの差し替え（課金のキャラの試し）。名前ごとに paint の値を上書きする。試験場の「影の妖精」は fairy。skin=体を骨に結び付ける時の決まり（backRigid=背中の後ろの物（羽など）を胸に固く付ける。羽のあるキャラだけ true。sleeveKeep・sleeveReach=広い袖を腕に寄せる強さ）",
           "fairy": { "body": "assets/models/fairy_body.glb", "eyeColor": [150, 200, 255], "bladeColor": [170, 140, 255], "skin": { "backRigid": true } }
@@ -674,6 +675,12 @@
         "power": 1.6,
         "minMs": 120,
         "maxMs": 1400
+      },
+      "avatars": {
+        "_note": "輪郭の影の体型（js/shadowoutline.js の reshape）。本人の輪郭の、骨格の各部からの距離を何倍にするか。head=頭、shoulders・waist・hips=胴の肩・腰のくびれ・尻、arm=上腕、fore=前腕、thigh=腿、shin=脛、hem=脛の裾への広がり（袴や衣の裾）。horns=角（true か大きさ）、ribbons=肩から流れる羽衣。person=本人のまま",
+        "person": {},
+        "oni": { "head": 1.15, "shoulders": 1.55, "waist": 1.3, "hips": 1.35, "arm": 1.55, "fore": 1.5, "thigh": 1.4, "shin": 1.35, "horns": true },
+        "sennyo": { "head": 0.95, "shoulders": 0.85, "waist": 0.62, "hips": 0.9, "arm": 0.75, "fore": 0.7, "thigh": 0.9, "shin": 1.05, "hem": 2.4, "ribbons": true }
       },
       "amp": {
         "_note": "誇張（影の浪人のみ）。腕を本人より大きく振る（本人より小さくはしない）。手と肘を、前後 windowMs の平均の位置から gain の割合だけ外へ押し出し、肩からの届きを reach 倍にする。on=使うか",

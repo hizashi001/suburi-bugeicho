@@ -236,3 +236,65 @@ export function createAmp(g, motion, cfg = {}) {
     metaAt: (t) => motion.metaAt(t),
   };
 }
+
+// ---------- the body from the person's outline (js/shadowoutline.js): a painted silhouette ----------
+// pts: [x0, y0, …] in pixels (unmirrored picture, the caller's frame is mirrored). o: { ink, light, paint (image), wind, time,
+// rim, alpha, wobble }. The outline is a smooth closed brush shape; inside, a rough paint texture and a light edge on the lit side.
+export function silPath(ctx, pts, wob = 0, time = 0) {
+  const n = pts.length / 2, P = (i) => { const k = ((i % n) + n) % n, x = pts[k * 2], y = pts[k * 2 + 1];
+    return wob ? [x + Math.sin(time / 260 + k * 1.7) * wob, y + Math.cos(time / 310 + k * 2.3) * wob] : [x, y]; };
+  ctx.beginPath();
+  let a = P(0), b = P(1); ctx.moveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2);
+  for (let i = 1; i <= n; i++) { a = P(i); b = P(i + 1); ctx.quadraticCurveTo(a[0], a[1], (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); }
+  ctx.closePath();
+}
+export function drawSil(ctx, pts, bw, o) {
+  const ink = o.ink || [20, 20, 24], light = o.light || [200, 204, 210], wob = bw * (o.wobble ?? 0.003);
+  ctx.save();
+  ctx.globalAlpha = o.alpha ?? 1;
+  silPath(ctx, pts, wob, o.time); ctx.fillStyle = `rgb(${ink.join(",")})`; ctx.fill();
+  ctx.save(); silPath(ctx, pts, wob, o.time); ctx.clip();
+  // a rough paint texture inside (lighter strokes on the dark body)
+  if (o.paint) {
+    const pat = ctx.createPattern(o.paint, "repeat");
+    ctx.globalAlpha = (o.alpha ?? 1) * (o.texture ?? 0.22); ctx.globalCompositeOperation = "screen"; ctx.fillStyle = pat;
+    ctx.save(); ctx.translate((o.time / 40) % 512, 0); ctx.fillRect(-bw * 2, -bw * 3, bw * 5, bw * 7); ctx.restore();
+    ctx.globalCompositeOperation = "source-over";
+  }
+  // the lit edge: the outline stroked again, shifted away from the light, so only its lit inner side stays inside the clip
+  ctx.globalAlpha = (o.alpha ?? 1) * (o.rim ?? 0.75);
+  ctx.translate(bw * 0.008, bw * 0.006); ctx.strokeStyle = `rgb(${light.join(",")})`; ctx.lineWidth = bw * 0.014; ctx.shadowColor = `rgb(${light.join(",")})`; ctx.shadowBlur = bw * 0.03;
+  silPath(ctx, pts, wob, o.time); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+}
+// horns for an oni: two curved, tapering horns from the top of the head, leaning outwards with the head
+export function drawHorns(ctx, head, up, side, size, ink) {
+  ctx.save(); ctx.fillStyle = `rgb(${ink.join(",")})`;
+  for (const s of [1, -1]) {
+    const bx = head[0] + side[0] * s * size * 0.45, by = head[1] + side[1] * s * size * 0.45;
+    const tip = [bx + (up[0] * 1.0 + side[0] * s * 0.55) * size, by + (up[1] * 1.0 + side[1] * s * 0.55) * size];
+    const mid = [bx + up[0] * size * 0.6 + side[0] * s * size * 0.05, by + up[1] * size * 0.6 + side[1] * s * size * 0.05];
+    const w = size * 0.2;
+    ctx.beginPath(); ctx.moveTo(bx - side[0] * w, by - side[1] * w); ctx.quadraticCurveTo(mid[0], mid[1], tip[0], tip[1]);
+    ctx.quadraticCurveTo(mid[0] + side[0] * w * 1.6 * s, mid[1] + side[1] * w * 1.6 * s, bx + side[0] * w, by + side[1] * w); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+// a sennyo's hagoromo: two long ribbons from the shoulders, following where the shoulders have been (a trail in time),
+// carried downwind, thinning to the end
+export function drawRibbons(ctx, trails, bw, wind, ink, alpha = 0.85) {
+  ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+  for (const tr of trails) {
+    if (tr.length < 4) continue;
+    const n = tr.length;
+    // the newest point is at the shoulder; older points drift downwind and sink a little, like cloth carried by the air
+    const pts = tr.map((q, i) => { const age = n - 1 - i; return [q[0] + wind[0] * age * bw * 0.014, q[1] + wind[1] * age * bw * 0.014 + age * age * bw * 0.0004]; }).reverse();
+    for (let i = 1; i < n - 1; i++) {
+      const f = i / (n - 1), a = pts[i - 1], b = pts[i], c = pts[i + 1];
+      ctx.strokeStyle = `rgba(${ink.join(",")},${alpha * (1 - f * 0.85)})`; ctx.lineWidth = bw * 0.028 * (1 - f * 0.8);
+      ctx.beginPath(); ctx.moveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2); ctx.quadraticCurveTo(b[0], b[1], (b[0] + c[0]) / 2, (b[1] + c[1]) / 2); ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
