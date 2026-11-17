@@ -561,7 +561,30 @@
       "flatHold": 0.92,
       "flatFull": 0.94,
       "blendSec": 0.08,
-      "rim": 1.4
+      "rim": 1.4,
+      "head": {
+        "_note": "首と頭を鼻の点へ向ける。share=首が受け持つ割合（残りは頭）。max=胸から曲げる上限（度）。nose=頭の骨から鼻までの位置（モデルのメートル。右・上・前）",
+        "share": 0.5,
+        "max": 45,
+        "nose": [0, 0.06, 0.1]
+      },
+      "hand": {
+        "_note": "手を拳に握り、刀へ向けて手首を曲げる。fist=指の付け根・中・先の曲げ（度）。bendMax=手首を曲げる上限（度）。twistMax=前腕をひねる上限（度。親指を体の上へ向ける）",
+        "fist": [70, 90, 60],
+        "bendMax": 35,
+        "twistMax": 90
+      },
+      "cloth": {
+        "_note": "着物の布の扱い。match=布とみなす素材の名前（正規表現）、skip=除く物。legShare=布が脚から受け取る動きのうち、腰へ移す割合（袴や裾が脚と一緒に裂けないように。0で元のまま）。sleeveKeep・sleeveReach=腕のまわりの布を、腕からsleeveReachメートルより外の分をsleeveKeepの割合まで腕へ寄せる（揺れ骨の無い広い袖が皿のように開くのを防ぐ。1で元のまま）。stiffness・drag・gravity=揺れ骨（裾）の硬さ・抵抗・重力",
+        "match": "CLOTH",
+        "skip": "Shoes",
+        "legShare": 0.6,
+        "sleeveKeep": 0.25,
+        "sleeveReach": 0.06,
+        "stiffness": 0.5,
+        "drag": 0.4,
+        "gravity": 0.35
+      }
     },
     "lab": {
       "speeds": [

@@ -125,11 +125,86 @@ export function createLiftView(g, motion, cfg = {}) {
 
 // ---------- 2. retarget: 3D joints → the rotations of a VRM's bones; 3. draw ----------
 // Bones are aimed straight at the joints (no Kalidokit): the parent's rotation is kept and the smallest extra turn is added
-// that points the bone from its joint to the next one. The twist of an arm about its own length is unknown and left alone.
+// that points the bone from its joint to the next one. What the 13 points do not say is filled in the way games do it:
+// the head leans towards the nose, the hands close into fists around the sword and bend only as far as a wrist can,
+// and cloth hangs partly from the hips instead of following each leg (cfg.head, cfg.hand, cfg.cloth).
 const CHAINS = [["leftUpperArm", "leftLowerArm", "leftHand", 11, 13, 15], ["rightUpperArm", "rightLowerArm", "rightHand", 12, 14, 16],
   ["leftUpperLeg", "leftLowerLeg", "leftFoot", 23, 25, 27], ["rightUpperLeg", "rightLowerLeg", "rightFoot", 24, 26, 28]];
+const D2R = Math.PI / 180;
+
+// Cloth (materials whose name matches cfg.cloth.match) gives part of what it takes from each leg to the hips, so a hakama
+// or a long hem hangs between the legs instead of splitting with them. Inside a black shadow a leg pushing through is not seen.
+function loosenCloth(vrm, share, match, nameOf) {
+  if (!(share > 0)) return 0;
+  const raw = (n) => vrm.humanoid.getRawBoneNode(n), hips = raw("hips"), legs = [raw("leftUpperLeg"), raw("rightUpperLeg")].filter(Boolean);
+  const underLeg = (b) => { for (let o = b; o; o = o.parent) if (legs.includes(o)) return true; return false; };
+  let moved = 0;
+  vrm.scene.traverse((o) => {
+    if (!o.isSkinnedMesh || !match.test(nameOf(o))) return;
+    const bones = o.skeleton.bones, hi = bones.indexOf(hips); if (hi < 0) return;
+    const leg = new Set(); bones.forEach((b, i) => underLeg(b) && leg.add(i));
+    const si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight;
+    for (let v = 0; v < si.count; v++) {
+      const idx = [si.getX(v), si.getY(v), si.getZ(v), si.getW(v)], w = [sw.getX(v), sw.getY(v), sw.getZ(v), sw.getW(v)];
+      let take = 0;
+      for (let k = 0; k < 4; k++) if (w[k] > 0 && leg.has(idx[k])) { take += w[k] * share; w[k] *= 1 - share; }
+      if (!take) continue;
+      let slot = idx.findIndex((x, k) => x === hi && w[k] > 0);
+      if (slot < 0) slot = w.findIndex((x) => x === 0);
+      if (slot < 0) { slot = w.indexOf(Math.min(...w)); take += w[slot]; w[slot] = 0; }   // the weakest pull gives way to the hips
+      idx[slot] = hi; w[slot] += take; moved++;
+      si.setXYZW(v, ...idx); sw.setXYZW(v, ...w);
+    }
+    si.needsUpdate = sw.needsUpdate = true;
+  });
+  return moved;
+}
+// Wide sleeves that are skinned to the forearm stand out like dishes when the arm is raised (the model has no bones to let
+// them hang). Cloth around the arms is pulled in towards the arm, beyond `reach` metres, by `keep` of the way it stuck out.
+function narrowSleeves(vrm, keep, reach, match, nameOf) {
+  if (!(keep < 1)) return 0;
+  const raw = (n) => vrm.humanoid.getRawBoneNode(n);
+  vrm.scene.updateMatrixWorld(true);
+  let moved = 0;
+  for (const side of ["left", "right"]) {
+    const top = raw(side + "UpperArm"), hand = raw(side + "Hand"); if (!top || !hand) continue;
+    const underArm = (b) => { for (let o = b; o; o = o.parent) { if (o === top) return true; } return false; };
+    const a0 = top.getWorldPosition(new THREE.Vector3()), a1 = hand.getWorldPosition(new THREE.Vector3());
+    vrm.scene.traverse((o) => {
+      if (!o.isSkinnedMesh || !match.test(nameOf(o))) return;
+      const inv = new THREE.Matrix4().copy(o.matrixWorld).invert(), p0 = a0.clone().applyMatrix4(inv), p1 = a1.clone().applyMatrix4(inv);
+      const ax = p1.clone().sub(p0), L = ax.length(); ax.normalize();
+      const arm = new Set(); o.skeleton.bones.forEach((b, i) => underArm(b) && arm.add(i));
+      const pos = o.geometry.attributes.position, si = o.geometry.attributes.skinIndex, sw = o.geometry.attributes.skinWeight, q = new THREE.Vector3();
+      for (let v = 0; v < pos.count; v++) {
+        let w = 0; for (let k = 0; k < 4; k++) if (arm.has(si.getComponent(v, k))) w += sw.getComponent(v, k);
+        if (w < 0.5) continue;
+        q.fromBufferAttribute(pos, v);
+        const along = clamp(q.clone().sub(p0).dot(ax), 0, L * 1.1), c = p0.clone().addScaledVector(ax, along), r = q.clone().sub(c), d = r.length();
+        if (d <= reach) continue;
+        r.multiplyScalar((reach + (d - reach) * keep) / d); q.copy(c).add(r); pos.setXYZ(v, q.x, q.y, q.z); moved++;
+      }
+      pos.needsUpdate = true; o.geometry.computeVertexNormals();
+    });
+  }
+  return moved;
+}
+// the swinging bones (hems, sleeves): slower and hanging, so they trail the body instead of fluttering
+function tuneSprings(vrm, c) {
+  const m = vrm.springBoneManager; if (!m || !c) return;
+  for (const j of m.joints) {
+    const s = j.settings;
+    if (c.stiffness != null) s.stiffness = c.stiffness;
+    if (c.drag != null) s.dragForce = c.drag;
+    if (c.gravity != null) { s.gravityPower = c.gravity; s.gravityDir.set(0, -1, 0); }
+  }
+}
+
 export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255] } = {}) {
   const lift = createLift(g, motion, cfg), asp = g.aspect || 0.75;
+  const HEAD = { share: 0.5, max: 45, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
+  const HAND = { fist: [70, 90, 60], bendMax: 35, twistMax: 90, ...(cfg.hand || {}) };
+  const CLOTH = { legShare: 0.6, match: "CLOTH", skip: "Shoes", stiffness: 0.5, drag: 0.4, gravity: 0.35, sleeveKeep: 0.25, sleeveReach: 0.06, ...(cfg.cloth || {}) };
   const gl = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   gl.setClearColor(0x000000, 0);
   const scene = new THREE.Scene(), cam = new THREE.OrthographicCamera(-0.5, 0.5, 0.5 / asp, -0.5 / asp, 0.1, 20);
@@ -150,6 +225,16 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const gltf = await loader.loadAsync(cfg.model || "assets/models/shadow.vrm"), vrm = gltf.userData.vrm;
   VRMUtils.removeUnnecessaryVertices(gltf.scene); VRMUtils.removeUnnecessaryJoints(gltf.scene);
   if (vrm.meta && vrm.meta.metaVersion === "0") VRMUtils.rotateVRM0(vrm);
+  const clothRe = new RegExp(CLOTH.match), skipRe = CLOTH.skip ? new RegExp(CLOTH.skip) : null;
+  // the material's name as written in the file (the loader does not keep it on every material)
+  const nameOf = (o) => {
+    const a = gltf.parser.associations.get(o), j = gltf.parser.json;
+    const m = a && a.meshes != null ? j.meshes[a.meshes].primitives[a.primitives || 0].material : null;
+    return (m != null && j.materials[m] && j.materials[m].name) || (o.material && o.material.name) || "";
+  };
+  const clothMoved = loosenCloth(vrm, CLOTH.legShare, { test: (n) => clothRe.test(n) && !(skipRe && skipRe.test(n)) }, nameOf);
+  const sleeveMoved = narrowSleeves(vrm, CLOTH.sleeveKeep, CLOTH.sleeveReach, { test: (n) => clothRe.test(n) && !(skipRe && skipRe.test(n)) }, nameOf);
+  tuneSprings(vrm, CLOTH);
   vrm.scene.traverse((o) => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(ink) : ink(); o.frustumCulled = false; } });
   scene.add(vrm.scene);
   const bone = (name) => vrm.humanoid.getNormalizedBoneNode(name);
@@ -165,47 +250,98 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     if (a && b) restDir[up] = b.clone().sub(a).normalize();
     if (b && c) restDir[low] = c.clone().sub(b).normalize();
   }
-  const sword = new THREE.Mesh(new THREE.BoxGeometry(0.008, 1, 0.02), new THREE.MeshBasicMaterial({ color: new THREE.Color(aura[0] / 255, aura[1] / 255, aura[2] / 255).lerp(new THREE.Color(1, 1, 1), 0.6) }));
+  // the head: from the neck to the nose, at rest (the nose is cfg.head.nose from the head bone, in the model's metres)
+  const neckRest = restPos("neck"), headRest = restPos("head");
+  const noseRest = neckRest && headRest ? headRest.clone().add(new THREE.Vector3(...HEAD.nose)).sub(neckRest) : null;
+  // the hands: closed into fists once (the fingers are never moved again)
+  for (const side of ["left", "right"]) {
+    const sg = side === "left" ? -1 : 1;                              // a left hand's fingers point +X and curl down: about −Z
+    for (const f of ["Index", "Middle", "Ring", "Little"]) ["Proximal", "Intermediate", "Distal"].forEach((p, k) => {
+      const b = bone(side + f + p); if (b) b.quaternion.setFromAxisAngle(new THREE.Vector3(0, 0, 1), sg * HAND.fist[k] * D2R);
+    });
+    const tp = bone(side + "ThumbProximal"); if (tp) tp.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), -sg * 25 * D2R);
+  }
+  const blade = new THREE.Color(aura[0] / 255, aura[1] / 255, aura[2] / 255).lerp(new THREE.Color(1, 1, 1), 0.6);
+  const sword = new THREE.Mesh(new THREE.BoxGeometry(0.008, 1, 0.02), new THREE.MeshBasicMaterial({ color: blade }));
   scene.add(sword);
 
-  const v = (q) => new THREE.Vector3(q[0], q[1], q[2]), UP = new THREE.Vector3(0, 1, 0);
+  const v = (q) => new THREE.Vector3(q[0], q[1], q[2]), UP = new THREE.Vector3(0, 1, 0), FWD = new THREE.Vector3(0, 0, 1);
   const basis = (xAxis, up) => {                                       // a rotation from "left" and "up" (up is straightened to be square to left)
     const x = xAxis.clone().normalize(), z = new THREE.Vector3().crossVectors(x, up).normalize(), y = new THREE.Vector3().crossVectors(z, x);
     return new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
   };
   const put = (name, world, parentWorld) => { const b = bone(name); if (!b) return parentWorld; b.quaternion.copy(parentWorld.clone().invert().multiply(world)); return world; };
+  const limit = (q, maxDeg) => {                                       // the same turn, cut down to at most maxDeg
+    const a = 2 * Math.acos(clamp(Math.abs(q.w), 0, 1)) / D2R;
+    return a <= maxDeg ? q : new THREE.Quaternion().slerp(q, maxDeg / a);
+  };
+  const flatTo = (v3, axis) => v3.clone().sub(axis.clone().multiplyScalar(v3.dot(axis)));
   const ID = new THREE.Quaternion();
   let lastT = null, lastTime = null;
 
   function pose(J) {
+    // the whole body first: sized so that torso + leg match the person's, hips placed on the picture's hips
+    const s = J.size / (torsoRest + legRest);
+    vrm.scene.scale.setScalar(s);
+    vrm.scene.position.set(J.hc[0] - hipRest.x * s, J.hc[1] - hipRest.y * s, -hipRest.z * s);
     const up = v(J.sc).sub(v(J.hc)); if (up.length() < 1e-5) up.set(0, 1, 0);
     const qHips = basis(v(J[23]).sub(v(J[24])), up), qChest = basis(v(J[11]).sub(v(J[12])), up);
     put("hips", qHips, ID);
     const qSpine = bone("chest") ? put("spine", qHips.clone().slerp(qChest, 0.5), qHips) : put("spine", qChest, qHips);
     const qTop = bone("chest") ? put("chest", qChest, qSpine) : qSpine;
+    const world = {};
     for (const [upper, lower, , a, b, c] of CHAINS) {
       let parent = upper.endsWith("Leg") ? qHips : qTop;
       for (const [name, from, to] of [[upper, a, b], [lower, b, c]]) {
         const d = v(J[to]).sub(v(J[from])), r = restDir[name];
+        world[name] = parent;
         if (!r || !bone(name) || d.length() < 1e-5) continue;
         const now = r.clone().applyQuaternion(parent);                 // where the bone points if it only follows its parent
-        parent = put(name, new THREE.Quaternion().setFromUnitVectors(now, d.normalize()).multiply(parent), parent);
+        parent = world[name] = put(name, new THREE.Quaternion().setFromUnitVectors(now, d.normalize()).multiply(parent), parent);
       }
     }
-    // the whole body: sized by the torso, hips placed on the picture's hips
-    const s = J.size / (torsoRest + legRest);                       // sized so that torso + leg match the person's
-    vrm.scene.scale.setScalar(s);
-    vrm.scene.position.set(J.hc[0] - hipRest.x * s, J.hc[1] - hipRest.y * s, -hipRest.z * s);
-    // the sword: from between the hands, along the forearms (its true direction is not known from the skeleton)
-    const hand = v(J[15]).add(v(J[16])).multiplyScalar(0.5), elbow = v(J[13]).add(v(J[14])).multiplyScalar(0.5), dir = hand.clone().sub(elbow);
-    if (dir.length() > 1e-5) {
-      dir.normalize(); const len = J.U * 2.1;
-      sword.position.copy(hand).addScaledVector(dir, len / 2 + J.U * 0.08); sword.quaternion.setFromUnitVectors(UP, dir); sword.scale.set(s, len, s);
+    // the head: neck and head share the turn that brings the nose over the picture's nose (depth from the neck's length)
+    if (noseRest && bone("neck") && bone("head")) {
+      vrm.scene.updateMatrixWorld(true);
+      const neck = bone("neck").getWorldPosition(new THREE.Vector3());
+      const r = noseRest.clone().multiplyScalar(s).applyQuaternion(qTop), R = r.length();
+      const fl = Math.hypot(J[0][0] - neck.x, J[0][1] - neck.y), dz = Math.sqrt(Math.max(0, R * R - fl * fl));
+      const want = new THREE.Vector3(J[0][0] - neck.x, J[0][1] - neck.y, Math.sign(r.z || 1) * dz);
+      if (want.length() > 1e-5) {
+        const turn = limit(new THREE.Quaternion().setFromUnitVectors(r.clone().normalize(), want.normalize()), HEAD.max);
+        const qNeck = put("neck", new THREE.Quaternion().slerp(turn, HEAD.share).multiply(qTop), qTop);
+        put("head", turn.clone().multiply(qTop), qNeck);
+      }
     }
+    // the sword: along the forearms (the skeleton cannot tell more: docs/設計_影の3D.md), steadied between the two arms
+    const fa = v(J[15]).sub(v(J[13])).normalize().add(v(J[16]).sub(v(J[14])).normalize());
+    const dir = fa.length() > 1e-5 ? fa.normalize() : UP.clone();
+    // the hands: the forearm turns about its length so the thumbs face the body's "up", then the wrist bends towards the sword
+    const bodyUp = UP.clone().applyQuaternion(qTop);
+    for (const [, lower, hand, , el, wr] of CHAINS.slice(0, 2)) {   // (CHAINS rows: upper, lower, end, joint a, b, c)
+      if (!bone(hand) || !world[lower]) continue;
+      const axis = v(J[wr]).sub(v(J[el])); if (axis.length() < 1e-5) continue; axis.normalize();
+      let ql = world[lower];
+      const thumb = flatTo(FWD.clone().applyQuaternion(ql), axis), aim = flatTo(bodyUp, axis);
+      if (thumb.length() > 1e-4 && aim.length() > 1e-4) {
+        thumb.normalize(); aim.normalize();
+        const ang = clamp(Math.atan2(new THREE.Vector3().crossVectors(thumb, aim).dot(axis), thumb.dot(aim)), -HAND.twistMax * D2R, HAND.twistMax * D2R);
+        ql = world[lower] = put(lower, new THREE.Quaternion().setFromAxisAngle(axis, ang).multiply(ql), world[lower.replace("Lower", "Upper")]);
+      }
+      const bend = limit(new THREE.Quaternion().setFromUnitVectors(axis, dir), HAND.bendMax);
+      world[hand] = put(hand, bend.multiply(ql), ql);
+    }
+    // the sword starts between the model's own fists (not the picture's wrists), so it is always held
+    vrm.scene.updateMatrixWorld(true);
+    const fists = [["leftHand", 1], ["rightHand", -1]].filter(([n]) => bone(n) && world[n])
+      .map(([n, sx]) => bone(n).getWorldPosition(new THREE.Vector3()).addScaledVector(new THREE.Vector3(sx, 0, 0).applyQuaternion(world[n]), 0.06 * s));
+    const hand = fists.length === 2 ? fists[0].add(fists[1]).multiplyScalar(0.5) : v(J[15]).add(v(J[16])).multiplyScalar(0.5);
+    const len = J.U * 2.1;
+    sword.position.copy(hand).addScaledVector(dir, len / 2 + J.U * 0.08); sword.quaternion.setFromUnitVectors(UP, dir); sword.scale.set(s, len, s);
   }
 
   return {
-    lift, vrm, rest: { torsoRest, hipRest, restDir },
+    lift, vrm, rest: { torsoRest, hipRest, restDir }, clothMoved, sleeveMoved,
     draw(ctx, _pose, box, { aspect = asp, t = performance.now(), time = 0 } = {}) {
       const bw = Math.round(Math.min(box.w, box.h * aspect)), bh = Math.round(bw / aspect), ox = box.x + (box.w - bw) / 2, oy = box.y + (box.h - bh) / 2;
       if (gl.domElement.width !== bw || gl.domElement.height !== bh) gl.setSize(bw, bh, false);
