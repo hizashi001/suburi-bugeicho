@@ -212,6 +212,29 @@
     "assets/images/mask/mask_shop_aka_oni.png"
    ],
    "note": "全面の目と口の白い穴を透過に。半面は1割小さく、目の間隔の0.2倍上へ"
+  },
+  {
+   "date": "2026-11-17",
+   "via": "ヒデキがAIで作った筆の素材（docs/注文書_筆の素材.md）。tools/models/make_brushes.py で白を透明にして縮めた。元の画像はリポジトリの外（../_downloads/brush_originals）。smoke_02 と smoke_03 は同じ画像",
+   "files": [
+    "assets/images/shadow/shadow_brush_sweep_01.png",
+    "assets/images/shadow/shadow_brush_sweep_02.png",
+    "assets/images/shadow/shadow_brush_sweep_03.png",
+    "assets/images/shadow/shadow_brush_sweep_04.png",
+    "assets/images/shadow/shadow_brush_dry_01.png",
+    "assets/images/shadow/shadow_brush_dry_02.png",
+    "assets/images/shadow/shadow_brush_smoke_01.png",
+    "assets/images/shadow/shadow_brush_smoke_02.png",
+    "assets/images/shadow/shadow_brush_smoke_03.png",
+    "assets/images/shadow/shadow_brush_splat_01.png"
+   ]
+  },
+  {
+   "date": "2026-11-17",
+   "via": "ヒデキが Tripo3D で作った鎧武者（元の assets/images/3d/samurai.glb は57MBのためリポジトリに入れない）。tools/models/make_parts.py で軽くし、関節で切り分けた",
+   "files": [
+    "assets/models/samurai_parts.glb"
+   ]
   }
  ]
 }

@@ -78,3 +78,24 @@ export function buildArmor(vrm, cfg = {}) {
   }
   return parts;
 }
+
+// A made armour (tools/models/make_parts.py): one piece per bone, named "part_" + the VRM bone's name, already placed in
+// the VRM's rest space with the joints cut away. Each piece is hung on its bone, keeping its place.
+export async function loadArmorParts(vrm, url) {
+  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+  const gltf = await new GLTFLoader().loadAsync(url);
+  gltf.scene.updateMatrixWorld(true);
+  vrm.scene.updateMatrixWorld(true);
+  const parts = [], mat = new THREE.MeshStandardMaterial({ color: 0x111111, side: THREE.DoubleSide });
+  gltf.scene.traverse((o) => {
+    if (!o.isMesh) return;
+    const name = (o.name || (o.parent && o.parent.name) || "").replace(/^part_/, "").replace(/_\d+$/, "");
+    const b = vrm.humanoid.getNormalizedBoneNode(name); if (!b) return;
+    const g = o.geometry.clone(); g.applyMatrix4(o.matrixWorld); g.computeVertexNormals();
+    const m = new THREE.Mesh(g, mat); m.frustumCulled = false;
+    m.position.copy(b.getWorldPosition(new THREE.Vector3())).multiplyScalar(-1);
+    parts.push([b, m]);
+  });
+  for (const [b, m] of parts) b.add(m);
+  return parts.map((p) => p[1]);
+}

@@ -11,7 +11,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
-import { buildArmor } from "./shadowarmor.js";
+import { buildArmor, loadArmorParts } from "./shadowarmor.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -252,7 +252,10 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   tuneSprings(vrm, CLOTH);
   // armor: the model's own body is hidden and rigid pieces with empty joints are hung on its bones (js/shadowarmor.js)
   const ARM = { haze: 0.8, hazeSize: 1.5, ...(cfg.armor || {}) };
-  if (armor) { vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; }); buildArmor(vrm, ARM); }
+  if (armor) {
+    vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; });
+    if (ARM.parts) await loadArmorParts(vrm, ARM.parts); else buildArmor(vrm, ARM);   // a made armour, or the test pieces
+  }
   vrm.scene.traverse((o) => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(ink) : ink(); o.frustumCulled = false; } });
   scene.add(vrm.scene);
   const bone = (name) => vrm.humanoid.getNormalizedBoneNode(name);
@@ -426,6 +429,13 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         const a = Math.pow(1 - u, 1.5) * S.ink;
         const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
         gr.addColorStop(0, `rgba(${cr},${cg},${cb},${a})`); gr.addColorStop(0.5, `rgba(${cr},${cg},${cb},${a * 0.6})`); gr.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+        if (S.sprites && S.sprites.length) {
+          const im = S.sprites[seed % S.sprites.length], k = (r * 2.2) / Math.max(im.width, im.height);
+          ctx.save(); ctx.globalAlpha = Math.min(1, a * S.spriteInk); ctx.translate(x, y); ctx.rotate(Math.sin(time / 900 + seed) * 0.35 + (hash(seed + 7) - 0.5) * 0.8);
+          if (hash(seed + 2) > 0.5) ctx.scale(-1, 1);
+          ctx.drawImage(im, (-im.width * k) / 2, (-im.height * k) / 2, im.width * k, im.height * k); ctx.restore();
+          continue;
+        }
         ctx.fillStyle = gr; ctx.beginPath(); ctx.ellipse(x, y, r * (S.tall ? 0.6 : 1), r * (S.tall || 0.75 + 0.5 * hash(seed + 3)), S.tall ? Math.sin(time / 700 + seed) * 0.4 : hash(seed + 7) * 3, 0, Math.PI * 2); ctx.fill();
       }
     });
@@ -436,17 +446,32 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   // The 3D body is never shown as a surface: its outline and which way each part faces are read from a hidden picture
   // (normals), and a brush is laid over that: wobbling, bleeding edges, dry-brush streaks where the light falls.
   const SU = { wob: 0.012, edgeR: 7, dry: 0.7, streak: 1, glow: 0, ink: [14, 14, 16], bladeW: 0.016, trailMs: 260,
-    trailMin: 2.5, trailDepth: 0.45, bristles: 26, bristleW: 0.007, splat: 1, smokeBack: 0.3, smokeFront: 0.35, ...(cfg.sumi || {}) };
+    trailMin: 2.5, trailDepth: 0.45, bristles: 26, bristleW: 0.007, splat: 1, smokeBack: 0.3, smokeFront: 0.35,
+    brushes: null, smokeSpriteSize: 1.8, smokeSpriteInk: 1.2, smokeSpritePuffs: 2, ...(cfg.sumi || {}) };
   let post = null, splats = [], swordHist = [];
+  // the brush pictures made by AI (docs/注文書_筆の素材.md; made light by tools/models/make_brushes.py). Without them the
+  // brush is computed (noise) as before.
+  const BR = { sweep: [], smoke: [], dry: null, splat: null, splatRects: [] };
+  if (sumi && SU.brushes) {
+    const dir = SU.brushes, img = (f) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = dir + f; });
+    const [sw, sm, dry, sp, rects] = await Promise.all([
+      Promise.all([1, 2, 3, 4].map((n) => img(`shadow_brush_sweep_0${n}.png`))),
+      Promise.all([1, 2].map((n) => img(`shadow_brush_smoke_0${n}.png`))),
+      img("shadow_brush_dry_02.png"), img("shadow_brush_splat_01.png"),
+      fetch(dir + "shadow_brush_splat_01.json").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]);
+    BR.sweep = sw.filter(Boolean); BR.smoke = sm.filter(Boolean); BR.dry = dry; BR.splat = sp; BR.splatRects = (rects && rects.sprites) || [];
+  }
   if (sumi) {
     const rt = new THREE.WebGLRenderTarget(4, 4);
     const mat = new THREE.ShaderMaterial({
       uniforms: { tMask: { value: rt.texture }, res: { value: new THREE.Vector2(4, 4) }, time: { value: 0 }, wob: { value: SU.wob }, edgeR: { value: SU.edgeR },
         dry: { value: SU.dry }, streak: { value: SU.streak }, glow: { value: SU.glow }, ink: { value: new THREE.Vector3(...SU.ink.map((c) => c / 255)) },
-        aura: { value: new THREE.Vector3(aura[0] / 255, aura[1] / 255, aura[2] / 255) } },
+        aura: { value: new THREE.Vector3(aura[0] / 255, aura[1] / 255, aura[2] / 255) },
+        tDry: { value: null }, useDry: { value: 0 } },
       vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
       fragmentShader: [
-        "uniform sampler2D tMask; uniform vec2 res; uniform float time, wob, edgeR, dry, streak, glow; uniform vec3 ink, aura; varying vec2 vUv;",
+        "uniform sampler2D tMask, tDry; uniform float useDry; uniform vec2 res; uniform float time, wob, edgeR, dry, streak, glow; uniform vec3 ink, aura; varying vec2 vUv;",
         "float h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }",
         "float nz(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);",
         "  return mix(mix(h21(i), h21(i + vec2(1.0, 0.0)), f.x), mix(h21(i + vec2(0.0, 1.0)), h21(i + vec2(1.0, 1.0)), f.x), f.y); }",
@@ -467,6 +492,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         "  vec2 w = vUv * vec2(asp, 1.0); w += (vec2(fbm(w * 2.0 + 3.0), fbm(w * 2.0 + 9.0)) - 0.5) * 0.6;",
         "  vec2 r = mat2(0.8, -0.6, 0.6, 0.8) * w;",
         "  float st = fbm(r * vec2(2.0, 34.0) * streak + 3.0);",                                 // bent dry-brush streaks
+        "  if (useDry > 0.5) st = mix(st, 1.0 - texture2D(tDry, (mat2(0.8, -0.6, 0.6, 0.8) * (vUv * vec2(asp, 1.0))) * vec2(0.55, 0.9) * streak).a, 0.55);",   // the brush picture's straight streaks, mixed in
         "  float white = smoothstep(0.7, 0.78, lit * 0.95 + (st - 0.5) * 1.1) * dry * smoothstep(0.6, 0.95, inside);",           // paper showing where the light falls
         "  float edge = smoothstep(0.42, 0.5, fbm(q * 2.5 + 9.0) * 0.75 + inside * 0.75);",       // the edge breaks into dry brush
         "  float dens = m * (1.0 - white) * edge;",
@@ -484,6 +510,10 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false;
     const pscene = new THREE.Scene(); pscene.add(quad);
     post = { rt, mat, pscene, normal: new THREE.MeshNormalMaterial() };
+    if (BR.dry) {
+      const tx = new THREE.Texture(BR.dry); tx.wrapS = tx.wrapT = THREE.MirroredRepeatWrapping; tx.needsUpdate = true;
+      mat.uniforms.tDry.value = tx; mat.uniforms.useDry.value = 1;
+    }
     vrm.scene.traverse((o) => { if (o.isMesh) o.material = post.normal; });
     sword.visible = false;
   }
@@ -511,7 +541,43 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   }
   // the path of the blade: one sweep of a wide brush — many bristles along the path of the blade's outer part,
   // solid where the stroke is fresh and fast, breaking into dry streaks as it ages
+  function drawSweep(ctx, bw, time) {
+    const raw = swordHist.filter((e) => time - e.time <= SU.trailMs && e.time <= time), live = [];
+    for (let i = 0; i < raw.length; i++) {
+      if (i) {
+        const A = raw[i - 1], B = raw[i], n = 6;
+        const la = Math.hypot(A.tip[0] - A.h[0], A.tip[1] - A.h[1]), lb = Math.hypot(B.tip[0] - B.h[0], B.tip[1] - B.h[1]);
+        const aa = Math.atan2(A.tip[1] - A.h[1], A.tip[0] - A.h[0]); let ab = Math.atan2(B.tip[1] - B.h[1], B.tip[0] - B.h[0]);
+        while (ab - aa > Math.PI) ab -= 2 * Math.PI; while (ab - aa < -Math.PI) ab += 2 * Math.PI;
+        for (let k = 1; k < n; k++) {
+          const t = k / n, h = [A.h[0] + (B.h[0] - A.h[0]) * t, A.h[1] + (B.h[1] - A.h[1]) * t], an = aa + (ab - aa) * t, L = la + (lb - la) * t;
+          live.push({ time: A.time + (B.time - A.time) * t, h, tip: [h[0] + Math.cos(an) * L, h[1] + Math.sin(an) * L] });
+        }
+      }
+      live.push(raw[i]);
+    }
+    if (live.length < 2) return false;
+    const img = BR.sweep[Math.floor(hash(Math.floor(live[0].time / 400)) * BR.sweep.length) % BR.sweep.length];
+    const f = 1 - SU.trailDepth, inner = (e) => [e.h[0] + (e.tip[0] - e.h[0]) * f, e.h[1] + (e.tip[1] - e.h[1]) * f];
+    ctx.save();
+    for (let i = live.length - 1; i >= 1; i--) {
+      const B = live[i], A = live[i - 1], dt = Math.max(1, B.time - A.time);           // B newer, A older
+      const spd = Math.hypot(B.tip[0] - A.tip[0], B.tip[1] - A.tip[1]) / bw / (dt / 1000), k = clamp(spd / SU.trailMin - 1, 0, 1);
+      if (k <= 0.02) continue;
+      const u0 = (time - B.time) / SU.trailMs, u1 = (time - A.time) / SU.trailMs;            // 0 = the head of the stroke
+      const sx = Math.max(0, u0) * img.width, sw = Math.max(1, (Math.min(1, u1) - Math.max(0, u0)) * img.width);
+      const bi = inner(B), ai = inner(A);
+      ctx.save(); ctx.globalAlpha = Math.min(1, k * 1.4);
+      // the picture's strip [sx, sx+sw] onto the four-sided piece B.inner, A.inner (along) and B.tip (across)
+      ctx.transform(ai[0] - bi[0], ai[1] - bi[1], B.tip[0] - bi[0], B.tip[1] - bi[1], bi[0], bi[1]);
+      ctx.drawImage(img, sx, 0, sw, img.height, -0.02, 0, 1.04, 1);
+      ctx.restore();
+    }
+    ctx.restore();
+    return true;
+  }
   function drawTrail(ctx, bw, time) {
+    if (BR.sweep.length && drawSweep(ctx, bw, time)) return;
     const live = swordHist.filter((e) => time - e.time <= SU.trailMs && e.time <= time);
     if (live.length < 2) return;
     const N = SU.bristles, ks = live.map((e, i) => {
@@ -548,7 +614,8 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         const k = Math.random();
         splats.push({ x: e[1].tip[0] + (e[0].tip[0] - e[1].tip[0]) * k, y: e[1].tip[1] + (e[0].tip[1] - e[1].tip[1]) * k,
           vx: vx * (0.25 + 0.4 * Math.random()) + (Math.random() - 0.5) * bw * 0.6, vy: vy * (0.25 + 0.4 * Math.random()) + (Math.random() - 0.5) * bw * 0.6,
-          r: bw * (0.002 + 0.008 * Math.random() ** 2), age: 0, life: 0.5 + Math.random() * 0.6 });
+          r: bw * (0.002 + 0.008 * Math.random() ** 2) * (BR.splat ? 2.2 : 1), age: 0, life: 0.5 + Math.random() * 0.6,
+          id: Math.floor(Math.random() * 1000), spin: (Math.random() - 0.5) * 0.6 });
       }
     }
     splats = splats.filter((p) => (p.age += dt) < p.life);
@@ -557,6 +624,12 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       const flying = p.age < 0.12;
       if (flying) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += bw * 2 * dt; }
       const a = 0.9 * (1 - p.age / p.life);
+      if (BR.splat && BR.splatRects.length) {
+        const rc = BR.splatRects[p.id % BR.splatRects.length], k = (p.r * 2.6) / Math.max(rc[2], rc[3]);
+        ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(p.vy, p.vx) + p.spin);
+        ctx.drawImage(BR.splat, rc[0], rc[1], rc[2], rc[3], (-rc[2] * k) / 2, (-rc[3] * k) / 2, rc[2] * k, rc[3] * k); ctx.restore();
+        continue;
+      }
       ctx.fillStyle = inkCss(a); ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
       if (flying) { ctx.strokeStyle = inkCss(a * 0.6); ctx.lineWidth = p.r; ctx.beginPath(); ctx.moveTo(p.x - p.vx * 0.02, p.y - p.vy * 0.02); ctx.lineTo(p.x, p.y); ctx.stroke(); }
     }
@@ -581,7 +654,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         swordHist.push({ time, h: pxOf(swordNow.h, bw, bh, aspect), tip: pxOf(swordNow.tip, bw, bh, aspect) });
         while (swordHist.length && time - swordHist[0].time > SU.trailMs + 100) swordHist.shift();
         renderSumi(bw, bh, time);
-        drawSmoke(ctx, bw, time, { color: [22, 22, 26], size: SMOKE.size * 1.6, rise: SMOKE.rise * 3.2, sway: SMOKE.sway * 3, ink: SU.smokeBack, life: SMOKE.life * 1.8, seed: 500, tall: 2.2 });
+        drawSmoke(ctx, bw, time, { color: [22, 22, 26], size: SMOKE.size * 1.6 * (BR.smoke.length ? SU.smokeSpriteSize : 1), rise: SMOKE.rise * 3.2, sway: SMOKE.sway * 3, ink: SU.smokeBack, life: SMOKE.life * 1.8, seed: 500, tall: 2.2, sprites: BR.smoke, spriteInk: SU.smokeSpriteInk, puffs: BR.smoke.length ? SU.smokeSpritePuffs : SMOKE.puffs });
         drawTrail(ctx, bw, time);
         ctx.drawImage(gl.domElement, 0, 0, bw, bh);
         const last = swordHist[swordHist.length - 1];
