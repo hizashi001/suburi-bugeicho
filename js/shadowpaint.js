@@ -174,8 +174,9 @@ export function drawBladeGlow(ctx, h, tip, bw, rgb, time, strength) {
   ctx.restore();
 }
 
-// ---------- 溜めとキレ: inside each fast movement of the hands, time is bent so the start lingers (a build-up) and the cut
-// itself goes faster; the movement still starts and ends at the recorded moments, so the ghost keeps the person's timing.
+// ---------- キレ（先回り）: inside each fast stroke of the hands, time is bent so the ghost gets there first: it moves ahead of
+// the person, reaches the end of the stroke early and holds it. It is never behind the person (a lag looks small and slow);
+// the stroke still starts and ends at the recorded moments, so the person's timing is kept.
 // lift: anything with at(t). Returns the same shape, plus `swings` ([from, to] ms) for checks.
 export function createSnap(g, motion, lift, cfg = {}) {
   const C = { speed: 0.9, power: 1.8, minMs: 120, maxMs: 1400, ...cfg };
@@ -194,8 +195,44 @@ export function createSnap(g, motion, lift, cfg = {}) {
     if (top > C.speed && ms >= C.minMs && ms <= C.maxMs) segs.push([T[a], T[b]]);
   }
   const remap = (t) => {
-    for (const [a, b] of segs) if (t > a && t < b) { const u = (t - a) / (b - a); return a + (b - a) * Math.pow(u, C.power); }
+    // ahead of the person, never behind: the stroke is finished early and held (ease-out), so it hits and settles
+    for (const [a, b] of segs) if (t > a && t < b) { const u = (t - a) / (b - a); return a + (b - a) * (1 - Math.pow(1 - u, C.power)); }
     return t;
   };
   return { ...lift, swings: segs, remap, at: (t) => lift.at(remap(t)) };
+}
+
+// ---------- 誇張: the arms swing wider than the person's — never smaller. Each hand and elbow is pushed further out from
+// where it has been on average just before and after (a running mean over `windowMs`), by `gain`; the whole arm also
+// reaches a little further from the shoulders (`reach`). motion: anything with at(t) / metaAt(t) giving the 13 points.
+export function createAmp(g, motion, cfg = {}) {
+  const C = { gain: 0.45, windowMs: 360, reach: 1.08, ...cfg };
+  const T = g.frames.map((f) => f[0]), n = T.length, P = T.map((t) => motion.at(t));
+  const ARM = [13, 14, 15, 16], sc = (p) => [(p[11][0] + p[12][0]) / 2, (p[11][1] + p[12][1]) / 2];
+  // the running mean of each arm point relative to the shoulder centre, at each frame
+  const mean = P.map((_, i) => {
+    const out = {}; let cnt = 0;
+    for (const k of ARM) out[k] = [0, 0];
+    for (let j = i; j >= 0 && T[i] - T[j] <= C.windowMs / 2; j--) { const s = sc(P[j]); for (const k of ARM) { out[k][0] += P[j][k][0] - s[0]; out[k][1] += P[j][k][1] - s[1]; } cnt++; }
+    for (let j = i + 1; j < n && T[j] - T[i] <= C.windowMs / 2; j++) { const s = sc(P[j]); for (const k of ARM) { out[k][0] += P[j][k][0] - s[0]; out[k][1] += P[j][k][1] - s[1]; } cnt++; }
+    for (const k of ARM) { out[k][0] /= cnt; out[k][1] /= cnt; }
+    return out;
+  });
+  let hint = 0;
+  return {
+    ...motion,
+    at(t) {
+      const src = motion.at(t), p = Array.isArray(src) ? src.map((q) => (q ? q.slice() : q)) : {};
+      if (!Array.isArray(src)) for (const k in src) p[k] = Array.isArray(src[k]) ? src[k].slice() : src[k];
+      let i = T[hint] <= t ? hint : 0; while (i < n - 1 && T[i + 1] <= t) i++; hint = i;
+      const j = Math.min(i + 1, n - 1), k = T[j] > T[i] ? Math.max(0, Math.min(1, (t - T[i]) / (T[j] - T[i]))) : 0, s = sc(p);
+      for (const a of ARM) {
+        const mx = mean[i][a][0] + (mean[j][a][0] - mean[i][a][0]) * k, my = mean[i][a][1] + (mean[j][a][1] - mean[i][a][1]) * k;
+        const rx = p[a][0] - s[0], ry = p[a][1] - s[1];
+        p[a][0] = s[0] + (rx + (rx - mx) * C.gain) * C.reach; p[a][1] = s[1] + (ry + (ry - my) * C.gain) * C.reach;
+      }
+      return p;
+    },
+    metaAt: (t) => motion.metaAt(t),
+  };
 }

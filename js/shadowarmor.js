@@ -109,7 +109,7 @@ const SKIN_SEGS = [["hips", "hips", "spine"], ["spine", "spine", "chest"], ["che
   ["leftUpperLeg", "leftUpperLeg", "leftLowerLeg"], ["leftLowerLeg", "leftLowerLeg", "leftFoot"], ["leftFoot", "leftFoot", "leftToes"],
   ["rightUpperLeg", "rightUpperLeg", "rightLowerLeg"], ["rightLowerLeg", "rightLowerLeg", "rightFoot"], ["rightFoot", "rightFoot", "rightToes"]];
 export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
-  const C = { power: 4, near: 0.01, headFrom: 0.6, headReach: 0.3, backDepth: 0.12, ...cfg };
+  const C = { power: 4, near: 0.01, headFrom: 0.6, headReach: 0.3, backRigid: false, backDepth: 0.12, armOut: 0.04, armBand: 0.45, chestReach: 0.08, sleeveKeep: 0.3, sleeveReach: 0.07, ...cfg };
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
   const gltf = await new GLTFLoader().loadAsync(url);
   let src = null; gltf.scene.traverse((o) => { if (o.isMesh && !src) src = o; });
@@ -128,6 +128,9 @@ export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
   const head = segs.findIndex((s) => s.name === "head"), headAt = head >= 0 ? segs[head].A : null;
   const neckY = W("neck") ? W("neck").y : 0, headCut = headAt ? neckY + (headAt.y - neckY) * C.headFrom : Infinity;
   const chest = segs.findIndex((s) => s.name === "chest"), backZ = chest >= 0 ? segs[chest].A.z : 0, hipY = W("hips") ? W("hips").y : 0;
+  const shL = W("leftUpperArm"), shR = W("rightUpperArm");
+  const armSegs = { left: segs.map((s, k) => (s.name.startsWith("left") && !/Leg|Foot/.test(s.name) ? k : -1)).filter((k) => k >= 0),
+    right: segs.map((s, k) => (s.name.startsWith("right") && !/Leg|Foot/.test(s.name) ? k : -1)).filter((k) => k >= 0) };
   const pos = g.attributes.position, n = pos.count, idx = new Uint16Array(n * 4), wts = new Float32Array(n * 4), p = new THREE.Vector3(), d = new Float32Array(segs.length);
   for (let i = 0; i < n; i++) {
     p.fromBufferAttribute(pos, i);
@@ -137,11 +140,34 @@ export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
     });
     let near = 0; for (let k = 1; k < segs.length; k++) if (d[k] < d[near]) near = k;
     if (head >= 0 && p.y > headCut && Math.hypot(p.x - headAt.x, p.z - headAt.z) < C.headReach) { idx[i * 4] = head; wts[i * 4] = 1; continue; }
-    // things on the back (wings, a quiver...): behind the back, between the waist and the neck → the chest alone
-    if (chest >= 0 && p.z < backZ - C.backDepth && p.y > hipY && p.y < neckY + 0.05) { idx[i * 4] = chest; wts[i * 4] = 1; continue; }
-    const order = [near, ...segs[near].nb].sort((a, b) => d[a] - d[b]).slice(0, 4);
+    // things on the back (wings...): behind the back, between the waist and the neck → the chest alone. Only for characters
+    // that have them (backRigid): on a robe it would catch the back of wide sleeves and nail them to the chest
+    if (C.backRigid && chest >= 0 && p.z < backZ - C.backDepth && p.y > hipY && p.y < neckY + 0.05) { idx[i * 4] = chest; wts[i * 4] = 1; continue; }
+    // in a T-pose, whatever lies further out than a shoulder belongs to that arm (wide sleeves hang nearer the body than the arm)
+    const side = p.x > shL.x + C.armOut ? "left" : p.x < shR.x - C.armOut ? "right" : null;
+    if (side && Math.abs(p.y - shL.y) < C.armBand) {
+      near = -1; for (const k of armSegs[side]) if (near < 0 || d[k] < d[near]) near = k;
+    }
+    const order = [near, ...segs[near].nb].filter((k) => !side || armSegs[side].includes(k) || (k === chest && Math.abs(p.x - (side === "left" ? shL.x : shR.x)) < C.chestReach)).sort((a, b) => d[a] - d[b]).slice(0, 4);
     let sum = 0; const w = order.map((k) => { const v = 1 / Math.pow(d[k] + C.near, C.power); sum += v; return v; });
     order.forEach((k, j) => { idx[i * 4 + j] = k; wts[i * 4 + j] = w[j] / sum; });
+  }
+  // wide sleeves bound to the arm swing out like boards when the arm is raised (they cannot fall): until there is cloth,
+  // whatever hangs further than sleeveReach from the arm's line is pulled in to sleeveKeep of that distance
+  if (C.sleeveKeep < 1) {
+    for (const [side, sh] of [["left", shL], ["right", shR]]) {
+      const tip = W(side + "Hand") || sh, ax = tip.clone().sub(sh), Lx = ax.length(); ax.normalize();
+      for (let i = 0; i < n; i++) {
+        let arm = 0; for (let j = 0; j < 4; j++) if (armSegs[side].includes(idx[i * 4 + j])) arm += wts[i * 4 + j];
+        if (arm < 0.5) continue;
+        p.fromBufferAttribute(pos, i);
+        const along = Math.max(0, Math.min(Lx * 1.3, p.clone().sub(sh).dot(ax))), c = sh.clone().addScaledVector(ax, along), r = p.clone().sub(c), dist = r.length();
+        if (dist <= C.sleeveReach) continue;
+        r.multiplyScalar((C.sleeveReach + (dist - C.sleeveReach) * C.sleeveKeep) / dist);
+        pos.setXYZ(i, c.x + r.x, c.y + r.y, c.z + r.z);
+      }
+    }
+    pos.needsUpdate = true; g.computeVertexNormals();
   }
   g.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(idx, 4));
   g.setAttribute("skinWeight", new THREE.Float32BufferAttribute(wts, 4));

@@ -12,7 +12,7 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
 import { buildArmor, loadArmorParts, loadSkinnedBody } from "./shadowarmor.js";
-import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow, drawBladeAfterglow, createSnap } from "./shadowpaint.js";
+import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow, drawBladeAfterglow, createSnap, createAmp } from "./shadowpaint.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -214,6 +214,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
+  if (paint && (cfg.amp || {}).on !== false) motion = createAmp(g, motion, cfg.amp);              // wider than the person, never smaller
   let lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg);
   if (paint && (cfg.snap || {}).on !== false) lift = createSnap(g, motion, lift, cfg.snap);      // build-up and a fast cut
   const asp = g.aspect || 0.75;
@@ -262,7 +263,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   let bodyMesh = null, WORLD = null, weather = null;
   if (paint) {
     vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; });
-    bodyMesh = await loadSkinnedBody(vrm, PA.body, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }), { eyeY: PA.eyeY, eyeGap: PA.eyes[0] });
+    bodyMesh = await loadSkinnedBody(vrm, PA.body, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }), { eyeY: PA.eyeY, eyeGap: PA.eyes[0], ...(PA.skin || {}) });
     WORLD = await loadWorld(PA.world);
     weather = createWeather(WORLD, { wind: PA.wind, ...(PA.weather || {}) });
   }
@@ -284,6 +285,29 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     const a = restPos(up), b = restPos(low), c = restPos(end);
     if (a && b) restDir[up] = b.clone().sub(a).normalize();
     if (b && c) restDir[low] = c.clone().sub(b).normalize();
+  }
+  // the person's proportions: each ghost's bones are stretched to the person's lengths (arm, leg, torso), so the hands reach
+  // where the person's hands are. Only the bones move apart; the gaps at the joints are under smoke. (cfg.fit)
+  const FIT = { on: true, min: 0.7, max: 1.6, ...(cfg.fit || {}) };
+  const restLocal = {}, restLen = {};
+  for (const n of ["spine", "chest", "upperChest", "neck", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand", "leftLowerLeg", "rightLowerLeg", "leftFoot", "rightFoot"]) {
+    const b = bone(n); if (b) restLocal[n] = b.position.clone();
+  }
+  for (const [up, low, end] of CHAINS) {
+    const a = restPos(up), b = restPos(low), c = restPos(end);
+    if (a && b) restLen[low] = a.distanceTo(b);                         // the length that ends at `low`
+    if (b && c) restLen[end] = b.distanceTo(c);
+  }
+  function fitBones(J, s) {
+    if (!FIT.on || !lift.L) return;
+    const k = (want, rest) => clamp(want / Math.max(1e-6, rest * s), FIT.min, FIT.max);
+    const set = (n, f) => { const b = bone(n); if (b && restLocal[n]) b.position.copy(restLocal[n]).multiplyScalar(f); };
+    for (const side of ["left", "right"]) {
+      set(side + "LowerArm", k(lift.L[0], restLen[side + "LowerArm"])); set(side + "Hand", k(lift.L[1], restLen[side + "Hand"]));
+      set(side + "LowerLeg", k(lift.L[4], restLen[side + "LowerLeg"])); set(side + "Foot", k(lift.L[5], restLen[side + "Foot"]));
+    }
+    const kt = k(lift.L[8], torsoRest);
+    for (const n of ["spine", "chest", "upperChest", "neck"]) set(n, kt);
   }
   // the head: from the neck to the nose, at rest (the nose is cfg.head.nose from the head bone, in the model's metres)
   const neckRest = restPos("neck"), headRest = restPos("head");
@@ -318,6 +342,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   function pose(J, time = 0) {
     // the whole body first: sized so that torso + leg match the person's, hips placed on the picture's hips
     const s = J.size / (torsoRest + legRest);
+    fitBones(J, s);
     vrm.scene.scale.setScalar(s);
     vrm.scene.position.set(J.hc[0] - hipRest.x * s, J.hc[1] - hipRest.y * s, -hipRest.z * s);
     const up = v(J.sc).sub(v(J.hc)); if (up.length() < 1e-5) up.set(0, 1, 0);
