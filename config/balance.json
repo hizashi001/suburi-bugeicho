@@ -592,6 +592,18 @@
         "glow": 0.35,
         "halo": 0.05
       },
+      "kata": {
+        "_note": "型を混ぜる（js/shadowkata.js。試験場の「型を混ぜる（C）」）。fidelityArm=腕と刀を、作った型から本人の骨格へ戻す割合（0=型どおり、1=本人どおり）。fidelityBody=胴・脚・頭の同じ割合。minSpeed=振りとみなす手の下がる速さ（絵の高さ/秒）。minDrop=真っ向とみなす手の下がる量（絵の高さ）。vertical=横の動きが下がる量のこの割合までなら真っ向。eventWindowMs=記録の判定の結果（swing）を振りに結び付ける時間の幅。holdMs=振り終わりから残心までの時間。rampInMs・rampOutMs=型へ入る・型から抜ける時間",
+        "fidelityArm": 0.35,
+        "fidelityBody": 0.2,
+        "minSpeed": 0.35,
+        "minDrop": 0.12,
+        "vertical": 0.6,
+        "eventWindowMs": 400,
+        "holdMs": 300,
+        "rampInMs": 150,
+        "rampOutMs": 300
+      },
       "cloth": {
         "_note": "着物の布の扱い。match=布とみなす素材の名前（正規表現）、skip=除く物。legShare=布が脚から受け取る動きのうち、腰へ移す割合（袴や裾が脚と一緒に裂けないように。0で元のまま）。sleeveKeep・sleeveReach=腕のまわりの布を、腕からsleeveReachメートルより外の分をsleeveKeepの割合まで腕へ寄せる（揺れ骨の無い広い袖が皿のように開くのを防ぐ。1で元のまま）。stiffness・drag・gravity=揺れ骨（裾）の硬さ・抵抗・重力",
         "match": "CLOTH",

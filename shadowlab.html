@@ -129,7 +129,9 @@ const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
 function lazy3d(g, kind) {
   let impl = null, msg = t("slab.loading");
   const m = createMotion(g, MOTION, SH.facing);
-  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" })))
+  const kata = kind === "vrmKata" ? "mix" : kind === "vrmKataOnly" ? "only" : null;
+  const label = (k) => t("slab.kata", { form: t("slab.kata." + k.form), u: Math.round(k.u * 100), w: Math.round(k.w * 100) });
+  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" || !!kata, kata, label })))
     .then((r) => (impl = r)).catch((e) => { msg = String((e && e.message) || e); console.error(e); });
   return {
     get impl() { return impl; },
@@ -140,6 +142,8 @@ function lazy3d(g, kind) {
   };
 }
 const RENDERERS = [
+  { id: "vrmKata", make: (g) => lazy3d(g, "vrmKata") },
+  { id: "vrmKataOnly", make: (g) => lazy3d(g, "vrmKataOnly") },
   { id: "vrmSmoke", make: (g) => lazy3d(g, "vrmSmoke") },
   { id: "vrm", make: (g) => lazy3d(g, "vrm") },
   { id: "lift", make: (g) => lazy3d(g, "lift") },
@@ -158,8 +162,8 @@ const ghosts = [];                       // every ghost read so far
 let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black";
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
-  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "bones", mode: "tidy", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmSmoke", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "vrmSmoke", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmKata", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
 const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };

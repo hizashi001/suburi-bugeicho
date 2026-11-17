@@ -10,6 +10,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
+import { createKata } from "./shadowkata.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -207,10 +208,11 @@ const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.
   ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false } = {}) {
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null } = {}) {
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
-  const lift = createLift(g, motion, cfg), asp = g.aspect || 0.75;
+  // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
+  const lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg), asp = g.aspect || 0.75;
   const HEAD = { share: 0.5, max: 45, keep: 1, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
   // posture: the skeleton is trusted for the arms and the sword; the trunk is "sung with reverb" — kept upright and square
   const POSE = { leanKeep: 1, leanMax: 90, twistMax: 180, ...(cfg.posture || {}) };
@@ -340,7 +342,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       }
     }
     // the sword: along the forearms (the skeleton cannot tell more: docs/設計_影の3D.md), steadied between the two arms
-    const fa = v(J[15]).sub(v(J[13])).normalize().add(v(J[16]).sub(v(J[14])).normalize());
+    const fa = J.sword ? v(J.sword) : v(J[15]).sub(v(J[13])).normalize().add(v(J[16]).sub(v(J[14])).normalize());
     const dir = fa.length() > 1e-5 ? fa.normalize() : UP.clone();
     // the hands: the forearm turns about its length so the thumbs face the body's "up", then the wrist bends towards the sword
     const bodyUp = UP.clone().applyQuaternion(qTop);
@@ -410,7 +412,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       if (gl.domElement.width !== bw || gl.domElement.height !== bh) gl.setSize(bw, bh, false);
       const jump = lastT == null || t < lastT || t - lastT > 400 || lastTime == null || Math.abs(time - lastTime) > 400;
       const dt = jump ? 0 : Math.min(0.05, (t - lastT) / 1000); lastT = t; lastTime = time;
-      pose(lift.at(time));
+      const J = lift.at(time); pose(J);
       if (jump && vrm.springBoneManager) vrm.springBoneManager.reset();
       vrm.update(dt);
       gl.render(scene, cam);
@@ -421,6 +423,10 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       ctx.drawImage(gl.domElement, 0, 0, bw, bh);
       if (smoke) drawSmoke(ctx, bw, bh, aspect, time);
       ctx.restore();
+      if (label && J.kata) {                                           // which form is being shown, for the lab
+        ctx.save(); ctx.fillStyle = `rgba(${aura[0]},${aura[1]},${aura[2]},${0.4 + 0.6 * J.kata.w})`; ctx.font = `${Math.round(bw / 26)}px system-ui, sans-serif`;
+        ctx.textAlign = "left"; ctx.fillText(label(J.kata), ox + bw * 0.04, oy + bh * 0.05); ctx.restore();
+      }
     },
   };
 }
