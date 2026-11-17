@@ -129,9 +129,9 @@ const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
 function lazy3d(g, kind) {
   let impl = null, msg = t("slab.loading");
   const m = createMotion(g, MOTION, SH.facing);
-  const kata = kind === "vrmKata" || kind === "vrmSumi" || kind === "vrmArmor" ? "mix" : kind === "vrmKataOnly" ? "only" : null, sumi = kind === "vrmSumi" || kind === "vrmSumiRaw" || kind === "vrmArmor", armor = kind === "vrmArmor";
+  const kata = kind === "vrmKata" || kind === "vrmSumi" || kind === "vrmArmor" || kind === "vrmRonin" ? "mix" : kind === "vrmKataOnly" ? "only" : null, sumi = kind === "vrmSumi" || kind === "vrmSumiRaw" || kind === "vrmArmor", armor = kind === "vrmArmor", paint = kind === "vrmRonin";
   const label = (k) => t("slab.kata", { form: t("slab.kata." + k.form), u: Math.round(k.u * 100), w: Math.round(k.w * 100) });
-  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" || !!kata, kata, label, sumi, armor })))
+  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" || !!kata, kata, label, sumi, armor, paint })))
     .then((r) => (impl = r)).catch((e) => { msg = String((e && e.message) || e); console.error(e); });
   return {
     get impl() { return impl; },
@@ -142,6 +142,7 @@ function lazy3d(g, kind) {
   };
 }
 const RENDERERS = [
+  { id: "vrmRonin", make: (g) => lazy3d(g, "vrmRonin") },
   { id: "vrmArmor", make: (g) => lazy3d(g, "vrmArmor") },
   { id: "vrmSumi", make: (g) => lazy3d(g, "vrmSumi") },
   { id: "vrmSumiRaw", make: (g) => lazy3d(g, "vrmSumiRaw") },
@@ -158,15 +159,20 @@ const RENDERERS = [
   { id: "bones", make: () => bonesRenderer() },
   { id: "plain", make: () => ({ draw: (ctx, pose, box, o) => drawGhost(ctx, pose, box, { aspect: o.aspect }) }) },
 ];
-const BGS = { paper: "#ece6d8", black: "#05080f", indigo: "#1c2a4a", grey: "#b9bcc4" };
+const BGS = { snow: "#9aa0a6", ash: "#5b5752", bamboo: "#8d9290", mountain: "#a9a49c", paper: "#ece6d8", black: "#05080f", indigo: "#1c2a4a", grey: "#b9bcc4" };
+// the pictured backgrounds (docs/注文書_影の世界観.md) and the weather each one brings to the painted ghost
+const BGI = { snow: "shadow_bg_snow_01", ash: "shadow_bg_ash_01", bamboo: "shadow_bg_mist_01", mountain: "shadow_bg_mist_02" };
+const WEATHER = { snow: "snow", ash: "ash", bamboo: "mist", mountain: "mist" };
+const bgImg = {};
+for (const [k, f] of Object.entries(BGI)) { const i = new Image(); i.onload = () => (bgImg[k] = i); i.src = `assets/images/shadow/${f}.png`; }
 
 // ---------- state ----------
 const ghosts = [];                       // every ghost read so far
-let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "paper";
+let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "snow";
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
   { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "bones", mode: "tidy", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmArmor", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmRonin", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
 const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };
@@ -257,10 +263,12 @@ function loop(now) {
     if (s.cv.width !== w || s.cv.height !== h) { s.cv.width = w; s.cv.height = h; }
     const ctx = s.cv.getContext("2d");
     ctx.fillStyle = BGS[bg]; ctx.fillRect(0, 0, w, h);
+    const bi = bgImg[bg];
+    if (bi) { const k = Math.max(w / bi.width, h / bi.height); ctx.drawImage(bi, (w - bi.width * k) / 2, (h - bi.height * k) / 2, bi.width * k, bi.height * k); }
     if (cur && s.view) {
       const t0 = performance.now();
       // the renderers run on their own clock while playing, and on the ghost's clock while stepping, so a stopped frame stays still
-      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur, time: tNow, meta: s.mode === "tidy" && motion ? motion.metaAt(tNow) : null });
+      s.view.draw(ctx, poseFor(s), { x: 0, y: 0, w, h }, { aspect: cur.aspect || 0.75, t: playing ? now : tNow, ghost: cur, time: tNow, weather: WEATHER[bg] || null, meta: s.mode === "tidy" && motion ? motion.metaAt(tNow) : null });
       s.ms += (performance.now() - t0 - s.ms) * 0.1;
     }
   }

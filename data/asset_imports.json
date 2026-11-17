@@ -235,6 +235,32 @@
    "files": [
     "assets/models/samurai_parts.glb"
    ]
+  },
+  {
+   "date": "2026-11-17",
+   "via": "ヒデキがAIで作った世界観の素材（docs/注文書_影の世界観.md）。tools/models/make_world.py で縮めて透明にした。元の画像はリポジトリの外（../_downloads/world_originals）",
+   "files": [
+    "assets/images/shadow/shadow_bg_ash_01.png",
+    "assets/images/shadow/shadow_bg_mist_01.png",
+    "assets/images/shadow/shadow_bg_mist_02.png",
+    "assets/images/shadow/shadow_bg_snow_01.png",
+    "assets/images/shadow/shadow_fx_flakes_01.png",
+    "assets/images/shadow/shadow_fx_paint_01.png",
+    "assets/images/shadow/shadow_fx_paint_02.png",
+    "assets/images/shadow/shadow_fx_shreds_01.png",
+    "assets/images/shadow/shadow_fx_smoke_heavy_01.png",
+    "assets/images/shadow/shadow_fx_smoke_heavy_02.png",
+    "assets/images/shadow/shadow_fx_smoke_heavy_03.png",
+    "assets/images/shadow/shadow_fx_smoke_heavy_04.png",
+    "assets/images/shadow/shadow_fx_wind_01.png"
+   ]
+  },
+  {
+   "date": "2026-11-17",
+   "via": "ヒデキが Tripo3D（有料プラン）で作った笠の浪人（元の assets/images/3d/ronin.glb は58MBのためリポジトリに入れない）。tools/models/make_ronin.py で軽くした",
+   "files": [
+    "assets/models/ronin_body.glb"
+   ]
   }
  ]
 }

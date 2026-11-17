@@ -99,3 +99,44 @@ export async function loadArmorParts(vrm, url) {
   for (const [b, m] of parts) b.add(m);
   return parts.map((p) => p[1]);
 }
+
+// A whole body that bends at the joints (tools/models/make_ronin.py): one mesh with a grey per point, already in the VRM's
+// rest space. It is bound here to the VRM's bones: each point follows the nearest bones, weighted by closeness, so the
+// joints bend softly (they are hidden under smoke anyway). The model needs no bones of its own.
+const SKIN_SEGS = [["hips", "hips", "spine"], ["spine", "spine", "chest"], ["chest", "chest", "neck"], ["neck", "neck", "head"], ["head", "head", null],
+  ["leftUpperArm", "leftUpperArm", "leftLowerArm"], ["leftLowerArm", "leftLowerArm", "leftHand"], ["leftHand", "leftHand", "leftMiddleProximal"],
+  ["rightUpperArm", "rightUpperArm", "rightLowerArm"], ["rightLowerArm", "rightLowerArm", "rightHand"], ["rightHand", "rightHand", "rightMiddleProximal"],
+  ["leftUpperLeg", "leftUpperLeg", "leftLowerLeg"], ["leftLowerLeg", "leftLowerLeg", "leftFoot"], ["leftFoot", "leftFoot", "leftToes"],
+  ["rightUpperLeg", "rightUpperLeg", "rightLowerLeg"], ["rightLowerLeg", "rightLowerLeg", "rightFoot"], ["rightFoot", "rightFoot", "rightToes"]];
+export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
+  const C = { power: 4, near: 0.01, ...cfg };
+  const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
+  const gltf = await new GLTFLoader().loadAsync(url);
+  let src = null; gltf.scene.traverse((o) => { if (o.isMesh && !src) src = o; });
+  gltf.scene.updateMatrixWorld(true);
+  const g = src.geometry.clone(); g.applyMatrix4(src.matrixWorld); g.computeVertexNormals();
+  vrm.scene.updateMatrixWorld(true);
+  const node = (n) => vrm.humanoid.getNormalizedBoneNode(n), W = (n) => { const b = node(n); return b ? b.getWorldPosition(new THREE.Vector3()) : null; };
+  const segs = SKIN_SEGS.filter(([n, a]) => node(n) && W(a)).map(([n, a, b]) => {
+    const A = W(a), B = b && W(b) ? W(b) : A.clone().add(new THREE.Vector3(0, b ? -0.08 : 0.25, 0));
+    return { bone: node(n), A, AB: B.clone().sub(A) };
+  });
+  const pos = g.attributes.position, n = pos.count, idx = new Uint16Array(n * 4), wts = new Float32Array(n * 4), p = new THREE.Vector3(), d = new Float32Array(segs.length);
+  for (let i = 0; i < n; i++) {
+    p.fromBufferAttribute(pos, i);
+    segs.forEach((s, k) => {
+      const t = Math.max(0, Math.min(1, p.clone().sub(s.A).dot(s.AB) / Math.max(1e-9, s.AB.lengthSq())));
+      d[k] = p.distanceTo(s.A.clone().addScaledVector(s.AB, t));
+    });
+    const order = [...d.keys()].sort((a, b) => d[a] - d[b]).slice(0, 4);
+    let sum = 0; const w = order.map((k) => { const v = 1 / Math.pow(d[k] + C.near, C.power); sum += v; return v; });
+    order.forEach((k, j) => { idx[i * 4 + j] = k; wts[i * 4 + j] = w[j] / sum; });
+  }
+  g.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(idx, 4));
+  g.setAttribute("skinWeight", new THREE.Float32BufferAttribute(wts, 4));
+  const bones = segs.map((s) => s.bone);
+  const skel = new THREE.Skeleton(bones, bones.map((b) => b.matrixWorld.clone().invert()));
+  const mesh = new THREE.SkinnedMesh(g, material); mesh.frustumCulled = false;
+  vrm.scene.add(mesh); mesh.updateMatrixWorld(true); mesh.bind(skel, mesh.matrixWorld.clone());
+  return mesh;
+}

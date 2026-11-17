@@ -11,7 +11,8 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
-import { buildArmor, loadArmorParts } from "./shadowarmor.js";
+import { buildArmor, loadArmorParts, loadSkinnedBody } from "./shadowarmor.js";
+import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow } from "./shadowpaint.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -209,7 +210,7 @@ const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.
   ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false, armor = false } = {}) {
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false, armor = false, paint = false } = {}) {
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
@@ -252,11 +253,22 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   tuneSprings(vrm, CLOTH);
   // armor: the model's own body is hidden and rigid pieces with empty joints are hung on its bones (js/shadowarmor.js)
   const ARM = { haze: 0.8, hazeSize: 1.5, ...(cfg.armor || {}) };
-  if (armor) {
+  // paint: the painted ghost (js/shadowpaint.js). A whole body with greys, bound to the VRM's bones; joints under smoke
+  const PA = { body: "assets/models/ronin_body.glb", world: "assets/images/shadow/", tones: [0.1, 0.3, 0.52, 0.8], cuts: [0.1, 0.24, 0.45],
+    wob: 0.006, smear: 0.05, wind: [1, 0.3], eyes: [0.032, 0.045, 0.1], eyeColor: [255, 40, 30], bladeColor: [255, 70, 60], bladeGlow: 1,
+    jointSmoke: 0.38, jointSmokeSize: 1.9, backSmoke: 0.3, key: 3.2, rimLight: 2.6, fill: 0.9, ...(cfg.paint || {}) };
+  let bodyMesh = null, WORLD = null, weather = null;
+  if (paint) {
+    vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; });
+    bodyMesh = await loadSkinnedBody(vrm, PA.body, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }));
+    WORLD = await loadWorld(PA.world);
+    weather = createWeather(WORLD, { wind: PA.wind, ...(PA.weather || {}) });
+  }
+  if (armor && !paint) {
     vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; });
     if (ARM.parts) await loadArmorParts(vrm, ARM.parts); else buildArmor(vrm, ARM);   // a made armour, or the test pieces
   }
-  vrm.scene.traverse((o) => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(ink) : ink(); o.frustumCulled = false; } });
+  vrm.scene.traverse((o) => { if (o.isMesh && o !== bodyMesh) { o.material = Array.isArray(o.material) ? o.material.map(ink) : ink(); o.frustumCulled = false; } });
   scene.add(vrm.scene);
   const bone = (name) => vrm.humanoid.getNormalizedBoneNode(name);
   // the body at rest: where the joints are, which way each bone points
@@ -452,8 +464,8 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   // the brush pictures made by AI (docs/注文書_筆の素材.md; made light by tools/models/make_brushes.py). Without them the
   // brush is computed (noise) as before.
   const BR = { sweep: [], smoke: [], dry: null, splat: null, splatRects: [] };
-  if (sumi && SU.brushes) {
-    const dir = SU.brushes, img = (f) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = dir + f; });
+  if ((sumi || paint) && (SU.brushes || paint)) {
+    const dir = SU.brushes || PA.world, img = (f) => new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = dir + f; });
     const [sw, sm, dry, sp, rects] = await Promise.all([
       Promise.all([1, 2, 3, 4].map((n) => img(`shadow_brush_sweep_0${n}.png`))),
       Promise.all([1, 2, 3].map((n) => img(`shadow_brush_smoke_0${n}.png`))),
@@ -517,6 +529,39 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     vrm.scene.traverse((o) => { if (o.isMesh) o.material = post.normal; });
     sword.visible = false;
   }
+  let pp = null;
+  if (paint) {
+    sword.visible = false;
+    scene.add(new THREE.HemisphereLight(0xdfe6ee, 0x202024, PA.fill));
+    const key = new THREE.DirectionalLight(0xffffff, PA.key); key.position.set(-0.6, 0.9, 0.7); scene.add(key);         // upper left (once mirrored: upper right)
+    const rim = new THREE.DirectionalLight(0xffffff, PA.rimLight); rim.position.set(0.5, 0.4, -1); scene.add(rim);      // from behind: a bright rim
+    const rt = new THREE.WebGLRenderTarget(4, 4);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { tCol: { value: rt.texture }, tPaint: { value: null }, usePaint: { value: 0 }, res: { value: new THREE.Vector2(4, 4) }, time: { value: 0 },
+        wob: { value: PA.wob }, smear: { value: PA.smear }, wind: { value: new THREE.Vector2(-PA.wind[0], -PA.wind[1]) },
+        tones: { value: new THREE.Vector4(...PA.tones) }, cuts: { value: new THREE.Vector4(...PA.cuts, 1) } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+      fragmentShader: PAINT_FRAG, transparent: true, blending: THREE.NoBlending, depthTest: false, depthWrite: false,
+    });
+    if (WORLD.paint) { const tx = new THREE.Texture(WORLD.paint); tx.wrapS = tx.wrapT = THREE.MirroredRepeatWrapping; tx.needsUpdate = true; mat.uniforms.tPaint.value = tx; mat.uniforms.usePaint.value = 1; }
+    const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); quad.frustumCulled = false;
+    const ps = new THREE.Scene(); ps.add(quad);
+    pp = { rt, mat, ps };
+  }
+  function renderPaint(bw, bh, time) {
+    if (pp.rt.width !== bw || pp.rt.height !== bh) { pp.rt.setSize(bw, bh); pp.mat.uniforms.res.value.set(bw, bh); }
+    pp.mat.uniforms.time.value = time / 1000;
+    gl.setRenderTarget(pp.rt); gl.setClearColor(0x000000, 0); gl.clear(); gl.render(scene, cam);
+    gl.setRenderTarget(null); gl.clear(); gl.render(pp.ps, cam);
+  }
+  let eyeTrails = [[], []];
+  function eyesOnPicture(bw, bh, aspect, s) {
+    const hb = bone("head"); if (!hb) return { pts: [], k: 0 };
+    const q = hb.getWorldQuaternion(new THREE.Quaternion()), c = hb.getWorldPosition(new THREE.Vector3());
+    const k = clamp((FWD.clone().applyQuaternion(q).z - 0.05) / 0.3, 0, 1);       // facing away: the eyes are not seen
+    const pts = [1, -1].map((sx) => pxOf(c.clone().add(new THREE.Vector3(sx * PA.eyes[0], PA.eyes[1], PA.eyes[2]).multiplyScalar(s).applyQuaternion(q)), bw, bh, aspect));
+    return { pts, k };
+  }
   function renderSumi(bw, bh, time) {
     if (post.rt.width !== bw || post.rt.height !== bh) { post.rt.setSize(bw, bh); post.mat.uniforms.res.value.set(bw, bh); }
     post.mat.uniforms.time.value = time / 1000;
@@ -541,6 +586,18 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   }
   // the path of the blade: one sweep of a wide brush — many bristles along the path of the blade's outer part,
   // solid where the stroke is fresh and fast, breaking into dry streaks as it ages
+  // draw the picture's triangle (s0, s1, s2) onto the canvas triangle (d0, d1, d2), clipped, a hair larger to hide seams
+  function tri(ctx, img, s0, s1, s2, d0, d1, d2) {
+    const cx = (d0[0] + d1[0] + d2[0]) / 3, cy = (d0[1] + d1[1] + d2[1]) / 3, g = (p) => [p[0] + (p[0] - cx) * 0.04, p[1] + (p[1] - cy) * 0.04];
+    const D0 = g(d0), D1 = g(d1), D2 = g(d2);
+    const sx1 = s1[0] - s0[0], sy1 = s1[1] - s0[1], sx2 = s2[0] - s0[0], sy2 = s2[1] - s0[1], det = sx1 * sy2 - sx2 * sy1;
+    if (Math.abs(det) < 1e-6) return;
+    const dx1 = d1[0] - d0[0], dy1 = d1[1] - d0[1], dx2 = d2[0] - d0[0], dy2 = d2[1] - d0[1];
+    const a = (dx1 * sy2 - dx2 * sy1) / det, c = (dx2 * sx1 - dx1 * sx2) / det, b = (dy1 * sy2 - dy2 * sy1) / det, d = (dy2 * sx1 - dy1 * sx2) / det;
+    ctx.save(); ctx.beginPath(); ctx.moveTo(...D0); ctx.lineTo(...D1); ctx.lineTo(...D2); ctx.closePath(); ctx.clip();
+    ctx.transform(a, b, c, d, d0[0] - a * s0[0] - c * s0[1], d0[1] - b * s0[0] - d * s0[1]);
+    ctx.drawImage(img, 0, 0); ctx.restore();
+  }
   function drawSweep(ctx, bw, time) {
     const raw = swordHist.filter((e) => time - e.time <= SU.trailMs && e.time <= time), live = [];
     for (let i = 0; i < raw.length; i++) {
@@ -566,11 +623,11 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       if (k <= 0.02) continue;
       const u0 = (time - B.time) / SU.trailMs, u1 = (time - A.time) / SU.trailMs;            // 0 = the head of the stroke
       const sx = Math.max(0, u0) * img.width, sw = Math.max(1, (Math.min(1, u1) - Math.max(0, u0)) * img.width);
-      const bi = inner(B), ai = inner(A);
+      const bi = inner(B), ai = inner(A), u0p = sx, u1p = sx + sw, H = img.height;
       ctx.save(); ctx.globalAlpha = Math.min(1, k * 1.4);
-      // the picture's strip [sx, sx+sw] onto the four-sided piece B.inner, A.inner (along) and B.tip (across)
-      ctx.transform(ai[0] - bi[0], ai[1] - bi[1], B.tip[0] - bi[0], B.tip[1] - bi[1], bi[0], bi[1]);
-      ctx.drawImage(img, sx, 0, sw, img.height, -0.02, 0, 1.04, 1);
+      // two triangles, each with the picture fitted exactly to its corners (so neighbouring pieces meet without gaps)
+      tri(ctx, img, [u0p, 0], [u1p, 0], [u0p, H], bi, ai, B.tip);
+      tri(ctx, img, [u1p, 0], [u1p, H], [u0p, H], ai, A.tip, B.tip);
       ctx.restore();
     }
     ctx.restore();
@@ -638,7 +695,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
 
   return {
     lift, vrm, rest: { torsoRest, hipRest, restDir }, clothMoved, sleeveMoved,
-    draw(ctx, _pose, box, { aspect = asp, t = performance.now(), time = 0 } = {}) {
+    draw(ctx, _pose, box, { aspect = asp, t = performance.now(), time = 0, weather: weatherKind = null } = {}) {
       const bw = Math.round(Math.min(box.w, box.h * aspect)), bh = Math.round(bw / aspect), ox = box.x + (box.w - bw) / 2, oy = box.y + (box.h - bh) / 2;
       if (gl.domElement.width !== bw || gl.domElement.height !== bh) gl.setSize(bw, bh, false);
       const jump = lastT == null || t < lastT || t - lastT > 400 || lastTime == null || Math.abs(time - lastTime) > 400;
@@ -646,10 +703,30 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       const J = lift.at(time); pose(J, time);
       if (jump && vrm.springBoneManager) vrm.springBoneManager.reset();
       vrm.update(dt);
-      if (smoke || sumi) recordJoints(bw, bh, aspect, time);
+      if (smoke || sumi || paint) recordJoints(bw, bh, aspect, time);
       ctx.save();
       ctx.translate(ox + bw, oy); ctx.scale(-1, 1);                    // mirrored, like every other ghost drawing
-      if (sumi) {
+      if (paint) {
+        if (jump) { splats = []; swordHist = []; eyeTrails = [[], []]; }
+        swordHist.push({ time, h: pxOf(swordNow.h, bw, bh, aspect), tip: pxOf(swordNow.tip, bw, bh, aspect) });
+        while (swordHist.length && time - swordHist[0].time > SU.trailMs + 100) swordHist.shift();
+        const last = swordHist[swordHist.length - 1], prev = swordHist.length > 1 ? swordHist[swordHist.length - 2] : null;
+        const tipV = prev && last.time > prev.time ? [((last.tip[0] - prev.tip[0]) / (last.time - prev.time)) * 1000, ((last.tip[1] - prev.tip[1]) / (last.time - prev.time)) * 1000] : null;
+        weather.set(weatherKind, bw, bh); weather.step(dt, time, last.tip, tipV);
+        renderPaint(bw, bh, time);
+        weather.draw(ctx, false);
+        drawSmoke(ctx, bw, time, { color: [30, 30, 34], size: SMOKE.size * 2.2, rise: SMOKE.rise * 2.5, sway: SMOKE.sway * 3, ink: PA.backSmoke, life: SMOKE.life * 2, seed: 900, tall: 1.6, sprites: WORLD.smoke, spriteInk: 1, puffs: 2 });
+        drawTrail(ctx, bw, time);
+        ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+        drawBlade(ctx, last.h, last.tip, bw);
+        drawBladeGlow(ctx, last.h, last.tip, bw, PA.bladeColor, time, PA.bladeGlow);
+        drawSmoke(ctx, bw, time, { color: [20, 20, 24], size: SMOKE.size * PA.jointSmokeSize, rise: SMOKE.rise * 1.2, sway: SMOKE.sway * 2, ink: PA.jointSmoke, life: SMOKE.life * 1.3, seed: 300, sprites: WORLD.smoke, spriteInk: 1, puffs: 2 });
+        const E = eyesOnPicture(bw, bh, aspect, vrm.scene.scale.x);
+        E.pts.forEach((pt, i) => { eyeTrails[i].push(pt); if (eyeTrails[i].length > 7) eyeTrails[i].shift(); });
+        drawEyes(ctx, eyeTrails, bw, PA.eyeColor, E.k);
+        stepSplats(ctx, bw, dt);
+        weather.draw(ctx, true);
+      } else if (sumi) {
         if (jump) { splats = []; swordHist = []; }
         swordHist.push({ time, h: pxOf(swordNow.h, bw, bh, aspect), tip: pxOf(swordNow.tip, bw, bh, aspect) });
         while (swordHist.length && time - swordHist[0].time > SU.trailMs + 100) swordHist.shift();
