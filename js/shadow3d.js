@@ -12,7 +12,7 @@ import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
 import { buildArmor, loadArmorParts, loadSkinnedBody } from "./shadowarmor.js";
-import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow } from "./shadowpaint.js";
+import { PAINT_FRAG, loadWorld, createWeather, drawEyes, drawBladeGlow, drawBladeAfterglow, createSnap } from "./shadowpaint.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -214,7 +214,9 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
-  const lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg), asp = g.aspect || 0.75;
+  let lift = kata ? createKata(g, motion, createLift(g, motion, cfg), cfg.kata, kata) : createLift(g, motion, cfg);
+  if (paint && (cfg.snap || {}).on !== false) lift = createSnap(g, motion, lift, cfg.snap);      // build-up and a fast cut
+  const asp = g.aspect || 0.75;
   const HEAD = { share: 0.5, max: 45, keep: 1, front: 0, frontUpTo: 100, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
   // posture: the skeleton is trusted for the arms and the sword; the trunk is "sung with reverb" — kept upright and square
   const POSE = { leanKeep: 1, leanMax: 90, twistMax: 180, ...(cfg.posture || {}) };
@@ -255,12 +257,12 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const ARM = { haze: 0.8, hazeSize: 1.5, ...(cfg.armor || {}) };
   // paint: the painted ghost (js/shadowpaint.js). A whole body with greys, bound to the VRM's bones; joints under smoke
   const PA = { body: "assets/models/ronin_body.glb", world: "assets/images/shadow/", tones: [0.1, 0.3, 0.52, 0.8], cuts: [0.1, 0.24, 0.45],
-    wob: 0.006, smear: 0.05, wind: [1, 0.3], eyes: [0.032, 0.045, 0.1], eyeColor: [255, 40, 30], bladeColor: [255, 70, 60], bladeGlow: 1,
-    jointSmoke: 0.38, jointSmokeSize: 1.9, backSmoke: 0.3, key: 3.2, rimLight: 2.6, fill: 0.9, ...(cfg.paint || {}) };
+    wob: 0.006, smear: 0.025, wind: [1, 0.3], eyes: [0.032, 0.045, 0.1], eyesAuto: true, eyeY: 0.06, eyeColor: [255, 40, 30], bladeColor: [255, 70, 60], bladeGlow: 1,
+    jointSmoke: 0.42, jointSmokeSize: 2.1, backSmoke: 0.45, glow: 1.4, afterglowMs: 220, ghosts: 3, ghostGap: 45, ghostAlpha: 0.32, ghostSpeed: 1.2, key: 3.2, rimLight: 2.6, fill: 0.9, ...(cfg.paint || {}) };
   let bodyMesh = null, WORLD = null, weather = null;
   if (paint) {
     vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; });
-    bodyMesh = await loadSkinnedBody(vrm, PA.body, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }));
+    bodyMesh = await loadSkinnedBody(vrm, PA.body, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }), { eyeY: PA.eyeY, eyeGap: PA.eyes[0] });
     WORLD = await loadWorld(PA.world);
     weather = createWeather(WORLD, { wind: PA.wind, ...(PA.weather || {}) });
   }
@@ -554,12 +556,22 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     gl.setRenderTarget(pp.rt); gl.setClearColor(0x000000, 0); gl.clear(); gl.render(scene, cam);
     gl.setRenderTarget(null); gl.clear(); gl.render(pp.ps, cam);
   }
-  let eyeTrails = [[], []];
+  let eyeTrails = [[], []], ghostsPool = [], ghostsKept = [];
+  // keep a copy of the painted body every ghostGap ms (a few canvases reused), for afterimages while the hands move fast
+  function keepGhost(bw, bh, time) {
+    if (ghostsKept.length && time - ghostsKept[ghostsKept.length - 1].time < PA.ghostGap && time >= ghostsKept[ghostsKept.length - 1].time) return;
+    let c = ghostsPool.pop(); if (!c) c = document.createElement("canvas");
+    if (c.width !== bw || c.height !== bh) { c.width = bw; c.height = bh; }
+    const x = c.getContext("2d"); x.clearRect(0, 0, bw, bh); x.drawImage(gl.domElement, 0, 0);
+    ghostsKept.push({ time, c });
+    while (ghostsKept.length > PA.ghosts) ghostsPool.push(ghostsKept.shift().c);
+  }
   function eyesOnPicture(bw, bh, aspect, s) {
     const hb = bone("head"); if (!hb) return { pts: [], k: 0 };
     const q = hb.getWorldQuaternion(new THREE.Quaternion()), c = hb.getWorldPosition(new THREE.Vector3());
     const k = clamp((FWD.clone().applyQuaternion(q).z - 0.05) / 0.3, 0, 1);       // facing away: the eyes are not seen
-    const pts = [1, -1].map((sx) => pxOf(c.clone().add(new THREE.Vector3(sx * PA.eyes[0], PA.eyes[1], PA.eyes[2]).multiplyScalar(s).applyQuaternion(q)), bw, bh, aspect));
+    const E = (bodyMesh && bodyMesh.userData.eyes && PA.eyesAuto) ? bodyMesh.userData.eyes : PA.eyes;      // found on the model, or set by hand
+    const pts = [1, -1].map((sx) => pxOf(c.clone().add(new THREE.Vector3(sx * E[0], E[1], E[2]).multiplyScalar(s).applyQuaternion(q)), bw, bh, aspect));
     return { pts, k };
   }
   function renderSumi(bw, bh, time) {
@@ -707,7 +719,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       ctx.save();
       ctx.translate(ox + bw, oy); ctx.scale(-1, 1);                    // mirrored, like every other ghost drawing
       if (paint) {
-        if (jump) { splats = []; swordHist = []; eyeTrails = [[], []]; }
+        if (jump) { splats = []; swordHist = []; eyeTrails = [[], []]; while (ghostsKept.length) ghostsPool.push(ghostsKept.pop().c); }
         swordHist.push({ time, h: pxOf(swordNow.h, bw, bh, aspect), tip: pxOf(swordNow.tip, bw, bh, aspect) });
         while (swordHist.length && time - swordHist[0].time > SU.trailMs + 100) swordHist.shift();
         const last = swordHist[swordHist.length - 1], prev = swordHist.length > 1 ? swordHist[swordHist.length - 2] : null;
@@ -717,13 +729,22 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         weather.draw(ctx, false);
         drawSmoke(ctx, bw, time, { color: [30, 30, 34], size: SMOKE.size * 2.2, rise: SMOKE.rise * 2.5, sway: SMOKE.sway * 3, ink: PA.backSmoke, life: SMOKE.life * 2, seed: 900, tall: 1.6, sprites: WORLD.smoke, spriteInk: 1, puffs: 2 });
         drawTrail(ctx, bw, time);
+        // afterimages: older bodies, fainter, only while the hands (the blade) move fast
+        const fast = tipV ? clamp((Math.hypot(tipV[0], tipV[1]) / bw / PA.ghostSpeed - 1), 0, 1) : 0;
+        if (fast > 0.02) {
+          ctx.save();
+          ghostsKept.forEach((gk, i) => { const age = (time - gk.time) / (PA.ghostGap * (PA.ghosts + 1)); if (age <= 0 || age >= 1) return; ctx.globalAlpha = PA.ghostAlpha * fast * (1 - age); ctx.drawImage(gk.c, 0, 0, bw, bh); });
+          ctx.restore();
+        }
         ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+        keepGhost(bw, bh, time);
+        drawBladeAfterglow(ctx, swordHist, bw, PA.bladeColor, time, PA.afterglowMs, PA.bladeGlow * PA.glow);
         drawBlade(ctx, last.h, last.tip, bw);
-        drawBladeGlow(ctx, last.h, last.tip, bw, PA.bladeColor, time, PA.bladeGlow);
+        drawBladeGlow(ctx, last.h, last.tip, bw, PA.bladeColor, time, PA.bladeGlow * PA.glow);
         drawSmoke(ctx, bw, time, { color: [20, 20, 24], size: SMOKE.size * PA.jointSmokeSize, rise: SMOKE.rise * 1.2, sway: SMOKE.sway * 2, ink: PA.jointSmoke, life: SMOKE.life * 1.3, seed: 300, sprites: WORLD.smoke, spriteInk: 1, puffs: 2 });
         const E = eyesOnPicture(bw, bh, aspect, vrm.scene.scale.x);
-        E.pts.forEach((pt, i) => { eyeTrails[i].push(pt); if (eyeTrails[i].length > 7) eyeTrails[i].shift(); });
-        drawEyes(ctx, eyeTrails, bw, PA.eyeColor, E.k);
+        E.pts.forEach((pt, i) => { eyeTrails[i].push(pt); if (eyeTrails[i].length > 16) eyeTrails[i].shift(); });
+        drawEyes(ctx, eyeTrails, bw, PA.eyeColor, E.k, PA.glow);
         stepSplats(ctx, bw, dt);
         weather.draw(ctx, true);
       } else if (sumi) {

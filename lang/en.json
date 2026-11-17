@@ -851,6 +851,7 @@
   "slab.r.vrm": "3D (current mannequin)",
   "slab.r.vrmSmoke": "3D + ink smoke (A: skeleton as read)",
   "slab.r.vrmRonin": "Ghost ronin (greys, smoke, light; prototype)",
+  "slab.r.vrmFairy": "Ghost fairy (character swap test)",
   "slab.r.vrmArmor": "Ink armoured warrior (joints left empty, prototype)",
   "slab.r.vrmSumi": "Ink painting (form mixed in, prototype)",
   "slab.r.vrmSumiRaw": "Ink painting (skeleton as read, prototype)",

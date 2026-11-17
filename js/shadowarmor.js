@@ -109,7 +109,7 @@ const SKIN_SEGS = [["hips", "hips", "spine"], ["spine", "spine", "chest"], ["che
   ["leftUpperLeg", "leftUpperLeg", "leftLowerLeg"], ["leftLowerLeg", "leftLowerLeg", "leftFoot"], ["leftFoot", "leftFoot", "leftToes"],
   ["rightUpperLeg", "rightUpperLeg", "rightLowerLeg"], ["rightLowerLeg", "rightLowerLeg", "rightFoot"], ["rightFoot", "rightFoot", "rightToes"]];
 export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
-  const C = { power: 4, near: 0.01, ...cfg };
+  const C = { power: 4, near: 0.01, headFrom: 0.6, headReach: 0.3, backDepth: 0.12, ...cfg };
   const { GLTFLoader } = await import("three/addons/loaders/GLTFLoader.js");
   const gltf = await new GLTFLoader().loadAsync(url);
   let src = null; gltf.scene.traverse((o) => { if (o.isMesh && !src) src = o; });
@@ -119,8 +119,15 @@ export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
   const node = (n) => vrm.humanoid.getNormalizedBoneNode(n), W = (n) => { const b = node(n); return b ? b.getWorldPosition(new THREE.Vector3()) : null; };
   const segs = SKIN_SEGS.filter(([n, a]) => node(n) && W(a)).map(([n, a, b]) => {
     const A = W(a), B = b && W(b) ? W(b) : A.clone().add(new THREE.Vector3(0, b ? -0.08 : 0.25, 0));
-    return { bone: node(n), A, AB: B.clone().sub(A) };
+    return { name: n, bone: node(n), A, AB: B.clone().sub(A) };
   });
+  // who is next to whom (parent and children), by name
+  const PARENT = { spine: "hips", chest: "spine", neck: "chest", head: "neck", leftUpperArm: "chest", rightUpperArm: "chest", leftLowerArm: "leftUpperArm", rightLowerArm: "rightUpperArm",
+    leftHand: "leftLowerArm", rightHand: "rightLowerArm", leftUpperLeg: "hips", rightUpperLeg: "hips", leftLowerLeg: "leftUpperLeg", rightLowerLeg: "rightUpperLeg", leftFoot: "leftLowerLeg", rightFoot: "rightLowerLeg" };
+  segs.forEach((s) => { s.nb = segs.map((o, k) => (PARENT[o.name] === s.name || PARENT[s.name] === o.name ? k : -1)).filter((k) => k >= 0); });
+  const head = segs.findIndex((s) => s.name === "head"), headAt = head >= 0 ? segs[head].A : null;
+  const neckY = W("neck") ? W("neck").y : 0, headCut = headAt ? neckY + (headAt.y - neckY) * C.headFrom : Infinity;
+  const chest = segs.findIndex((s) => s.name === "chest"), backZ = chest >= 0 ? segs[chest].A.z : 0, hipY = W("hips") ? W("hips").y : 0;
   const pos = g.attributes.position, n = pos.count, idx = new Uint16Array(n * 4), wts = new Float32Array(n * 4), p = new THREE.Vector3(), d = new Float32Array(segs.length);
   for (let i = 0; i < n; i++) {
     p.fromBufferAttribute(pos, i);
@@ -128,7 +135,11 @@ export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
       const t = Math.max(0, Math.min(1, p.clone().sub(s.A).dot(s.AB) / Math.max(1e-9, s.AB.lengthSq())));
       d[k] = p.distanceTo(s.A.clone().addScaledVector(s.AB, t));
     });
-    const order = [...d.keys()].sort((a, b) => d[a] - d[b]).slice(0, 4);
+    let near = 0; for (let k = 1; k < segs.length; k++) if (d[k] < d[near]) near = k;
+    if (head >= 0 && p.y > headCut && Math.hypot(p.x - headAt.x, p.z - headAt.z) < C.headReach) { idx[i * 4] = head; wts[i * 4] = 1; continue; }
+    // things on the back (wings, a quiver...): behind the back, between the waist and the neck → the chest alone
+    if (chest >= 0 && p.z < backZ - C.backDepth && p.y > hipY && p.y < neckY + 0.05) { idx[i * 4] = chest; wts[i * 4] = 1; continue; }
+    const order = [near, ...segs[near].nb].sort((a, b) => d[a] - d[b]).slice(0, 4);
     let sum = 0; const w = order.map((k) => { const v = 1 / Math.pow(d[k] + C.near, C.power); sum += v; return v; });
     order.forEach((k, j) => { idx[i * 4 + j] = k; wts[i * 4 + j] = w[j] / sum; });
   }
@@ -138,5 +149,11 @@ export async function loadSkinnedBody(vrm, url, material, cfg = {}) {
   const skel = new THREE.Skeleton(bones, bones.map((b) => b.matrixWorld.clone().invert()));
   const mesh = new THREE.SkinnedMesh(g, material); mesh.frustumCulled = false;
   vrm.scene.add(mesh); mesh.updateMatrixWorld(true); mesh.bind(skel, mesh.matrixWorld.clone());
+  // the eyes, in the head bone's frame: at eyeY above the head bone, the front-most face points 2–5 cm either side
+  if (headAt) {
+    const y0 = headAt.y + (C.eyeY ?? 0.06); let zf = -Infinity;
+    for (let i = 0; i < n; i++) { const y = pos.getY(i), x = pos.getX(i); if (Math.abs(y - y0) < 0.015 && Math.abs(x - headAt.x) < 0.05) zf = Math.max(zf, pos.getZ(i)); }
+    if (zf > -Infinity) mesh.userData.eyes = [C.eyeGap ?? 0.032, y0 - headAt.y, zf - headAt.z + 0.004];
+  }
   return mesh;
 }

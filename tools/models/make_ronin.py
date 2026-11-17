@@ -9,6 +9,7 @@ Tripo3D などで作った、模様付き・骨なしの重いモデル（Tポ�
 
 使い方:
   python tools/models/make_ronin.py assets/images/3d/ronin.glb assets/models/ronin_body.glb
+  python tools/models/make_ronin.py assets/images/3d/test.glb assets/models/fairy_body.glb 0   # already light: keep every point
 """
 import sys, os
 import numpy as np
@@ -46,7 +47,7 @@ def main(src, dst):
     m = sc.to_geometry() if isinstance(sc, trimesh.Scene) else sc
     print("in:", len(m.faces), "faces")
     g = gray_of(m)
-    v, f, g = cluster_with(m, g, CELL * m.extents[1])
+    v, f, g = cluster_with(m, g, CELL * m.extents[1]) if CELL > 0 else (np.asarray(m.vertices), np.asarray(m.faces), g)
     print("lighter:", len(f), "faces, grey %.2f..%.2f" % (g.min(), g.max()))
     J = vrm_joints("assets/models/shadow.vrm")
     span = v[:, 0].max() - v[:, 0].min()
@@ -69,4 +70,5 @@ def main(src, dst):
     print("wrote", dst, os.path.getsize(dst) // 1024, "KB")
 
 if __name__ == "__main__":
+    if len(sys.argv) > 3: CELL = float(sys.argv[3])     # a lighter model needs a finer grid (or 0 = keep every point)
     main(sys.argv[1], sys.argv[2])

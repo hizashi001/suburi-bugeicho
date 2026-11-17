@@ -261,6 +261,13 @@
    "files": [
     "assets/models/ronin_body.glb"
    ]
+  },
+  {
+   "date": "2026-11-17",
+   "via": "ヒデキが Tripo3D で作った妖精（assets/images/3d/test.glb。リポジトリに入れない）を tools/models/make_ronin.py で影の体にした（キャラ差し替えの試し）",
+   "files": [
+    "assets/models/fairy_body.glb"
+   ]
   }
  ]
 }

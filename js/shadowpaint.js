@@ -128,33 +128,74 @@ export function createWeather(W, cfg = {}) {
 }
 
 // ---------- glowing eyes: two red points with a soft halo, leaving a short streak of light as the head moves ----------
-export function drawEyes(ctx, trails, bw, rgb, k) {
+export function drawEyes(ctx, trails, bw, rgb, k, glow = 1) {
   if (k <= 0.01) return;
-  ctx.save(); ctx.globalCompositeOperation = "lighter";
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  const c = (a) => `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${Math.min(1, a)})`;
   for (const tr of trails) {
     if (!tr.length) continue;
-    // the streak
-    ctx.lineCap = "round";
-    for (let i = 1; i < tr.length; i++) {
-      const a = (i / tr.length) * 0.5 * k;
-      ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a})`; ctx.lineWidth = bw * 0.006 * (i / tr.length);
-      ctx.beginPath(); ctx.moveTo(...tr[i - 1]); ctx.lineTo(...tr[i]); ctx.stroke();
+    // the streak of light left behind: wide and soft, then a bright core, fading towards its tail
+    for (const [w, a] of [[0.03, 0.18], [0.012, 0.5], [0.004, 0.9]]) {
+      for (let i = 1; i < tr.length; i++) {
+        const f = i / tr.length;
+        ctx.strokeStyle = c(a * f * f * k * glow); ctx.lineWidth = bw * w * (0.35 + 0.65 * f);
+        ctx.beginPath(); ctx.moveTo(...tr[i - 1]); ctx.lineTo(...tr[i]); ctx.stroke();
+      }
     }
-    const [x, y] = tr[tr.length - 1], R = bw * 0.03;
-    const gr = ctx.createRadialGradient(x, y, 0, x, y, R);
-    gr.addColorStop(0, `rgba(255,235,225,${0.95 * k})`); gr.addColorStop(0.12, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.9 * k})`); gr.addColorStop(0.4, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.25 * k})`); gr.addColorStop(1, `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0)`);
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.fill();
+    const [x, y] = tr[tr.length - 1];
+    for (const [R, a] of [[0.11, 0.18], [0.045, 0.45], [0.016, 1]]) {           // a wide bloom, a halo, a hot core
+      const r = bw * R * (0.7 + 0.3 * glow), gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+      gr.addColorStop(0, R < 0.02 ? `rgba(255,240,230,${a * k})` : c(a * k * glow)); gr.addColorStop(0.35, c(a * 0.45 * k * glow)); gr.addColorStop(1, c(0));
+      ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
   }
   ctx.restore();
 }
 
 // ---------- the blade's eerie light: a flickering glow along the dark blade ----------
+// the blade's afterglow: the last moments of the blade, as fading streaks of its light (hist: [{time, h, tip}] newest last)
+export function drawBladeAfterglow(ctx, hist, bw, rgb, time, ms, strength) {
+  ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
+  for (let i = 0; i < hist.length - 1; i++) {
+    const e = hist[i], age = (time - e.time) / ms; if (age >= 1 || age < 0) continue;
+    const a = Math.pow(1 - age, 1.6) * strength;
+    ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${0.22 * a})`; ctx.lineWidth = bw * 0.02;
+    ctx.beginPath(); ctx.moveTo(e.h[0] + (e.tip[0] - e.h[0]) * 0.2, e.h[1] + (e.tip[1] - e.h[1]) * 0.2); ctx.lineTo(...e.tip); ctx.stroke();
+  }
+  ctx.restore();
+}
 export function drawBladeGlow(ctx, h, tip, bw, rgb, time, strength) {
   const flick = 0.75 + 0.15 * Math.sin(time / 47) + 0.1 * Math.sin(time / 13.3);
   ctx.save(); ctx.globalCompositeOperation = "lighter"; ctx.lineCap = "round";
-  for (const [w, a] of [[0.03, 0.12], [0.014, 0.28], [0.005, 0.7]]) {
+  for (const [w, a] of [[0.06, 0.1], [0.03, 0.2], [0.014, 0.4], [0.005, 0.85]]) {
     ctx.strokeStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${a * flick * strength})`; ctx.lineWidth = bw * w;
     ctx.beginPath(); ctx.moveTo(h[0] + (tip[0] - h[0]) * 0.12, h[1] + (tip[1] - h[1]) * 0.12); ctx.lineTo(...tip); ctx.stroke();
   }
   ctx.restore();
+}
+
+// ---------- 溜めとキレ: inside each fast movement of the hands, time is bent so the start lingers (a build-up) and the cut
+// itself goes faster; the movement still starts and ends at the recorded moments, so the ghost keeps the person's timing.
+// lift: anything with at(t). Returns the same shape, plus `swings` ([from, to] ms) for checks.
+export function createSnap(g, motion, lift, cfg = {}) {
+  const C = { speed: 0.9, power: 1.8, minMs: 120, maxMs: 1400, ...cfg };
+  const T = g.frames.map((f) => f[0]), asp = g.aspect || 0.75, n = T.length;
+  const H = T.map((t) => { const p = motion.at(t); return [(p[15][0] + p[16][0]) / 2, ((p[15][1] + p[16][1]) / 2) / asp]; });
+  const raw = T.map((t, i) => (i ? Math.hypot(H[i][0] - H[i - 1][0], H[i][1] - H[i - 1][1]) / Math.max(1, T[i] - T[i - 1]) * 1000 : 0));
+  const sp = raw.map((v, i) => (raw[Math.max(0, i - 1)] + 2 * v + raw[Math.min(n - 1, i + 1)]) / 4);
+  // one stroke = from one slowest moment of the hands to the next; only strokes that get fast are bent
+  const valleys = [0];
+  for (let i = 1; i < n - 1; i++) if (sp[i] <= sp[i - 1] && sp[i] < sp[i + 1]) valleys.push(i);
+  valleys.push(n - 1);
+  const segs = [];
+  for (let k = 0; k < valleys.length - 1; k++) {
+    const a = valleys[k], b = valleys[k + 1], ms = T[b] - T[a];
+    let top = 0; for (let i = a; i <= b; i++) top = Math.max(top, sp[i]);
+    if (top > C.speed && ms >= C.minMs && ms <= C.maxMs) segs.push([T[a], T[b]]);
+  }
+  const remap = (t) => {
+    for (const [a, b] of segs) if (t > a && t < b) { const u = (t - a) / (b - a); return a + (b - a) * Math.pow(u, C.power); }
+    return t;
+  };
+  return { ...lift, swings: segs, remap, at: (t) => lift.at(remap(t)) };
 }

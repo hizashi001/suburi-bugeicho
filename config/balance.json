@@ -608,24 +608,36 @@
         "hazeSize": 1.5
       },
       "paint": {
-        "_note": "影の浪人（docs/注文書_影の世界観.md。試験場の「影の浪人」）。body=体のモデル（tools/models/make_ronin.py で作る。骨はVRMの骨に描く側で結び付ける）。world=背景・舞う物・煙・筆の質感の置き場。tones=体の4段の灰色（暗い→明るい）。cuts=明るさの区切り3つ。wob=輪郭の揺れ。smear=風下へちぎれる布の長さ。wind=風の向き（見る人から見て右・下が正）。eyes=目の位置（頭の骨から左右・上・前、メートル）。eyeColor=目の光の色。bladeColor=刀の光の色。bladeGlow=刀の光の強さ。jointSmoke・jointSmokeSize=関節に被せる煙の濃さと大きさ。backSmoke=体の後ろの煙の濃さ。key・rimLight・fill=正面の光・後ろからの縁の光・全体の明るさ",
+        "_note": "影の浪人（docs/注文書_影の世界観.md。試験場の「影の浪人」）。body=体のモデル（tools/models/make_ronin.py で作る。骨はVRMの骨に描く側で結び付ける）。world=背景・舞う物・煙・筆の質感の置き場。tones=体の4段の灰色（暗い→明るい）。cuts=明るさの区切り3つ。wob=輪郭の揺れ。smear=風下へちぎれる布の長さ。wind=風の向き（見る人から見て右・下が正）。eyes=目の位置（頭の骨から左右・上・前、メートル）。eyeColor=目の光の色。bladeColor=刀の光の色。bladeGlow=刀の光の強さ。jointSmoke・jointSmokeSize=関節に被せる煙の濃さと大きさ。backSmoke=体の後ろの煙の濃さ。key・rimLight・fill=正面の光・後ろからの縁の光・全体の明るさ。glow=目と刀の光の強さ（倍率）。afterglowMs=刀の残光が残る時間。ghosts・ghostGap・ghostAlpha・ghostSpeed=残像の数・間隔（ms）・濃さ・残像が出始める切っ先の速さ（絵の幅/秒）。eyesAuto=目の位置をモデルの顔から探す（false なら eyes の値）。eyeY=目の高さ（頭の骨から、メートル）",
         "body": "assets/models/ronin_body.glb",
         "world": "assets/images/shadow/",
         "tones": [0.1, 0.3, 0.52, 0.8],
         "cuts": [0.1, 0.24, 0.45],
         "wob": 0.006,
-        "smear": 0.05,
+        "smear": 0.025,
         "wind": [1, 0.3],
         "eyes": [0.032, 0.045, 0.1],
         "eyeColor": [255, 40, 30],
         "bladeColor": [255, 70, 60],
         "bladeGlow": 1,
-        "jointSmoke": 0.38,
-        "jointSmokeSize": 1.9,
-        "backSmoke": 0.3,
+        "jointSmoke": 0.42,
+        "jointSmokeSize": 2.1,
+        "backSmoke": 0.45,
+        "glow": 1.4,
+        "afterglowMs": 220,
+        "ghosts": 3,
+        "ghostGap": 45,
+        "ghostAlpha": 0.32,
+        "ghostSpeed": 1.2,
+        "eyesAuto": true,
+        "eyeY": 0.06,
         "key": 3.2,
         "rimLight": 2.6,
-        "fill": 0.9
+        "fill": 0.9,
+        "skins": {
+          "_note": "キャラの差し替え（課金のキャラの試し）。名前ごとに paint の値を上書きする。試験場の「影の妖精」は fairy",
+          "fairy": { "body": "assets/models/fairy_body.glb", "eyeColor": [150, 200, 255], "bladeColor": [170, 140, 255] }
+        }
       },
       "sumi": {
         "_note": "墨絵の描き方（試験場の「墨絵」）。3Dの体は見せず、輪郭と面の向きだけを使って墨で描く。wob=輪郭の揺れ（絵に対する割合）。edgeR=縁のにじみの幅（画素）。dry=明るい面を筆のかすれで白く抜く強さ（0〜1）。streak=かすれの筋の細かさ。glow=暗い背景のための薄い光（紙の背景では0）。ink=墨の色。bladeW=刀の一筆の太さ（絵の幅に対する割合）。trailMs=刀の軌道の筆跡が残る時間。trailMin=筆跡が出始める切っ先の速さ（絵の幅/秒）。trailDepth=筆跡の幅（刀の長さに対する割合。切っ先から内へ）。bristles=筆の毛の数。bristleW=毛1本の太さ（絵の幅に対する割合）。splat=飛沫の多さ（0で無し）。smokeBack=体の後ろの煙の濃さ。smokeFront=関節を隠す煙の濃さ。brushes=筆の素材（AIで作った画像。docs/注文書_筆の素材.md）の置き場所（空なら計算の筆）。smokeSpriteSize・smokeSpriteInk・smokeSpritePuffs=煙の画像の大きさ・濃さ・関節1つの数",
@@ -648,6 +660,14 @@
         "smokeSpriteSize": 1.8,
         "smokeSpriteInk": 1.2,
         "smokeSpritePuffs": 2
+      },
+      "snap": {
+        "_note": "溜めとキレ（影の浪人のみ）。手が速く動く所の前後で時間を曲げ、振り始めを溜めて、斬る所を速くする。振りの始めと終わりの時刻は変えない。on=使うか。1振り＝手が一番遅くなった所から次の一番遅くなった所まで。speed=この速さ（絵の幅/秒）を超える振りだけ曲げる。power=溜めの強さ（1で無し。大きいほど溜めて速く斬る）。minMs・maxMs=曲げる1振りの長さの範囲",
+        "on": true,
+        "speed": 0.9,
+        "power": 1.8,
+        "minMs": 120,
+        "maxMs": 1400
       },
       "kata": {
         "_note": "型を混ぜる（js/shadowkata.js。試験場の「型を混ぜる（C）」）。fidelityArm=腕と刀を、作った型から本人の骨格へ戻す割合（0=型どおり、1=本人どおり）。fidelityBody=胴・脚・頭の同じ割合。minSpeed=振りとみなす手の下がる速さ（絵の高さ/秒）。minDrop=真っ向とみなす手の下がる量（絵の高さ）。vertical=横の動きが下がる量のこの割合までなら真っ向。eventWindowMs=記録の判定の結果（swing）を振りに結び付ける時間の幅。holdMs=振り終わりから残心までの時間。rampInMs・rampOutMs=型へ入る・型から抜ける時間",
