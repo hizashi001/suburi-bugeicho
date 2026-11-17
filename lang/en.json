@@ -844,6 +844,7 @@
   "slab.left": "Left",
   "slab.right": "Right",
   "slab.r.vrm": "3D (current mannequin)",
+  "slab.r.vrmSmoke": "3D + ink smoke (prototype)",
   "slab.r.lift": "3D joints (front and side)",
   "slab.loading": "Loading 3D…",
   "slab.r.kiri": "Prototype A: sharp cut-out",

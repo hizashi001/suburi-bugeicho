@@ -200,9 +200,20 @@ function tuneSprings(vrm, c) {
   }
 }
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255] } = {}) {
+// Smoke: ink puffs rise from the joints (where a silhouette looks most like a doll) and the outline smoulders.
+// Each puff's age comes from the ghost's clock, so pausing and seeking show the same smoke.
+const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.1], ["leftLowerArm", 1.2], ["rightLowerArm", 1.2],
+  ["leftHand", 0.8], ["rightHand", 0.8], ["chest", 1.0], ["hips", 1.1], ["leftUpperLeg", 1.1], ["rightUpperLeg", 1.1],
+  ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
+const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false } = {}) {
+  const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
+  const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   const lift = createLift(g, motion, cfg), asp = g.aspect || 0.75;
-  const HEAD = { share: 0.5, max: 45, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
+  const HEAD = { share: 0.5, max: 45, keep: 1, nose: [0, 0.06, 0.1], ...(cfg.head || {}) };
+  // posture: the skeleton is trusted for the arms and the sword; the trunk is "sung with reverb" — kept upright and square
+  const POSE = { leanKeep: 1, leanMax: 90, twistMax: 180, ...(cfg.posture || {}) };
   const HAND = { fist: [70, 90, 60], bendMax: 35, twistMax: 90, ...(cfg.hand || {}) };
   const CLOTH = { legShare: 0.6, match: "CLOTH", skip: "Shoes", stiffness: 0.5, drag: 0.4, gravity: 0.35, sleeveKeep: 0.25, sleeveReach: 0.06, ...(cfg.cloth || {}) };
   const gl = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -285,7 +296,22 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     vrm.scene.scale.setScalar(s);
     vrm.scene.position.set(J.hc[0] - hipRest.x * s, J.hc[1] - hipRest.y * s, -hipRest.z * s);
     const up = v(J.sc).sub(v(J.hc)); if (up.length() < 1e-5) up.set(0, 1, 0);
-    const qHips = basis(v(J[23]).sub(v(J[24])), up), qChest = basis(v(J[11]).sub(v(J[12])), up);
+    up.normalize();
+    // a lean is mostly a misreading (a torso drawn short reads as bent forward): keep part of it, and never more than leanMax
+    const lean = up.angleTo(UP) / D2R;
+    if (lean > 0.01) {
+      const want = POSE.leanMax * Math.tanh((lean * POSE.leanKeep) / POSE.leanMax), axis = new THREE.Vector3().crossVectors(up, UP);
+      if (axis.length() > 1e-6) up.applyAxisAngle(axis.normalize(), (lean - want) * D2R);
+    }
+    // hips follow the shoulders when the two are read more than twistMax apart (a turn read late or wrong at the hips)
+    const shX = v(J[11]).sub(v(J[12])), hipX = v(J[23]).sub(v(J[24]));
+    const flatUp = (a) => a.clone().sub(up.clone().multiplyScalar(a.dot(up)));
+    const hs = flatUp(hipX), ss = flatUp(shX);
+    if (hs.length() > 1e-5 && ss.length() > 1e-5) {
+      const tw = Math.atan2(new THREE.Vector3().crossVectors(hs, ss).dot(up), hs.dot(ss)) / D2R;
+      if (Math.abs(tw) > POSE.twistMax) hipX.applyAxisAngle(up, (tw - Math.sign(tw) * POSE.twistMax) * D2R);
+    }
+    const qHips = basis(hipX, up), qChest = basis(shX, up);
     put("hips", qHips, ID);
     const qSpine = bone("chest") ? put("spine", qHips.clone().slerp(qChest, 0.5), qHips) : put("spine", qChest, qHips);
     const qTop = bone("chest") ? put("chest", qChest, qSpine) : qSpine;
@@ -308,7 +334,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       const fl = Math.hypot(J[0][0] - neck.x, J[0][1] - neck.y), dz = Math.sqrt(Math.max(0, R * R - fl * fl));
       const want = new THREE.Vector3(J[0][0] - neck.x, J[0][1] - neck.y, Math.sign(r.z || 1) * dz);
       if (want.length() > 1e-5) {
-        const turn = limit(new THREE.Quaternion().setFromUnitVectors(r.clone().normalize(), want.normalize()), HEAD.max);
+        const turn = limit(new THREE.Quaternion().slerp(new THREE.Quaternion().setFromUnitVectors(r.clone().normalize(), want.normalize()), HEAD.keep), HEAD.max);
         const qNeck = put("neck", new THREE.Quaternion().slerp(turn, HEAD.share).multiply(qTop), qTop);
         put("head", turn.clone().multiply(qTop), qNeck);
       }
@@ -340,6 +366,43 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
     sword.position.copy(hand).addScaledVector(dir, len / 2 + J.U * 0.08); sword.quaternion.setFromUnitVectors(UP, dir); sword.scale.set(s, len, s);
   }
 
+  // behind the body: only its blurred glow (the picture itself is drawn far off, its shadow lands in place), drifting up
+  function drawHalo(ctx, bw, bh, time) {
+    const [ar, ag, ab] = aura, far = bw * 4;
+    ctx.save(); ctx.globalAlpha = SMOKE.glow; ctx.shadowColor = `rgba(${ar},${ag},${ab},1)`; ctx.shadowBlur = bw * SMOKE.halo;
+    for (let k = 0; k < 2; k++) {
+      const ph = (time / 1000) * 1.3 + k * 2.1;
+      // drawn at x = far in the mirrored frame = far to the LEFT on the canvas; shadow offsets are not mirrored: move it back right
+      ctx.shadowOffsetX = far; ctx.shadowOffsetY = -bw * (0.01 + 0.008 * k);
+      ctx.drawImage(gl.domElement, far + Math.sin(ph) * bw * 0.006, 0, bw, bh);
+    }
+    ctx.restore();
+  }
+  // the smoke, drawn in the picture's own (mirrored) frame
+  function drawSmoke(ctx, bw, bh, aspect, time) {
+    const P = (w) => [(w.x + 0.5) * bw, (0.5 - w.y * aspect) * bh];
+    const now = SMOKE_JOINTS.map(([n]) => (bone(n) ? P(bone(n).getWorldPosition(new THREE.Vector3())) : null));
+    if (hist.length && Math.abs(hist[hist.length - 1].time - time) > 400) hist.length = 0;   // a jump: forget the trail
+    hist.push({ time, pts: now }); while (hist.length > 90) hist.shift();
+    const at = (t) => { let best = hist[hist.length - 1]; for (const h of hist) if (Math.abs(h.time - t) < Math.abs(best.time - t)) best = h; return best.pts; };
+    const [ar, ag, ab] = aura, L = SMOKE.life;
+    // ink puffs at the joints, rising, widening and fading: ink on the ink body is unseen, so they only soften the outline
+    ctx.save(); ctx.shadowBlur = 0;
+    SMOKE_JOINTS.forEach(([, w], j) => {
+      for (let k = 0; k < SMOKE.puffs; k++) {
+        const seed = j * 13 + k, age = (((time / 1000 + (k / SMOKE.puffs) * L + hash(seed) * L) % L) + L) % L, u = age / L;
+        const from = at(time - age * 1000)[j]; if (!from) continue;
+        const r = bw * SMOKE.size * w * (0.45 + 0.9 * u) * (0.8 + 0.4 * hash(seed + 5));
+        const x = from[0] + Math.sin(time / 1000 * 2 + seed) * bw * SMOKE.sway * u, y = from[1] - bw * SMOKE.rise * u * (0.7 + 0.6 * hash(seed + 9));
+        const a = Math.pow(1 - u, 1.5) * SMOKE.ink;
+        const gr = ctx.createRadialGradient(x, y, 0, x, y, r);
+        gr.addColorStop(0, `rgba(3,4,8,${a})`); gr.addColorStop(0.5, `rgba(3,4,8,${a * 0.6})`); gr.addColorStop(1, "rgba(3,4,8,0)");
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+    });
+    ctx.restore();
+  }
+
   return {
     lift, vrm, rest: { torsoRest, hipRest, restDir }, clothMoved, sleeveMoved,
     draw(ctx, _pose, box, { aspect = asp, t = performance.now(), time = 0 } = {}) {
@@ -354,7 +417,9 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
       ctx.save();
       ctx.translate(ox + bw, oy); ctx.scale(-1, 1);                    // mirrored, like every other ghost drawing
       ctx.shadowColor = `rgba(${aura[0]},${aura[1]},${aura[2]},0.55)`; ctx.shadowBlur = bw * 0.035;
+      if (smoke) drawHalo(ctx, bw, bh, time);
       ctx.drawImage(gl.domElement, 0, 0, bw, bh);
+      if (smoke) drawSmoke(ctx, bw, bh, aspect, time);
       ctx.restore();
     },
   };

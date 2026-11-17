@@ -129,7 +129,7 @@ const auraOf = (g) => (g.master ? [255, 190, 90] : [120, 175, 255]);
 function lazy3d(g, kind) {
   let impl = null, msg = t("slab.loading");
   const m = createMotion(g, MOTION, SH.facing);
-  import("./js/shadow3d.js").then((x) => (kind === "vrm" ? x.createVrmRenderer(g, m, D3, { aura: auraOf(g) }) : x.createLiftView(g, m, D3)))
+  import("./js/shadow3d.js").then((x) => (kind === "lift" ? x.createLiftView(g, m, D3) : x.createVrmRenderer(g, m, D3, { aura: auraOf(g), smoke: kind === "vrmSmoke" })))
     .then((r) => (impl = r)).catch((e) => { msg = String((e && e.message) || e); console.error(e); });
   return {
     get impl() { return impl; },
@@ -140,6 +140,7 @@ function lazy3d(g, kind) {
   };
 }
 const RENDERERS = [
+  { id: "vrmSmoke", make: (g) => lazy3d(g, "vrmSmoke") },
   { id: "vrm", make: (g) => lazy3d(g, "vrm") },
   { id: "lift", make: (g) => lazy3d(g, "lift") },
   // look prototypes (js/shadowstyle.js): three finishes to choose from before stage 2
@@ -158,7 +159,7 @@ let cur = null, playing = false, speed = 1, tNow = 0, lastTick = 0, bg = "black"
 // stage 1: each side shows the ghost as recorded ("raw") or after the clean-up ("tidy"), so the same drawing can be compared
 const sides = [
   { cv: $("cv-left"), sel: $("r-left"), msel: $("m-left"), r: "bones", mode: "tidy", view: null, ms: 0 },
-  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrm", mode: "tidy", view: null, ms: 0 },
+  { cv: $("cv-right"), sel: $("r-right"), msel: $("m-right"), r: "vrmSmoke", mode: "tidy", view: null, ms: 0 },
 ];
 // the steps of the clean-up, each of which can be switched off to see what it does
 const fixes = { smooth: true, bone: MOTION.boneLock === true ? "full" : MOTION.boneLock || "off", foot: true, interp: true };
