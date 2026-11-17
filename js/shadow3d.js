@@ -11,6 +11,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 import { hasDepth } from "./shadowmotion.js";
 import { createKata } from "./shadowkata.js";
+import { buildArmor } from "./shadowarmor.js";
 
 const LIMBS = [[11, 13], [13, 15], [12, 14], [14, 16], [23, 25], [25, 27], [24, 26], [26, 28]];   // upper arm, forearm (L, R), thigh, shin (L, R)
 const SPINE = 8;                                                                                 // index of the spine among the signed bones
@@ -208,7 +209,7 @@ const SMOKE_JOINTS = [["neck", 1.2], ["leftUpperArm", 1.1], ["rightUpperArm", 1.
   ["leftLowerLeg", 1.2], ["rightLowerLeg", 1.2], ["leftFoot", 0.9], ["rightFoot", 0.9]];
 const hash = (n) => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
-export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false } = {}) {
+export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175, 255], smoke = false, kata = null, label = null, sumi = false, armor = false } = {}) {
   const SMOKE = { puffs: 4, life: 1.1, size: 0.09, rise: 0.12, sway: 0.03, ink: 0.75, glow: 0.35, halo: 0.05, ...(cfg.smoke || {}) };
   const hist = [];                                                   // recent joint positions on the picture: { time, pts }
   // kata: "mix" (C) or "only" (B) puts the made form over the person's swings (js/shadowkata.js); null = the skeleton as read (A)
@@ -249,6 +250,9 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
   const clothMoved = loosenCloth(vrm, CLOTH.legShare, { test: (n) => clothRe.test(n) && !(skipRe && skipRe.test(n)) }, nameOf);
   const sleeveMoved = narrowSleeves(vrm, CLOTH.sleeveKeep, CLOTH.sleeveReach, { test: (n) => clothRe.test(n) && !(skipRe && skipRe.test(n)) }, nameOf);
   tuneSprings(vrm, CLOTH);
+  // armor: the model's own body is hidden and rigid pieces with empty joints are hung on its bones (js/shadowarmor.js)
+  const ARM = { haze: 0.8, hazeSize: 1.5, ...(cfg.armor || {}) };
+  if (armor) { vrm.scene.traverse((o) => { if (o.isMesh) o.visible = false; }); buildArmor(vrm, ARM); }
   vrm.scene.traverse((o) => { if (o.isMesh) { o.material = Array.isArray(o.material) ? o.material.map(ink) : ink(); o.frustumCulled = false; } });
   scene.add(vrm.scene);
   const bone = (name) => vrm.humanoid.getNormalizedBoneNode(name);
@@ -582,7 +586,7 @@ export async function createVrmRenderer(g, motion, cfg = {}, { aura = [120, 175,
         ctx.drawImage(gl.domElement, 0, 0, bw, bh);
         const last = swordHist[swordHist.length - 1];
         drawBlade(ctx, last.h, last.tip, bw);
-        drawSmoke(ctx, bw, time, { color: SU.ink, ink: SU.smokeFront });
+        drawSmoke(ctx, bw, time, armor ? { color: SU.ink, ink: ARM.haze, size: SMOKE.size * ARM.hazeSize, rise: SMOKE.rise * 0.6 } : { color: SU.ink, ink: SU.smokeFront });
         stepSplats(ctx, bw, dt);
       } else {
         gl.render(scene, cam);
