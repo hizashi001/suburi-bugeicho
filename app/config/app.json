@@ -1,0 +1,11 @@
+{
+  "_説明": "アプリ版だけの設定。tipEnabled を false にすると心付け（チップ）のボタンと画面が消える。safetyNotice は最初の起動で出す安全の注意。",
+  "tipEnabled": true,
+  "tipProducts": [
+    { "id": "jp.yoproject.ghost.tip.ippuku", "tier": "ippuku", "fallbackPrice": "¥100" },
+    { "id": "jp.yoproject.ghost.tip.chagashi", "tier": "chagashi", "fallbackPrice": "¥300" },
+    { "id": "jp.yoproject.ghost.tip.chakai", "tier": "chakai", "fallbackPrice": "¥1,000" }
+  ],
+  "thanksVoice": "assets/sounds/voice_katajikenai.mp3",
+  "safetyNotice": true
+}

@@ -1,0 +1,9 @@
+{
+  "appId": "jp.yoproject.ghost",
+  "appName": "GHOST",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "allowsLinkPreview": false
+  }
+}

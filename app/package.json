@@ -1,0 +1,24 @@
+{
+  "name": "ghost-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "NINJA SAMURAI WORKOUT: GHOST の iPhone アプリ版（Capacitor で包む）",
+  "type": "module",
+  "scripts": {
+    "vendor": "node scripts/fetch-vendor.mjs",
+    "build": "node scripts/build-www.mjs",
+    "sync": "npm run build && npx cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor-community/keep-awake": "8.0.1",
+    "@capacitor/core": "8.6.2",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.6.2",
+    "@capacitor/share": "8.0.3",
+    "@capgo/native-purchases": "8.9.17"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.2"
+  }
+}

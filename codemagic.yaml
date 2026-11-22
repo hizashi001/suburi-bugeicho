@@ -1,0 +1,54 @@
+# GHOST（iPhone アプリ版）を Codemagic のクラウドの Mac で組み立て、TestFlight に上げる手順。
+# 中身の説明は app/README.md。オーナーが Codemagic の画面で行う準備（API キーの登録・署名）も app/README.md の「オーナーの作業」にある。
+#
+# 流れ: 部品を入れる → www を組み立てる（同梱・選別・書き換え）→ iOS のプロジェクトを作って GHOST 用に直す
+#       → 署名 → 組み立て（.ipa）→ TestFlight へ上げる
+# triggering を書いていないので自動では動かない（Codemagic の画面の「Start new build」で動かす）。
+# 無料枠（月500分・Mac mini M2）で動かす。1回の目安は 10〜20 分（初回は部品の取得で長め）。
+
+workflows:
+  ghost-ios-testflight:
+    name: GHOST iOS → TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      # Codemagic の Team settings → Integrations → Developer Portal で API キーを登録したときに付けた名前
+      app_store_connect: GHOST App Store Connect
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: jp.yoproject.ghost
+      node: 22
+      xcode: latest
+    scripts:
+      - name: 部品を入れる（Capacitor とプラグイン）
+        script: |
+          cd app
+          npm ci
+      - name: www を組み立てる（アプリに入れる物の選別・外部の物の同梱・書き換え・確認）
+        script: |
+          cd app
+          node scripts/build-www.mjs
+      - name: iOS のプロジェクトを作り、GHOST 用に直す
+        script: |
+          cd app
+          rm -rf ios
+          npx cap add ios
+          BUILD_NUMBER=$PROJECT_BUILD_NUMBER node scripts/patch-ios.mjs
+          npx cap sync ios
+      - name: 署名の設定を入れる
+        script: |
+          xcode-project use-profiles --project app/ios/App/App.xcodeproj
+      - name: 組み立て（.ipa）
+        script: |
+          xcode-project build-ipa \
+            --project app/ios/App/App.xcodeproj \
+            --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # 社内のテスター（App Store Connect のユーザー＝ヒデキさん）は審査なしで TestFlight に届く

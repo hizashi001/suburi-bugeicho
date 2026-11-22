@@ -1,0 +1,6 @@
+{
+  "cam.unsupported": "The camera is not available. Allow it in iPhone Settings → GHOST, then reopen the app. You can still try the flow with Test swing.",
+  "cam.denied": "Could not use the camera ({err}). Turn on iPhone Settings → GHOST → Camera. Meanwhile you can try the flow with Test swing.",
+  "cam.modelFail": "Could not load the pose model. Close the app and open it again.",
+  "share.noRecord": "This device cannot record the screen"
+}
