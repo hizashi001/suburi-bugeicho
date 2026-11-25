@@ -1,11 +1,13 @@
 {
-  "_説明": "アプリ版だけの設定。tipEnabled を false にすると心付け（チップ）のボタンと画面が消える。safetyNotice は最初の起動で出す安全の注意。",
+  "_説明": "アプリ版だけの設定。tipEnabled を false にすると心付け（チップ）のボタンと画面が消える。thanksVoice は師範の声のファイル（1.0 では空。声がそろってから assets/sounds/voice_katajikenai.mp3 などを入れる）。safetyNotice は最初の起動で出す安全の注意。privacyText と contactText は「この作品について」に出す文で、空の間は欄ごと出さない（Q-147 の答えの後に入れる）。",
   "tipEnabled": true,
   "tipProducts": [
-    { "id": "jp.yoproject.ghost.tip.ippuku", "tier": "ippuku", "fallbackPrice": "¥100" },
-    { "id": "jp.yoproject.ghost.tip.chagashi", "tier": "chagashi", "fallbackPrice": "¥300" },
-    { "id": "jp.yoproject.ghost.tip.chakai", "tier": "chakai", "fallbackPrice": "¥1,000" }
+    { "id": "jp.yoproject.ghost.tip.ippuku", "tier": "ippuku" },
+    { "id": "jp.yoproject.ghost.tip.chagashi", "tier": "chagashi" },
+    { "id": "jp.yoproject.ghost.tip.chakai", "tier": "chakai" }
   ],
-  "thanksVoice": "assets/sounds/voice_katajikenai.mp3",
-  "safetyNotice": true
+  "thanksVoice": "",
+  "safetyNotice": true,
+  "privacyText": { "ja": "", "en": "" },
+  "contactText": { "ja": "", "en": "" }
 }

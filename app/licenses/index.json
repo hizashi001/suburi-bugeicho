@@ -1,0 +1,57 @@
+[
+ {
+  "name": "MediaPipe Tasks Vision 0.10.14",
+  "license": "Apache 2.0",
+  "file": "mediapipe.txt"
+ },
+ {
+  "name": "Shippori Mincho B1",
+  "license": "SIL OFL 1.1",
+  "file": "shippori-mincho-b1.txt"
+ },
+ {
+  "name": "Zen Kaku Gothic New",
+  "license": "SIL OFL 1.1",
+  "file": "zen-kaku-gothic-new.txt"
+ },
+ {
+  "name": "Capacitor 8.6.2",
+  "license": "MIT",
+  "file": "capacitor.txt"
+ },
+ {
+  "name": "Capacitor Haptics 8.0.2",
+  "license": "MIT",
+  "file": "haptics.txt"
+ },
+ {
+  "name": "Capacitor Share 8.0.3",
+  "license": "MIT",
+  "file": "share.txt"
+ },
+ {
+  "name": "Capacitor Filesystem 8.1.5",
+  "license": "MIT",
+  "file": "filesystem.txt"
+ },
+ {
+  "name": "ion-ios-filesystem 2.0.1",
+  "license": "MIT",
+  "file": "ion-ios-filesystem.txt"
+ },
+ {
+  "name": "Capacitor Synapse 1.0.4",
+  "license": "MIT",
+  "file": "synapse.txt"
+ },
+ {
+  "name": "Keep Awake 8.0.1",
+  "license": "MIT",
+  "file": "keep-awake.txt"
+ },
+ {
+  "name": "Capgo Native Purchases 8.9.17",
+  "license": "MPL 2.0",
+  "file": "native-purchases.txt"
+ }
+]

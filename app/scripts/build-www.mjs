@@ -19,6 +19,8 @@ const APPCFG = JSON.parse(await readFile(join(APP, "config", "app.json"), "utf8"
 const PAGES = ["index.html", "ghost.html", "share.html"];
 // 本編のメニューから外す試験用のボタン（id）
 const DROP_TILES = ["go-ghost3d", "go-swordlab", "go-shadowlab"];
+// 入れない画像（家紋に似た形があるため、アプリでは字の印で出す）
+const DROP_IMAGES = ["gear_hachigane_g4.png", "gear_hachigane_g5.png"];
 // 入れる画像の区分（manifest の section）。3D の試験モデル（assets/images/3d・assets/models）は入れない
 const IMAGE_SECTIONS = ["yokai", "boss", "mask", "gear", "sword", "shadow"];
 const MP = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
@@ -43,6 +45,12 @@ for (const page of PAGES) {
   for (const [from, to] of REWRITES) html = html.split(from).join(to);
   html = html.replace(FONT_LINKS, '<link rel="stylesheet" href="vendor/fonts/fonts.css">');
   for (const id of DROP_TILES) html = html.replace(new RegExp(`\\s*<button[^>]*id="${id}"[\\s\\S]*?</button>`), "");
+  // 影の書庫の「影を録る（師範の影・型の見本）」は開発用なので隠す（ページの処理が使うので、消さずに隠す）
+  if (page === "ghost.html") {
+    const before = html;
+    html = html.replace(/<div class="panel">(\s*<h2 data-i18n="ghost\.rec\.title">)/, '<div class="panel" style="display:none">$1');
+    if (html === before) throw new Error("ghost.html: 影を録る欄を隠せませんでした");
+  }
   // 文字コードの宣言のすぐあとに、普通の <script> で差し込む（ページのモジュールより先に動き、振動・共有などを差し替える）
   html = html.replace(/(<meta charset="utf-8">)/i, '$1<script src="js/native.js"></script>');
   if (!html.includes('src="js/native.js"')) throw new Error(`${page}: native.js を差し込めませんでした`);
@@ -64,7 +72,6 @@ log(`js: ${[...jsNeeded].join(", ")}`);
 
 // 2) データ（小さい JSON はまとめて）
 for (const d of ["config", "data"]) await copy(d);
-await copy("assets/ghost_asset_manifest.json");
 // 言語ファイル: アプリ用の言い換え（「ページを開き直す」→「アプリを開き直す」など）を上書きで重ねる
 for (const f of await readdir(join(SRC, "lang"))) {
   const base = JSON.parse(await readFile(join(SRC, "lang", f), "utf8"));
@@ -75,6 +82,8 @@ for (const f of await readdir(join(SRC, "lang"))) {
 
 // 3) 画像: manifest にあって、ファイルが実在するものだけ
 const manifest = JSON.parse(await readFile(join(SRC, "assets/ghost_asset_manifest.json"), "utf8"));
+manifest.assets = manifest.assets.filter((a) => !DROP_IMAGES.includes(a.file));
+await write("assets/ghost_asset_manifest.json", JSON.stringify(manifest));
 let nImg = 0;
 for (const a of manifest.assets) {
   if (!IMAGE_SECTIONS.includes(a.section)) continue;
@@ -93,7 +102,9 @@ if (existsSync(join(APP, "native", "sounds"))) await cp(join(APP, "native", "sou
 await cp(join(APP, "vendor"), join(WWW, "vendor"), { recursive: true });
 await cp(join(APP, "native", "native.js"), join(WWW, "js", "native.js"));
 if (existsSync(join(APP, "native", "img"))) await cp(join(APP, "native", "img"), join(WWW, "assets", "app"), { recursive: true });
+APPCFG.version = JSON.parse(await readFile(join(APP, "package.json"), "utf8")).version;
 await write("config/app.json", JSON.stringify(APPCFG, null, 2));
+await cp(join(APP, "licenses"), join(WWW, "licenses"), { recursive: true });
 
 // 6) 調べる: 外の URL が残っていないか（実行コード・データを外から読まない＝審査 2.5.2・4.2）
 const bad = [];
@@ -111,7 +122,7 @@ async function walk(dir) {
 await walk(WWW);
 if (bad.length) { console.error("外の URL が残っています:\n" + bad.join("\n")); process.exit(1); }
 // 参照している同梱ファイルがあるか
-for (const f of ["vendor/mediapipe/vision_bundle.js", "vendor/mediapipe/wasm/vision_wasm_internal.wasm", "vendor/models/pose_landmarker_lite.task", "vendor/fonts/fonts.css", "js/native.js"]) {
+for (const f of ["vendor/mediapipe/vision_bundle.js", "vendor/mediapipe/wasm/vision_wasm_internal.wasm", "vendor/models/pose_landmarker_lite.task", "vendor/fonts/fonts.css", "js/native.js", "licenses/index.json", ...JSON.parse(await readFile(join(APP, "licenses", "index.json"), "utf8")).map((x) => `licenses/${x.file}`)]) {
   if (!existsSync(join(WWW, f))) { console.error(`ありません: ${f}`); process.exit(1); }
 }
 

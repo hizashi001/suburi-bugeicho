@@ -22,6 +22,10 @@
         "<b>本物の刃物は絶対に使わない。</b>木刀・棒・箒・タオルなどで振ります（何も持たなくても遊べます）。",
         "前後左右に「腕＋得物」より広い空間を空け、<b>人・ペット・家具・照明・窓</b>から離れて振ってください。",
         "iPhone は倒れない所に縦に立て、2〜3m 離れます。床が滑らないか確かめてください。",
+        "持病・けが・妊娠・体調に不安がある人は、先に医師に相談してください。",
+        "準備運動をし、水分をとり、休みながら遊んでください。途中でやめてもかまいません。",
+        "得物は手から抜けないように握り、天井や照明との間も確かめてください。",
+        "重さや回数を競わず、無理なく振れる物を選んでください。",
         "痛み・息苦しさ・めまいを感じたら、すぐにやめて休んでください。子どもは大人と一緒に遊んでください。",
         "カメラの映像は iPhone の中だけで使い、外へ送りません（シェア動画は、あなたが共有を選んだときだけ）。"
       ],
@@ -30,7 +34,7 @@
       tipTileDesc: "お礼のチップ",
       tipTitle: "師範に心付け",
       tipLead: "GHOST を楽しんでもらえたら、師範にお茶を一服ごちそうしてください。<b>これはお礼（チップ）です。遊びの機能や強さは何も増えません。</b>",
-      tiers: { ippuku: ["一服", "師範の声「かたじけない」"], chagashi: ["茶と菓子", "声＋茶碗の印"], chakai: ["茶会", "声＋金の茶碗の印"] },
+      tiers: { ippuku: ["一服", "お礼の言葉「かたじけない」"], chagashi: ["茶と菓子", "お礼の言葉＋茶碗の印"], chakai: ["茶会", "お礼の言葉＋金の茶碗の印"] },
       total: "これまでに出したお茶: {n} 杯",
       marks: "茶碗の印",
       noMarks: "まだありません",
@@ -39,6 +43,19 @@
       buying: "手続き中…",
       failed: "購入できませんでした（{err}）。時間をおいて、もう一度お試しください。",
       unavailable: "いまは心付けを受け付けられません。",
+      loading: "値段を確かめています…",
+      noPrice: "値段を確かめられませんでした。通信できる所で、もう一度お試しください。",
+      retry: "もう一度確かめる",
+      aboutTile: "この作品について",
+      aboutTileDesc: "安全の注意・使っている部品",
+      aboutTitle: "この作品について",
+      version: "版 {v}",
+      privacy: "プライバシー",
+      contact: "お問い合わせ",
+      safetyAgain: "安全の注意",
+      parts: "使っている部品",
+      partsLead: "部品の名前を押すと、使用条件の全文が出ます。",
+      partsFail: "読み込めませんでした。",
       close: "閉じる"
     },
     en: {
@@ -47,6 +64,10 @@
         "<b>Never use a real blade.</b> Swing a bokuto, a stick, a broom or a towel (you can also play empty-handed).",
         "Keep more than arm-plus-weapon length clear in every direction, away from <b>people, pets, furniture, lights and windows</b>.",
         "Stand the iPhone upright where it cannot fall, and step 2–3 m back. Make sure the floor is not slippery.",
+        "If you have a medical condition or an injury, are pregnant, or are unsure about your health, talk to a doctor first.",
+        "Warm up, drink water and take breaks. You can stop at any time.",
+        "Grip your weapon so it cannot slip out of your hand, and check the space to the ceiling and lights too.",
+        "Do not compete on weight or number of swings. Choose something you can swing comfortably.",
         "If you feel pain, shortness of breath or dizziness, stop and rest. Children should play with an adult.",
         "Camera video is used only on this iPhone and never sent anywhere (a share video leaves only when you choose to share it)."
       ],
@@ -55,7 +76,7 @@
       tipTileDesc: "A thank-you tip",
       tipTitle: "Tip the master",
       tipLead: "If you enjoy GHOST, treat the master to a bowl of tea. <b>This is a thank-you tip. It does not unlock or strengthen anything in the game.</b>",
-      tiers: { ippuku: ["A bowl of tea", "The master's voice: “Katajikenai”"], chagashi: ["Tea and sweets", "Voice + tea-bowl mark"], chakai: ["Tea ceremony", "Voice + golden tea-bowl mark"] },
+      tiers: { ippuku: ["A bowl of tea", "A word of thanks: “Katajikenai”"], chagashi: ["Tea and sweets", "A word of thanks + tea-bowl mark"], chakai: ["Tea ceremony", "A word of thanks + golden tea-bowl mark"] },
       total: "Bowls of tea so far: {n}",
       marks: "Tea-bowl marks",
       noMarks: "None yet",
@@ -64,6 +85,19 @@
       buying: "Processing…",
       failed: "The purchase did not go through ({err}). Please try again later.",
       unavailable: "Tips are not available right now.",
+      loading: "Checking prices…",
+      noPrice: "Could not load the prices. Please try again when you are online.",
+      retry: "Try again",
+      aboutTile: "About",
+      aboutTileDesc: "Safety notes and licenses",
+      aboutTitle: "About this app",
+      version: "Version {v}",
+      privacy: "Privacy",
+      contact: "Contact",
+      safetyAgain: "Safety notes",
+      parts: "Open-source components",
+      partsLead: "Tap a name to read its full license.",
+      partsFail: "Could not load.",
       close: "Close"
     }
   };
@@ -141,15 +175,19 @@
   // ---------- 見た目（本編の色に合わせる） ----------
   var css = "" +
     ".gx-ov{position:fixed;inset:0;z-index:9999;background:rgba(8,12,24,.86);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}" +
-    ".gx-box{width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--ai-2,#1b2945);color:var(--washi,#ebe5d5);border:1px solid rgba(235,229,213,.18);border-radius:14px;padding:18px 16px;font-family:'Zen Kaku Gothic New',system-ui,sans-serif;line-height:1.6;font-size:15px}" +
+    ".gx-box{box-sizing:border-box;width:100%;max-width:420px;max-height:100%;overflow:auto;background:var(--ai-2,#1b2945);color:var(--washi,#ebe5d5);border:1px solid rgba(235,229,213,.18);border-radius:14px;padding:18px 16px;font-family:'Zen Kaku Gothic New',system-ui,sans-serif;line-height:1.6;font-size:15px}" +
     ".gx-box h2{margin:0 0 10px;font-family:'Shippori Mincho B1',serif;font-size:22px;color:var(--kin,#d6ab4c)}" +
     ".gx-box ul{margin:0 0 14px;padding-left:1.2em}.gx-box li{margin:6px 0}" +
     ".gx-btn{display:block;width:100%;margin:8px 0 0;padding:12px 14px;border-radius:10px;border:1px solid rgba(235,229,213,.2);background:var(--ai-3,#24365a);color:inherit;font:inherit;text-align:left;cursor:pointer}" +
     ".gx-btn.kin{background:var(--kin,#d6ab4c);color:#131d33;font-weight:700;text-align:center}" +
     ".gx-btn b{font-size:17px}.gx-btn .gx-p{float:right;font-weight:700;color:var(--kin,#d6ab4c)}.gx-btn small{display:block;opacity:.8}" +
-    ".gx-btn[disabled]{opacity:.5}" +
+    ".gx-btn[disabled]{opacity:.5}.gx-btn[hidden]{display:none}" +
     ".gx-note{font-size:12.5px;opacity:.75;margin-top:12px}" +
     ".gx-marks{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px;font-size:22px}.gx-gold{filter:sepia(1) saturate(4) hue-rotate(5deg) brightness(1.15)}" +
+    ".gx-box h3{margin:16px 0 4px;font-size:16px;color:var(--kin,#d6ab4c)}.gx-box details{border-top:1px solid rgba(235,229,213,.15);padding:8px 0}.gx-box summary{cursor:pointer;min-height:28px}" +
+    ".gx-box pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11.5px/1.5 ui-monospace,Menlo,monospace;max-height:45vh;overflow:auto;background:rgba(0,0,0,.25);border-radius:8px;padding:10px}" +
+    // まだ無い遊び（アップデートで開く）に鍵マーク
+    ".soon>div{position:relative;padding-right:38px!important}.soon>div::after{content:'\\1F512';position:absolute;top:8px;right:10px;font-size:18px;line-height:1.2}" +
     ".gx-msg{min-height:1.4em;margin-top:10px;color:var(--kin,#d6ab4c);font-weight:700}";
   function addStyle() { var s = document.createElement("style"); s.textContent = css; document.head.appendChild(s); }
 
@@ -176,15 +214,15 @@
   var TIP_KEY = "ghost-app.tip.v1";
   function tipState() { try { return JSON.parse(localStorage.getItem(TIP_KEY) || "{}"); } catch (e) { return {}; } }
   function saveTip(s) { try { localStorage.setItem(TIP_KEY, JSON.stringify(s)); } catch (e) {} }
-  var products = null; // id → 価格の文字
+  var products = {}; // id → 価格の文字（読めた物だけ覚える。失敗は覚えない）
   async function loadProducts() {
-    if (products || !P.NativePurchases) return products || {};
+    if (!P.NativePurchases) return products;
+    var ids = CFG.tipProducts.map(function (p) { return p.id; });
+    if (ids.every(function (id) { return products[id]; })) return products;
     try {
-      var ids = CFG.tipProducts.map(function (p) { return p.id; });
       var res = await P.NativePurchases.getProducts({ productIdentifiers: ids, productType: "inapp" });
-      products = {};
-      (res.products || []).forEach(function (p) { products[p.identifier] = p.priceString; });
-    } catch (e) { products = {}; }
+      (res.products || []).forEach(function (p) { if (p.priceString) products[p.identifier] = p.priceString; });
+    } catch (e) {}
     return products;
   }
   function playThanks() {
@@ -202,9 +240,10 @@
     var ov = overlay("<h2>" + T.tipTitle + "</h2><p>" + T.tipLead + "</p>" +
       CFG.tipProducts.map(function (p) {
         var t = T.tiers[p.tier] || [p.tier, ""];
-        return '<button class="gx-btn" type="button" data-id="' + p.id + '" data-tier="' + p.tier + '"><span class="gx-p">' + p.fallbackPrice + "</span><b>" + t[0] + "</b><small>" + t[1] + "</small></button>";
+        return '<button class="gx-btn" type="button" data-id="' + p.id + '" data-tier="' + p.tier + '" disabled><span class="gx-p"></span><b>' + t[0] + "</b><small>" + t[1] + "</small></button>";
       }).join("") +
       '<div class="gx-msg" aria-live="polite"></div>' +
+      '<button class="gx-btn" type="button" data-retry hidden>' + T.retry + "</button>" +
       '<p style="margin:12px 0 0">' + fill(T.total, { n: s.total || 0 }) + "</p>" +
       '<div style="font-size:13px;opacity:.85">' + T.marks + '</div><div class="gx-marks">' + marksHtml(s) + "</div>" +
       '<p class="gx-note">' + T.deviceNote + "</p>" +
@@ -212,9 +251,27 @@
     var msg = ov.querySelector(".gx-msg");
     ov.querySelector("[data-close]").addEventListener("click", function () { ov.remove(); });
     var btns = ov.querySelectorAll("[data-id]");
-    loadProducts().then(function (pr) {
-      btns.forEach(function (b) { if (pr[b.dataset.id]) b.querySelector(".gx-p").textContent = pr[b.dataset.id]; });
-    });
+    var retry = ov.querySelector("[data-retry]");
+    // 値段が読めた物だけ押せる（読めるまでは値段を出さず、買えない）
+    function applyPrices() {
+      btns.forEach(function (b) {
+        var pr = products[b.dataset.id];
+        b.querySelector(".gx-p").textContent = pr || "";
+        b.disabled = !pr;
+      });
+    }
+    async function refreshPrices() {
+      retry.hidden = true;
+      if (!P.NativePurchases) { msg.textContent = T.unavailable; return; }
+      msg.textContent = T.loading;
+      await loadProducts();
+      applyPrices();
+      var all = CFG.tipProducts.every(function (p) { return products[p.id]; });
+      msg.textContent = all ? "" : T.noPrice;
+      retry.hidden = all;
+    }
+    retry.addEventListener("click", refreshPrices);
+    refreshPrices();
     btns.forEach(function (b) {
       b.addEventListener("click", async function () {
         if (!P.NativePurchases) { msg.textContent = T.unavailable; return; }
@@ -238,7 +295,7 @@
           var m = String((e && (e.message || e.code)) || e);
           msg.textContent = /cancel/i.test(m) ? "" : fill(T.failed, { err: m.slice(0, 80) });
         }
-        btns.forEach(function (x) { x.disabled = false; });
+        applyPrices();
       });
     });
   }
@@ -252,6 +309,45 @@
     setup.parentNode.appendChild(b); // メニューの一番奥に置く（遊びの途中では勧めない）
   }
 
+  // ---------- この作品について（安全の注意の読み直し・部品の使用条件。プライバシーと連絡先は文が入ってから出る） ----------
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  function textBlock(title, txt) {
+    var s = txt && (JA ? txt.ja : txt.en);
+    return s ? "<h3>" + title + '</h3><p style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(s) + "</p>" : "";
+  }
+  function openAbout() {
+    var ov = overlay("<h2>" + T.aboutTitle + "</h2><p>NINJA SAMURAI WORKOUT: GHOST<br>" + (CFG.version ? fill(T.version, { v: esc(CFG.version) }) : "") + "</p>" +
+      textBlock(T.privacy, CFG.privacyText) + textBlock(T.contact, CFG.contactText) +
+      "<h3>" + T.safetyAgain + "</h3><ul>" + T.safety.map(function (s) { return "<li>" + s + "</li>"; }).join("") + "</ul>" +
+      "<h3>" + T.parts + '</h3><p class="gx-note" style="margin-top:0">' + T.partsLead + "</p><div data-parts></div>" +
+      '<button class="gx-btn kin" type="button" data-close>' + T.close + "</button>");
+    ov.querySelector("[data-close]").addEventListener("click", function () { ov.remove(); });
+    var box = ov.querySelector("[data-parts]");
+    fetch("licenses/index.json").then(function (r) { if (!r.ok) throw 0; return r.json(); }).then(function (list) {
+      list.forEach(function (it) {
+        var d = document.createElement("details");
+        d.innerHTML = "<summary>" + esc(it.name) + " — " + esc(it.license) + "</summary><pre></pre>";
+        d.addEventListener("toggle", function () {
+          var pre = d.querySelector("pre");
+          if (!d.open || pre.dataset.ok) return;
+          fetch("licenses/" + it.file).then(function (r) { if (!r.ok) throw 0; return r.text(); })
+            .then(function (s) { pre.textContent = s; pre.dataset.ok = "1"; })
+            .catch(function () { pre.textContent = T.partsFail; });
+        });
+        box.appendChild(d);
+      });
+    }).catch(function () { box.textContent = T.partsFail; });
+  }
+  function addAboutTile() {
+    var setup = document.getElementById("go-setup");
+    if (!setup || document.getElementById("go-about")) return;
+    var b = document.createElement("button");
+    b.className = "tile-btn"; b.id = "go-about"; b.type = "button";
+    b.innerHTML = "<b>" + T.aboutTile + "</b><span>" + T.aboutTileDesc + "</span>";
+    b.addEventListener("click", openAbout);
+    setup.parentNode.appendChild(b);
+  }
+
   function start() {
     addStyle();
     cfgReady.then(function (c) {
@@ -259,6 +355,7 @@
       try { seen = localStorage.getItem(SAFETY_KEY); } catch (e) {}
       if (c.safetyNotice !== false && !seen) showSafety();
       if (c.tipEnabled && Array.isArray(c.tipProducts) && c.tipProducts.length) addTipTile();
+      addAboutTile();
     });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();

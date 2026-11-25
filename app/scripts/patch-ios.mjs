@@ -17,11 +17,11 @@ if (!existsSync(IOS)) { console.error("ios/ がありません。先に npx cap 
 // 説明文（英語が元。日本語は ja.lproj で差し替え）
 const PURPOSE = {
   en: {
-    NSCameraUsageDescription: "GHOST uses the front camera to track your body pose on this iPhone and judge your sword swings. The video is processed on the device and is never sent anywhere.",
+    NSCameraUsageDescription: "GHOST uses the front camera to read your body movement on this iPhone, to judge your sword swings, record your shadow, and make the share videos you record. The video does not leave this iPhone unless you share it.",
     NSPhotoLibraryAddUsageDescription: "GHOST saves the share video or shadow file you made to your photo library only when you choose \u201cSave\u201d.",
   },
   ja: {
-    NSCameraUsageDescription: "GHOST は前のカメラで体の動きをこの iPhone の中で読み取り、素振りを判定します。映像は端末の中だけで使い、外へ送りません。",
+    NSCameraUsageDescription: "GHOST は前のカメラで体の動きをこの iPhone の中で読み取り、素振りの判定、影の記録、あなたが録るシェア動画に使います。映像は、あなたが共有しない限り外へ出ません。",
     NSPhotoLibraryAddUsageDescription: "あなたが「保存」を選んだときだけ、作ったシェア動画や影のファイルを写真に保存します。",
   },
 };

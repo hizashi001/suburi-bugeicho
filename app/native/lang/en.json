@@ -2,5 +2,11 @@
   "cam.unsupported": "The camera is not available. Allow it in iPhone Settings → GHOST, then reopen the app. You can still try the flow with Test swing.",
   "cam.denied": "Could not use the camera ({err}). Turn on iPhone Settings → GHOST → Camera. Meanwhile you can try the flow with Test swing.",
   "cam.modelFail": "Could not load the pose model. Close the app and open it again.",
-  "share.noRecord": "This device cannot record the screen"
+  "share.noRecord": "This device cannot record the screen",
+  "share.lead": "Records 10 seconds of the camera with a mask over your face, and checks that it can go to the iPhone share sheet. Nothing leaves the phone unless you tap Share. Before recording, make sure nobody else is in view.",
+  "soon.label": "Opens in an update",
+  "soon.phase2": "Opens in an update",
+  "soon.phase3": "Opens in an update",
+  "menu.ghost.desc": "Replay and export your ghosts",
+  "setup.safety": "Never use a real blade. Swing a bokuto, a broom or a towel. Keep more than arm-plus-weapon length clear in every direction, away from people, furniture and lights."
 }
