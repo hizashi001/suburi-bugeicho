@@ -188,6 +188,7 @@
     ".gx-box pre{white-space:pre-wrap;overflow-wrap:anywhere;font:11.5px/1.5 ui-monospace,Menlo,monospace;max-height:45vh;overflow:auto;background:rgba(0,0,0,.25);border-radius:8px;padding:10px}" +
     // まだ無い遊び（アップデートで開く）に鍵マーク
     ".soon>div{position:relative;padding-right:38px!important}.soon>div::after{content:'\\1F512';position:absolute;top:8px;right:10px;font-size:18px;line-height:1.2}" +
+    ".dock{flex-wrap:wrap}" + // 英語の「Shinobi」が右に切れないように
     ".gx-msg{min-height:1.4em;margin-top:10px;color:var(--kin,#d6ab4c);font-weight:700}";
   function addStyle() { var s = document.createElement("style"); s.textContent = css; document.head.appendChild(s); }
 

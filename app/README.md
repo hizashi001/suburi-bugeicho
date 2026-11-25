@@ -15,6 +15,7 @@ T-015（2026-11-22）で作成。段取りの資料は `C:\SNS_pipeline\dev\team
 | `scripts/build-www.mjs` | `www/` を組み立てる。ページの URL を `vendor/` に差し替え、試験用のボタンを外し、`js/native.js` を差し込み、最後に「外の URL が残っていないか」を調べて、残っていたら止まる |
 | `scripts/patch-ios.mjs` | `npx cap add ios` で作った `ios/` を GHOST 用に直す（説明文・縦固定・iPhone 専用・プライバシーの申告・暗号化の申告・共有スキーム・版番号）。何度実行しても同じ結果 |
 | `native/native.js` | アプリだけの部品（下の表） |
+| `native/startswing.js` | 一振りで START（アプリ版だけ）。数字は `config/app.json` の `startSwing`。`mode` を `count` にすると前の10秒に戻る |
 | `native/lang/*.json` | アプリ用の言い換え（「ブラウザ」「https のページ」などの文を、アプリ向けに上書き） |
 | `native/sounds/` | アプリだけの音を置く（師範の声は 1.0 では使わない。入れるときは `config/app.json` の `thanksVoice` も書く） |
 | `ios-extra/` | `PrivacyInfo.xcprivacy`（データは集めない・追跡なし）と、共有スキーム `App.xcscheme` |

@@ -8,6 +8,8 @@
   ],
   "thanksVoice": "",
   "safetyNotice": true,
+  "_startSwing": "一振りで START の数字（仮）。mode: swing=一振り／count=前の10秒。stanceMs=構えて止まる、raiseMs=振りかぶって保つ、swingWithinMs=下げ始めてから、amp=振り幅m、downDir=下向きの度合い、stillSpeed=止まったと見る速さm/s、relaxAfter=ゆるめるまでの失敗の数、relaxAmp・relaxChest=ゆるめた時の幅と高さ（肩から胴の何割下か）、lostMs=見失い、helpSec=助けを出す秒、pressSec=押して始める時の数え、afterMs=START から始まるまで。",
+  "startSwing": { "mode": "swing", "stanceMs": 500, "raiseMs": 250, "swingWithinMs": 1500, "amp": 0.5, "downDir": 0.5, "stillSpeed": 0.6, "relaxAfter": 3, "relaxAmp": 0.35, "relaxChest": 0.25, "lostMs": 1000, "helpSec": 30, "pressSec": 10, "afterMs": 1000 },
   "privacyText": { "ja": "", "en": "" },
   "contactText": { "ja": "", "en": "" }
 }

@@ -35,6 +35,31 @@ const log = (...a) => console.log(...a);
 const write = async (rel, data) => { const p = join(WWW, rel); await mkdir(dirname(p), { recursive: true }); await writeFile(p, data); };
 const copy = async (rel, to = rel) => { await mkdir(dirname(join(WWW, to)), { recursive: true }); await cp(join(SRC, rel), join(WWW, to), { recursive: true }); };
 
+// 一振りで START: 本編の写しに native/startswing.js をつなぐ（判定の処理は変えない。つなぎ先が変わっていたら止まる）
+function addStartSwing(html) {
+  const put = (from, to) => {
+    if (html.split(from).length !== 2) throw new Error(`index.html: 一振り START をつなげません: ${from}`);
+    html = html.replace(from, () => to);
+  };
+  put('import * as renkei from "./js/renkei.js";', 'import * as renkei from "./js/renkei.js"; import { createStartSwing } from "./js/startswing.js";');
+  put("function getReady(then) {", `const startSwing = await createStartSwing({
+  $, t, esc, showCue, clearCue, play, setPhase: (p) => { phase = p; },
+  startCamera: () => { if (!$("btn-cam").disabled) startCamera(); },
+  camera: () => (running && stream ? "on" : $("btn-cam").disabled ? "wait" : "off"),
+  resetDetector: () => { const n = performance.now(); if (hand3) detector.reset(hand3, n); else detector.lost(); },
+  speedLine: (m) => DIFF[0].speed * judge(m).tm.peak,
+});
+function getReady(then, opt) {
+  if (startSwing.enabled) { clearInterval(readyTimer); startSwing.begin(then, opt); return; }`);
+  put("function stopPlay() {", "function stopPlay() {\n  startSwing.cancel();");
+  put('getReady(() => { if (mode === "reg") phase = "fight"; });', 'getReady(() => { if (mode === "reg") phase = "fight"; }, { stanceOnly: true });');
+  put('if (phase === "ready") return; // still', 'if (phase === "ready") { startSwing.swing(m); return; } // still');
+  put("else { detector.lost(); gesture.update(tt, null); setChip(false); }", "else { detector.lost(); startSwing.lost(tt); gesture.update(tt, null); setChip(false); }");
+  put("  const visible = (ls.v > 0.5", `  startSwing.pose({ t: tt, shoulders: ls.v > 0.5 && rs.v > 0.5, wrists: lw.v > 0.3 && rw.v > 0.3, hips: hipsOk, lwY: lw.y, rwY: rw.y, handY: hand2.y, eyeY: (Pt(2).y + Pt(5).y) / 2, shoulderY: sm.y, T: torsoPx, speed: detector.speed });
+  const visible = (ls.v > 0.5`);
+  return html;
+}
+
 await rm(WWW, { recursive: true, force: true });
 await mkdir(WWW, { recursive: true });
 
@@ -55,6 +80,7 @@ for (const page of PAGES) {
   html = html.replace(/(<meta charset="utf-8">)/i, '$1<script src="js/native.js"></script>');
   if (!html.includes('src="js/native.js"')) throw new Error(`${page}: native.js を差し込めませんでした`);
   for (const m of html.matchAll(/from\s+["']\.\/(js\/[\w.-]+\.js)["']/g)) jsNeeded.add(m[1]);
+  if (page === "index.html") html = addStartSwing(html);
   await write(page, html);
 }
 // ページが読む js と、その js がさらに読む js
@@ -72,11 +98,19 @@ log(`js: ${[...jsNeeded].join(", ")}`);
 
 // 2) データ（小さい JSON はまとめて）
 for (const d of ["config", "data"]) await copy(d);
+{ // 画面に出る技名の「試作・」を外す（写しだけ。数値は変えない）
+  const bal = JSON.parse(await readFile(join(SRC, "config/balance.json"), "utf8"));
+  if (!JSON.stringify(bal).includes('"name_ja":"試作・')) log("注意: balance.json に「試作・」の技名がありません（外す処理は不要になりました）");
+  const strip = (o) => { for (const k of Object.keys(o)) { const v = o[k]; if (typeof v === "string") { if (k === "name_ja") o[k] = v.replace(/^試作・/, ""); else if (k === "name_en") o[k] = v.replace(/^Trial: /, ""); } else if (v && typeof v === "object") strip(v); } };
+  strip(bal);
+  await write("config/balance.json", JSON.stringify(bal));
+}
 // 言語ファイル: アプリ用の言い換え（「ページを開き直す」→「アプリを開き直す」など）を上書きで重ねる
 for (const f of await readdir(join(SRC, "lang"))) {
   const base = JSON.parse(await readFile(join(SRC, "lang", f), "utf8"));
   const ovPath = join(APP, "native", "lang", f);
   const ov = existsSync(ovPath) ? JSON.parse(await readFile(ovPath, "utf8")) : {};
+  if ((APPCFG.startSwing || {}).mode !== "swing") delete ov["map.start.desc"]; // 10秒に戻したら、始め方の文も元に戻す
   await write(`lang/${f}`, JSON.stringify({ ...base, ...ov }));
 }
 
@@ -101,6 +135,7 @@ if (existsSync(join(APP, "native", "sounds"))) await cp(join(APP, "native", "sou
 // 5) 同梱した外部の物とアプリだけの部品
 await cp(join(APP, "vendor"), join(WWW, "vendor"), { recursive: true });
 await cp(join(APP, "native", "native.js"), join(WWW, "js", "native.js"));
+await cp(join(APP, "native", "startswing.js"), join(WWW, "js", "startswing.js"));
 if (existsSync(join(APP, "native", "img"))) await cp(join(APP, "native", "img"), join(WWW, "assets", "app"), { recursive: true });
 APPCFG.version = JSON.parse(await readFile(join(APP, "package.json"), "utf8")).version;
 await write("config/app.json", JSON.stringify(APPCFG, null, 2));
@@ -122,7 +157,7 @@ async function walk(dir) {
 await walk(WWW);
 if (bad.length) { console.error("外の URL が残っています:\n" + bad.join("\n")); process.exit(1); }
 // 参照している同梱ファイルがあるか
-for (const f of ["vendor/mediapipe/vision_bundle.js", "vendor/mediapipe/wasm/vision_wasm_internal.wasm", "vendor/models/pose_landmarker_lite.task", "vendor/fonts/fonts.css", "js/native.js", "licenses/index.json", ...JSON.parse(await readFile(join(APP, "licenses", "index.json"), "utf8")).map((x) => `licenses/${x.file}`)]) {
+for (const f of ["vendor/mediapipe/vision_bundle.js", "vendor/mediapipe/wasm/vision_wasm_internal.wasm", "vendor/models/pose_landmarker_lite.task", "vendor/fonts/fonts.css", "js/native.js", "js/startswing.js", "licenses/index.json", ...JSON.parse(await readFile(join(APP, "licenses", "index.json"), "utf8")).map((x) => `licenses/${x.file}`)]) {
   if (!existsSync(join(WWW, f))) { console.error(`ありません: ${f}`); process.exit(1); }
 }
 
